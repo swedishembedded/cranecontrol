@@ -14,7 +14,7 @@ define package/firmware/flyingbergman/configure
 	PKG_CONFIGURE_OPTIONS:=\
 		--with-target=stm32f429zet6\
 		--with-devicetree=$(PWD)/dts/flyingbergman.dts\
-		--with-drivers="-Wl,-u,flyingbergman_ko,-u,stm32_spi_ko,-u,console_ko,-u,mcp2317_ko,-u,stm32_cpuinfo_ko,-u,stm32_tim_ko,-u,drv8302_ko"\
+		--with-drivers="-Wl,-u,flyingbergman_ko,-u,stm32_spi_ko,-u,console_ko,-u,mcp2317_ko,-u,stm32_cpuinfo_ko,-u,stm32_tim_ko,-u,drv8302_ko,-u,stm32_i2c_ko,-u,mcp4461_ko"\
 		--with-libs=-lflyingbergman
 endef
 
