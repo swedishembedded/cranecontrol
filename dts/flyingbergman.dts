@@ -4,6 +4,7 @@
 #include <libfirmware/dts/stm32f4xx.h>
 #include <libfirmware/dts/stm32f4xx_gpio.h>
 #include <libfirmware/dts/stm32f4xx_tim.h>
+#include <libfirmware/dts/stm32f4xx_adc.h>
 #include <libdriver/dts/mcp2317.h>
 
 / {
@@ -138,6 +139,20 @@
 			i2c = <&i2c1>;
 			reg = <0x2d>;
 		};
+
+		extleds_gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOE GPIO_Pin_7 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)
+			>;
+			defaults = <1>;
+		};
+
+		sw_leds: kextleds {
+			compatible = "fw,lp55231";
+			i2c = <&i2c1>;
+			reg = <0x32>;
+		};
 	};
 
 	tim1: tim1 {
@@ -194,19 +209,128 @@
 		};
 	};
 
-	adc1: adc1 {
-		compatible = "st,stm32_adc";
-		reg = <ADC1>;
+	tim8: tim8 {
+		compatible = "st,stm32_tim";
+		reg = <TIM8>;
+		mode = <TIM_CounterMode_CenterAligned1>;
+		freq = <18000>;
+		clock_div = <0>;
+		rep_count = <0>;
+		channel1 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <200>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		channel2 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <200>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		channel3 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <200>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
 		gpio {
 			compatible = "st,stm32_gpio";
 			pinctrl = <
-				GPIOA GPIO_Pin_3 (GPIO_Mode_AN | GPIO_Mode_IN) /* SOB1 */
-				GPIOA GPIO_Pin_4 (GPIO_Mode_AN | GPIO_Mode_IN) /* SOA1 */
-				GPIOC GPIO_Pin_0 (GPIO_Mode_AN | GPIO_Mode_IN) /* VSA1 */
-				GPIOC GPIO_Pin_1 (GPIO_Mode_AN | GPIO_Mode_IN) /* VSB1 */
-				GPIOC GPIO_Pin_2 (GPIO_Mode_AN | GPIO_Mode_IN) /* VSC1 */
+				GPIOA GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLA */
+				GPIOC GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHA */
+				GPIOB GPIO_Pin_14 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLB */
+				GPIOC GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHB */
+				GPIOB GPIO_Pin_15 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLC */
+				GPIOC GPIO_Pin_8 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHC */
+				GPIOA GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_Mode_IN | GPIO_PuPd_UP) /* BRKIN */
 			>;
 		};
+	};
+
+
+	adc: adc {
+		compatible = "st,stm32_adc";
+		channels = <
+			ADC1 ADC_Channel_3 1 ADC_SampleTime_28Cycles
+			ADC2 ADC_Channel_5 1 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_6 1 ADC_SampleTime_28Cycles
+
+			ADC1 ADC_Channel_4 2 ADC_SampleTime_28Cycles
+			ADC2 ADC_Channel_9 2 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_14 2 ADC_SampleTime_28Cycles
+
+			ADC1 ADC_Channel_10 3 ADC_SampleTime_28Cycles
+			ADC2 ADC_Channel_13 3 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_9 3 ADC_SampleTime_28Cycles
+
+			ADC1 ADC_Channel_11 4 ADC_SampleTime_28Cycles
+			ADC2 ADC_Channel_14 4 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_15 4 ADC_SampleTime_28Cycles
+
+			ADC1 ADC_Channel_12 5 ADC_SampleTime_28Cycles
+			ADC2 ADC_Channel_15 5 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_14 5 ADC_SampleTime_28Cycles
+		>;
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				/* ADC1 */
+				GPIOA GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOB2 */
+				GPIOC GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOA2 */
+				GPIOC GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSA2 */
+				GPIOC GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSB2 */
+				GPIOB GPIO_Pin_1 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSC2 */
+				/* ADC2 */
+				GPIOA GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOB1 */
+				GPIOA GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOA1 */
+				GPIOC GPIO_Pin_0 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSA1 */
+				GPIOC GPIO_Pin_1 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSB1 */
+				GPIOC GPIO_Pin_2 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSC1 */
+				/* ADC3 */
+				GPIOF GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VMOT */
+				GPIOF GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* POT */
+				GPIOF GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* TEMP1 */
+				GPIOF GPIO_Pin_8 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* TEMP2 */
+			>;
+		};
+	};
+	
+	ainpwen_pins {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOF GPIO_Pin_2 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_50MHz)
+		>;
+		defaults = <1>;
+	};
+
+	pot_mux_gpio: pot_mux_gpio {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOC GPIO_Pin_13 (GPIO_Mode_OUT | GPIO_PuPd_UP | GPIO_OType_OD | GPIO_Speed_50MHz) /* A */
+			GPIOC GPIO_Pin_14 (GPIO_Mode_OUT | GPIO_PuPd_UP | GPIO_OType_OD | GPIO_Speed_50MHz) /* B */
+			GPIOC GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_PuPd_UP | GPIO_OType_OD | GPIO_Speed_50MHz) /* C */
+		>;
+	};
+
+	pot_mux {
+		compatible = "fw,sn74lv4051";
+		gpio = <&pot_mux_gpio>;
 	};
 
 	tim2: tim2 {
@@ -239,6 +363,36 @@
 		};
 	};
 
+	tim4: tim4 {
+		compatible = "st,stm32_tim";
+		reg = <TIM4>;
+		mode = <TIM_CounterMode_Up>;
+		enc_mode = <TIM_EncoderMode_TI12>;
+		enc_pol = <TIM_ICPolarity_Rising TIM_ICPolarity_Rising>;
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOD GPIO_Pin_12 (GPIO_AF_TIM4 | GPIO_Mode_IN) /* ENCA1 */
+				GPIOD GPIO_Pin_13 (GPIO_AF_TIM4 | GPIO_Mode_IN) /* ENCB1 */
+			>;
+		};
+	};
+
+	tim5: tim5 {
+		compatible = "st,stm32_tim";
+		reg = <TIM5>;
+		mode = <TIM_CounterMode_Up>;
+		freq = <60000>;
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOB GPIO_Pin_4 (GPIO_AF_TIM5 | GPIO_Mode_IN) /* HALLA */
+				GPIOB GPIO_Pin_5 (GPIO_AF_TIM5 | GPIO_Mode_IN) /* HALLB */
+				GPIOB GPIO_Pin_0 (GPIO_AF_TIM5 | GPIO_Mode_IN) /* HALLC */
+			>;
+		};
+	};
+
 	motor1_gpio: motor1_gpio {
 		compatible = "st,stm32_gpio";
 		/* order is important! */
@@ -256,13 +410,39 @@
 		compatible = "fw,drv8302";
 		console = <&console>;
 		pwm = <&tim1>;
-		adc = <&adc1>;
+		adc = <&adc>;
 		enc = <&tim2>;
 		hall = <&tim3>;
 		gpio = <&motor1_gpio>;
 		i_chan = <0 1>;
 		v_chan = <2 3 4>;
 	};
+
+	motor2_gpio: motor2_gpio {
+		compatible = "st,stm32_gpio";
+		/* order is important! */
+		pinctrl = <
+			GPIOD GPIO_Pin_9 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* EN_GATE */
+			GPIOF GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* GAIN */
+			GPIOD GPIO_Pin_8 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* MOC */
+			GPIOF GPIO_Pin_12 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
+			GPIOG GPIO_Pin_5 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
+			GPIOD GPIO_Pin_7 (GPIO_Mode_IN | GPIO_PuPd_UP) /* FAULT */
+		>;
+	};
+
+	motor2 {
+		compatible = "fw,drv8302";
+		console = <&console>;
+		pwm = <&tim8>;
+		adc = <&adc>;
+		enc = <&tim4>;
+		hall = <&tim5>;
+		gpio = <&motor2_gpio>;
+		i_chan = <0 1>;
+		v_chan = <2 3 4>;
+	};
+
 
 	cpuinfo {
 		compatible = "st,stm32_cpuinfo";
@@ -278,8 +458,14 @@
 
     application {
         compatible = "app,flyingbergman";
+		leds = <&leds>;
 		console = <&console>;
 		sw_gpio = <&mcp2317_1>;
 		sw_pins = <8 9 10 11 12 13 14 15>;
+		sw_leds = <&sw_leds>;
+		adc = <&adc>;
+		mot_x = <&tim1>;
+		mot_y = <&tim8>;
+		mux = <&pot_mux_gpio>;
     };
 };
