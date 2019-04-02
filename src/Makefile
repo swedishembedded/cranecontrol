@@ -14,7 +14,7 @@ define package/firmware/flyingbergman/configure
 	PKG_CONFIGURE_OPTIONS:=\
 		--with-target=stm32f429zet6\
 		--with-devicetree=$(PWD)/dts/flyingbergman.dts\
-		--with-drivers="-Wl,-u,flyingbergman_ko,-u,stm32_spi_ko,-u,console_ko,-u,mcp2317_ko,-u,stm32_cpuinfo_ko,-u,stm32_tim_ko,-u,drv8302_ko,-u,stm32_i2c_ko,-u,mcp4461_ko,-u,stm32_adc_ko,-u,lp55231_ko"\
+		--with-drivers="-Wl,-u,flyingbergman_ko,-u,stm32_spi_ko,-u,console_ko,-u,mcp2317_ko,-u,stm32_cpuinfo_ko,-u,stm32_tim_ko,-u,drv8302_ko,-u,stm32_i2c_ko,-u,mcp4461_ko,-u,stm32_adc_ko,-u,lp55231_ko,-u,max14890_ko,-u,at24_ko"\
 		--with-libs=-lflyingbergman
 endef
 
@@ -23,11 +23,13 @@ $(eval $(call DefinePackage,firmware))
 
 package/firmware/flyingbergman/flash: package/firmware/flyingbergman/compile
 	$(TARGET_TOOL_PREFIX)objcopy -O binary $(BUILD_DIR)/$(TARGET)/firmware/src/theboss $(BUILD_DIR)/$(TARGET)/firmware/theboss.bin
+	$(TARGET_TOOL_PREFIX)objdump -t $(BUILD_DIR)/$(TARGET)/firmware/src/theboss | grep -v "ABS\|00000000" | awk '{print $$4 " " $$5 " " $$6}' | grep  "^\." | sort -r -k 1 | less > flyingbergman.syms
 	$(TARGET_TOOL_PREFIX)size $(BUILD_DIR)/$(TARGET)/firmware/src/theboss
 	stm32flash -w $(BUILD_DIR)/$(TARGET)/firmware/theboss.bin -b 115200 -v -g 0x0 /dev/ttyUSB0
 
 package/firmware/flyingbergman/flash-stlink: package/firmware/flyingbergman/compile
 	$(TARGET_TOOL_PREFIX)objcopy -O binary $(BUILD_DIR)/$(TARGET)/firmware/src/theboss $(BUILD_DIR)/$(TARGET)/firmware/theboss.bin
+	$(TARGET_TOOL_PREFIX)objdump -t $(BUILD_DIR)/$(TARGET)/firmware/src/theboss | grep -v "ABS\|00000000" | awk '{print $$4 " " $$5 " " $$6}' | grep  "^\." | sort -r -k 1 | less > flyingbergman.syms
 	$(TARGET_TOOL_PREFIX)size $(BUILD_DIR)/$(TARGET)/firmware/src/theboss
 	#openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg -c "program $(BUILD_DIR)/$(TARGET)/firmware/src/theboss verify reset";
 	st-flash --reset write $(BUILD_DIR)/$(TARGET)/firmware/theboss.bin 0x8000000
