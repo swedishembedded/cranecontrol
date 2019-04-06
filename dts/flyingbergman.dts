@@ -5,6 +5,7 @@
 #include <libfirmware/dts/stm32f4xx_gpio.h>
 #include <libfirmware/dts/stm32f4xx_tim.h>
 #include <libfirmware/dts/stm32f4xx_adc.h>
+#include <libfirmware/dts/canopen.h>
 #include <libdriver/dts/mcp2317.h>
 
 / {
@@ -13,11 +14,11 @@
 		/* hclk = sysclk / hclk_div */
 		compatible = "st,stm32_cpu";
 		hse_value = <8000000>;
-		hclk_div = <2>;
-		pclk1_div = <1>;
-		pclk2_div = <1>;
+		hclk_div = <1>;
+		pclk1_div = <2>;
+		pclk2_div = <2>;
 		pllm = <8>;
-		plln = <196>;
+		plln = <320>;
 		pllp = <2>;
 		pllq = <4>;
 	};
@@ -33,9 +34,14 @@
 		};
 	};
 
+	regmap: regmap {
+		compatible = "fw,regmap";
+	};
+
 	console: console {
 		compatible = "fw,console";
 		serial = <&debug_uart>;
+		regmap = <&regmap>;
 	};
 
 	leds: leds {
@@ -130,15 +136,32 @@
 		default = <1 1>;
 	};
 
+	an_out_gpio {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOB GPIO_Pin_9 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz) /* AP_RESET */
+		>;
+		defaults = <1>;
+	};
+
 	i2c1: i2c1 {
 		compatible = "st,stm32_i2c";
 		reg = <I2C1>;
 		baud = <50000>;
 
-		mcp4461_1 {
+		mcp4461_1: mcp4461_1 {
 			compatible = "fw,mcp4461";
 			i2c = <&i2c1>;
 			reg = <0x2d>;
+			gpio = <&mcp2317_1>;
+			reset_pin = <5>;
+			wp_pin = <6>;
+		};
+
+		mcp4461_2 {
+			compatible = "fw,mcp4461";
+			i2c = <&i2c1>;
+			reg = <0x2c>;
 		};
 
 		extleds_gpio {
@@ -372,7 +395,7 @@
 	encoder2_gpio: encoder2_gpio {
 		compatible = "st,stm32_gpio";
 		pinctrl = <
-			GPIOD GPIO_Pin_14 (GPIO_Mode_OUT| GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)  /* CS */
+			GPIOD GPIO_Pin_15 (GPIO_Mode_OUT| GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)  /* CS */
 		>;
 		defaults = <1>;
 	};
@@ -498,6 +521,45 @@
 		>;
 	};
 
+	can1: can1 {
+		compatible = "st,stm32_can";
+		reg = <CAN1>;
+		prescaler = <5>; // CANClk = 100Mhz / 7 = 7Mhz
+		sjw = <1>;
+		bs1 = <13>;
+		bs2 = <2>;
+		can1_gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOD GPIO_Pin_0 (GPIO_AF_CAN1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+				GPIOD GPIO_Pin_1 (GPIO_AF_CAN1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+			>;
+		};
+	};
+
+	can2: can2 {
+		compatible = "st,stm32_can";
+		reg = <CAN2>;
+		prescaler = <5>; // CANClk = 49Mhz / 7 = 7Mhz
+		sjw = <1>;
+		bs1 = <13>;
+		bs2 = <2>;
+		can2_gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOB GPIO_Pin_12 (GPIO_AF_CAN2 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+				GPIOB GPIO_Pin_13 (GPIO_AF_CAN2 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+			>;
+		};
+	};
+
+	canopen: canopen {
+		compatible = "fw,canopen";
+		mode = <CANOPEN_MODE_MASTER>;
+		can = <&can1>;
+		regmap = <&regmap>;
+	};
+
     application {
         compatible = "app,flyingbergman";
 		leds = <&leds>;
@@ -511,5 +573,10 @@
 		mux = <&pot_mux_gpio>;
 		enc1 = <&tim2>;
 		eeprom = <&eeprom>;
+		oc_pot = <&mcp4461_1>;
+		can1 = <&can1>;
+		can2 = <&can2>;
+		regmap = <&regmap>;
+		canopen = <&canopen>;
     };
 };
