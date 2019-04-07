@@ -87,6 +87,9 @@ struct application {
 	analog_device_t oc_pot;
 	can_device_t can1, can2;
 	regmap_device_t regmap;
+	memory_device_t motor_mem;
+	memory_device_t can1_mem;
+	memory_device_t can2_mem;
 
 	struct fb_config config;
 	struct {
@@ -234,10 +237,64 @@ static int _reg_cmd(console_t con, void *userptr, int argc, char **argv){
 		sscanf(argv[3], "%x", (unsigned int*)&value);
 		regmap_write_u32(self->regmap, id, value);
 	} else {
-		for(int c = 0; c < 109; c++){
-			printk("%d: %d\n", c, irq_get_count(c));
-		}
 		return -1;
+	}
+	return 0;
+}
+
+static int _motor_cmd(console_t con, void *userptr, int argc, char **argv){
+	struct application *self = (struct application*)userptr;
+	if(argc == 2 && strcmp(argv[1], "info") == 0){
+		uint32_t addr = 0x02000000;
+		uint32_t type = 0, error = 0, mfr_status = 0;
+		int ret = 0;
+#define _read(reg, value) ret |= memory_read(self->motor_mem, addr | reg, &value, sizeof(value))
+		_read(CANOPEN_REG_DEVICE_TYPE, type);
+		_read(CANOPEN_REG_DEVICE_ERROR, error);
+		_read(CANOPEN_REG_DEVICE_MFR_STATUS, mfr_status);
+#undef _read
+		printk("Type: %d\n", type);
+		printk("Error: %08x\n", error);
+		printk("MFR Status: %08x\n", mfr_status);
+	} else if(argc == 2 && strcmp(argv[1], "regs") == 0){
+		for(uint32_t c = 0; c < 0x1fff00; c+=0x0100){
+			uint32_t reg = 0;
+			uint32_t ofs = 0x01000000 | c;
+			if(memory_read(self->motor_mem, ofs, &reg, sizeof(reg)) >= 0){
+				console_printf(con, "%08x=%08x\n", ofs, reg);
+			} else {
+				console_printf(con, "%08x=--------\n", ofs);
+			}
+		}
+	} else {
+		return -EINVAL;
+	}
+	return 0;
+}
+
+static int _can_cmd(console_t con, void *userptr, int argc, char **argv){
+	struct application *self = (struct application*)userptr;
+
+	memory_device_t mem = 0;
+	if(strcmp(argv[0], "can1") == 0) mem = self->can1_mem;
+	if(strcmp(argv[0], "can2") == 0) mem = self->can2_mem;
+	if(!mem) return -EINVAL;
+
+	if(argc == 2 && strcmp(argv[1], "info") == 0){
+		struct can_counters cnt;
+		memory_read(mem, 0, &cnt, sizeof(cnt));
+		console_printf(con, "\tTX count: %d\n", cnt.tme); 
+		console_printf(con, "\tTX dropped: %d\n", cnt.txdrop);
+		console_printf(con, "\tRX count: %d\n", cnt.rxp); 
+		console_printf(con, "\tRX dropped: %d\n", cnt.rxdrop);
+		console_printf(con, "\tTX timeout: %d\n", cnt.txto);
+		console_printf(con, "\tRX on FIFO0: %d\n", cnt.fmp0);
+		console_printf(con, "\tRX on FIFO1: %d\n", cnt.fmp1);
+		console_printf(con, "\tTotal errors: %d\n", cnt.lec);
+		console_printf(con, "\tBus off errors: %d\n", cnt.bof);
+		console_printf(con, "\tBus passive errors: %d\n", cnt.epv);
+		console_printf(con, "\tBus errors warnings: %d\n", cnt.ewg);
+		console_printf(con, "\tFIFO Overflow errors: %d\n", cnt.fov);
 	}
 	return 0;
 }
@@ -557,7 +614,7 @@ static void _fb_control_loop(void *ptr){
 		_fb_update_state(self);
 		_fb_update_outputs(self);
 
-		thread_sleep_ms_until(&t, 10);
+		thread_sleep_ms_until(&t, 5);
 	}
 }
 
@@ -576,8 +633,12 @@ static int _fb_probe(void *fdt, int fdt_node){
 	memory_device_t eeprom = memory_find_by_ref(fdt, fdt_node, "eeprom");
 	analog_device_t oc_pot = analog_find_by_ref(fdt, fdt_node, "oc_pot");
 	can_device_t can1 = can_find_by_ref(fdt, fdt_node, "can1");
+	memory_device_t can1_mem = memory_find_by_ref(fdt, fdt_node, "can1");
 	can_device_t can2 = can_find_by_ref(fdt, fdt_node, "can2");
+	memory_device_t can2_mem = memory_find_by_ref(fdt, fdt_node, "can2");
 	regmap_device_t regmap = regmap_find_by_ref(fdt, fdt_node, "regmap");
+	regmap_device_t regmap_slave = regmap_find_by_ref(fdt, fdt_node, "regmap_slave");
+	memory_device_t motor_mem = memory_find_by_ref(fdt, fdt_node, "canopen");
 	//canopen_device_t canopen = canopen_find_by_ref(fdt, fdt_node, "canopen");
 
 	if(!leds || !sw_leds || !mux || !sw_gpio || !adc || !mot_x || !mot_y || !enc1){
@@ -591,10 +652,15 @@ static int _fb_probe(void *fdt, int fdt_node){
 	if(!can1){ printk(PRINT_ERROR "fb: can1 missing\n"); return -1; }
 	if(!can2){ printk(PRINT_ERROR "fb: can2 missing\n"); return -1; }
 	if(!regmap){ printk(PRINT_ERROR "fb: regmap missing\n"); return -1; }
+	if(!motor_mem){ printk(PRINT_ERROR "fb: canopen_slave missing\n"); return -1; }
+	if(!regmap_slave){ printk(PRINT_ERROR "fb: regmap_slave missing\n"); return -1; }
 	//if(!canopen){ printk(PRINT_ERROR "fb: canopen missing\n"); return -1; }
 
 	console_add_command(console, self, "fb", "Flying Bergman Control", "", _fb_cmd);
 	console_add_command(console, self, "reg", "Register ops", "", _reg_cmd);
+	console_add_command(console, self, "motor", "Motor slave board control", "", _motor_cmd);
+	console_add_command(console, self, "can1", "CAN1 control", "", _can_cmd);
+	console_add_command(console, self, "can2", "CAN2 control", "", _can_cmd);
 
 	self->leds = leds;
 	self->console = console;
@@ -608,8 +674,11 @@ static int _fb_probe(void *fdt, int fdt_node){
 	self->eeprom = eeprom;
 	self->oc_pot = oc_pot;
 	self->can1 = can1;
+	self->can1_mem = can1_mem;
 	self->can2 = can2;
+	self->can2_mem = can2_mem;
 	self->regmap = regmap;
+	self->motor_mem = motor_mem;
 	//self->canopen = canopen;
 
 	for(int c = 0; c < FB_LED_COUNT; c++){
@@ -631,6 +700,9 @@ static int _fb_probe(void *fdt, int fdt_node){
 
 	printk("fb: configuring as canopen master\n");
 	regmap_write_u32(self->regmap, CANOPEN_REG_DEVICE_CYCLE_PERIOD, 1000);
+	regmap_write_u32(self->regmap, CANOPEN_REG_DEVICE_TYPE, 402);
+
+	regmap_write_u32(regmap_slave, CANOPEN_REG_DEVICE_TYPE, 402);
 
 	printk("HEAP: %lu of %lu free\n", thread_get_free_heap(), thread_get_total_heap());
 	thread_meminfo();

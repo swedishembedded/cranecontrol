@@ -15,8 +15,8 @@
 		compatible = "st,stm32_cpu";
 		hse_value = <8000000>;
 		hclk_div = <1>;
-		pclk1_div = <2>;
-		pclk2_div = <2>;
+		pclk1_div = <1>;
+		pclk2_div = <1>;
 		pllm = <8>;
 		plln = <320>;
 		pllp = <2>;
@@ -127,6 +127,14 @@
 		};
 	};
 
+	extleds_gpio: extleds_gpio {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOE GPIO_Pin_7 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* BLED_EN */
+		>;
+		defaults = <0>;
+	};
+
 	i2c1_gpio {
 		compatible = "st,stm32_gpio";
 		pinctrl = <
@@ -164,18 +172,12 @@
 			reg = <0x2c>;
 		};
 
-		extleds_gpio {
-			compatible = "st,stm32_gpio";
-			pinctrl = <
-				GPIOE GPIO_Pin_7 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* BLED_EN */
-			>;
-			defaults = <1>;
-		};
-
 		sw_leds: extleds {
 			compatible = "fw,lp55231";
 			i2c = <&i2c1>;
 			reg = <0x32>;
+			gpio = <&extleds_gpio>;
+			en_pin = <0>;
 		};
 
 		eeprom: eeprom {
@@ -524,7 +526,7 @@
 	can1: can1 {
 		compatible = "st,stm32_can";
 		reg = <CAN1>;
-		prescaler = <5>; // CANClk = 100Mhz / 7 = 7Mhz
+		prescaler = <40>;
 		sjw = <1>;
 		bs1 = <13>;
 		bs2 = <2>;
@@ -540,7 +542,7 @@
 	can2: can2 {
 		compatible = "st,stm32_can";
 		reg = <CAN2>;
-		prescaler = <5>; // CANClk = 49Mhz / 7 = 7Mhz
+		prescaler = <40>;
 		sjw = <1>;
 		bs1 = <13>;
 		bs2 = <2>;
@@ -557,7 +559,20 @@
 		compatible = "fw,canopen";
 		mode = <CANOPEN_MODE_MASTER>;
 		can = <&can1>;
+		address = <0x01>;
 		regmap = <&regmap>;
+	};
+
+	regmap_slave: regmap_slave {
+		compatible = "fw,regmap";
+	};
+
+	canopen_slave: canopen_slave {
+		compatible = "fw,canopen";
+		mode = <CANOPEN_MODE_SLAVE>;
+		address = <0x02>;
+		can = <&can2>;
+		regmap = <&regmap_slave>;
 	};
 
     application {
@@ -578,5 +593,8 @@
 		can2 = <&can2>;
 		regmap = <&regmap>;
 		canopen = <&canopen>;
+
+		canopen_slave = <&canopen_slave>;
+		regmap_slave = <&regmap_slave>;
     };
 };
