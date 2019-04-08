@@ -390,16 +390,20 @@
 		compatible = "st,stm32_gpio";
 		pinctrl = <
 			GPIOD GPIO_Pin_4 (GPIO_Mode_OUT| GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)  /* CS */
+			GPIOD GPIO_Pin_5 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* ENCSH1 (P40) */
+			GPIOF GPIO_Pin_6 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* PWM_IN1 (P39) */
 		>;
-		defaults = <1>;
+		defaults = <1 1 1>;
 	};
 
 	encoder2_gpio: encoder2_gpio {
 		compatible = "st,stm32_gpio";
 		pinctrl = <
 			GPIOD GPIO_Pin_15 (GPIO_Mode_OUT| GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)  /* CS */
+			GPIOD GPIO_Pin_11 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* ENCSH2 (P44) */
+			GPIOF GPIO_Pin_7 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* PWM_IN2 (P43) */
 		>;
-		defaults = <1>;
+		defaults = <1 1 1>;
 	};
 
 	encoder1 {
@@ -430,7 +434,7 @@
 		gpio = <&pot_mux_gpio>;
 	};
 
-	tim2: tim2 {
+	enc1: tim2 {
 		compatible = "st,stm32_tim";
 		reg = <TIM2>;
 		mode = <TIM_EncoderMode_TI12>;
@@ -458,15 +462,15 @@
 		};
 	};
 
-	tim4: tim4 {
+	enc2: tim4 {
 		compatible = "st,stm32_tim";
 		reg = <TIM4>;
 		mode = <TIM_EncoderMode_TI12>;
 		gpio {
 			compatible = "st,stm32_gpio";
 			pinctrl = <
-				GPIOD GPIO_Pin_12 (GPIO_AF_TIM4 | GPIO_Mode_IN | GPIO_PuPd_UP) /* ENCA1 */
-				GPIOD GPIO_Pin_13 (GPIO_AF_TIM4 | GPIO_Mode_IN | GPIO_PuPd_UP) /* ENCB1 */
+				GPIOD GPIO_Pin_12 (GPIO_AF_TIM4 | GPIO_Mode_IN | GPIO_PuPd_UP) /* ENCA2 */
+				GPIOD GPIO_Pin_13 (GPIO_AF_TIM4 | GPIO_Mode_IN | GPIO_PuPd_UP) /* ENCB2 */
 			>;
 		};
 	};
@@ -491,7 +495,7 @@
 		console = <&console>;
 		pwm = <&tim1>;
 		adc = <&adc>;
-		enc = <&tim2>;
+		enc = <&enc1>;
 		hall = <&tim3>;
 		gpio = <&motor1_gpio>;
 		i_chan = <0 1>;
@@ -503,7 +507,7 @@
 		console = <&console>;
 		pwm = <&tim8>;
 		adc = <&adc>;
-		enc = <&tim4>;
+		enc = <&enc2>;
 		hall = <&tim5>;
 		gpio = <&motor2_gpio>;
 		i_chan = <0 1>;
@@ -526,7 +530,7 @@
 	can1: can1 {
 		compatible = "st,stm32_can";
 		reg = <CAN1>;
-		prescaler = <40>;
+		prescaler = <5>;
 		sjw = <1>;
 		bs1 = <13>;
 		bs2 = <2>;
@@ -542,7 +546,7 @@
 	can2: can2 {
 		compatible = "st,stm32_can";
 		reg = <CAN2>;
-		prescaler = <40>;
+		prescaler = <5>;
 		sjw = <1>;
 		bs1 = <13>;
 		bs2 = <2>;
@@ -586,7 +590,10 @@
 		mot_x = <&tim1>;
 		mot_y = <&tim8>;
 		mux = <&pot_mux_gpio>;
-		enc1 = <&tim2>;
+		enc1 = <&enc1>;
+		enc1_gpio = <&encoder1_gpio>;
+		enc2 = <&enc2>;
+		enc2_gpio = <&encoder2_gpio>;
 		eeprom = <&eeprom>;
 		oc_pot = <&mcp4461_1>;
 		can1 = <&can1>;
@@ -594,7 +601,7 @@
 		regmap = <&regmap>;
 		canopen = <&canopen>;
 
-		canopen_slave = <&canopen_slave>;
+		//canopen_slave = <&canopen_slave>;
 		regmap_slave = <&regmap_slave>;
     };
 };
