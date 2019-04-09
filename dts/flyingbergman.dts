@@ -207,8 +207,8 @@
 			GPIOD GPIO_Pin_9 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* EN_GATE */
 			GPIOF GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* GAIN */
 			GPIOD GPIO_Pin_8 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* MOC */
-			GPIOF GPIO_Pin_12 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
-			GPIOG GPIO_Pin_5 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
+			GPIOG GPIO_Pin_5 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
+			GPIOD GPIO_Pin_10 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
 			GPIOD GPIO_Pin_7 (GPIO_Mode_IN | GPIO_PuPd_UP) /* FAULT */
 		>;
 	};
@@ -327,44 +327,44 @@
 		channels = <
 			ADC1 ADC_Channel_3 1 ADC_SampleTime_28Cycles
 			ADC2 ADC_Channel_5 1 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_6 1 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_14 1 ADC_SampleTime_28Cycles
 
 			ADC1 ADC_Channel_4 2 ADC_SampleTime_28Cycles
-			ADC2 ADC_Channel_9 2 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_14 2 ADC_SampleTime_28Cycles
+			ADC2 ADC_Channel_14 2 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_9 2 ADC_SampleTime_28Cycles
 
 			ADC1 ADC_Channel_10 3 ADC_SampleTime_28Cycles
 			ADC2 ADC_Channel_13 3 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_9 3 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_15 3 ADC_SampleTime_28Cycles
 
 			ADC1 ADC_Channel_11 4 ADC_SampleTime_28Cycles
-			ADC2 ADC_Channel_14 4 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_15 4 ADC_SampleTime_28Cycles
+			ADC2 ADC_Channel_15 4 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_6 4 ADC_SampleTime_28Cycles
 
 			ADC1 ADC_Channel_12 5 ADC_SampleTime_28Cycles
-			ADC2 ADC_Channel_15 5 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_14 5 ADC_SampleTime_28Cycles
+			ADC2 ADC_Channel_9 5 ADC_SampleTime_28Cycles
+			ADC3 ADC_Channel_15 5 ADC_SampleTime_28Cycles
 		>;
 		gpio {
 			compatible = "st,stm32_gpio";
 			pinctrl = <
 				/* ADC1 */
-				GPIOA GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOB2 */
-				GPIOC GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOA2 */
-				GPIOC GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSA2 */
-				GPIOC GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSB2 */
-				GPIOB GPIO_Pin_1 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSC2 */
+				GPIOA GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOB1 CH3 */
+				GPIOA GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOA1 CH4 */
+				GPIOC GPIO_Pin_0 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSA1 CH10 */
+				GPIOC GPIO_Pin_1 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSB1 CH11 */
+				GPIOC GPIO_Pin_2 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSC1 CH12 */
 				/* ADC2 */
-				GPIOA GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOB1 */
-				GPIOA GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOA1 */
-				GPIOC GPIO_Pin_0 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSA1 */
-				GPIOC GPIO_Pin_1 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSB1 */
-				GPIOC GPIO_Pin_2 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSC1 */
+				GPIOA GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOB2 CH5 */
+				GPIOC GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOA2 CH14 */
+				GPIOC GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSA2 CH13 */
+				GPIOC GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSB2 CH15 */
+				GPIOB GPIO_Pin_1 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSC2 CH9 */
 				/* ADC3 */
-				GPIOF GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VMOT */
-				GPIOF GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* POT */
-				GPIOF GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* TEMP1 */
-				GPIOF GPIO_Pin_8 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* TEMP2 */
+				GPIOF GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VMOT CH9 */
+				GPIOF GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* POT CH14 */
+				GPIOF GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* TEMP1 CH15 */
+				GPIOF GPIO_Pin_8 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* TEMP2 CH6 */
 			>;
 		};
 	};
@@ -600,6 +600,7 @@
 		can2 = <&can2>;
 		regmap = <&regmap>;
 		canopen = <&canopen>;
+		canopen_slave = <&canopen_slave>;
 
 		//canopen_slave = <&canopen_slave>;
 		regmap_slave = <&regmap_slave>;

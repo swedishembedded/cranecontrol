@@ -26,6 +26,8 @@
 
 #include <libfdt/libfdt.h>
 
+#include "canopen.h"
+
 #define FB_SWITCH_COUNT 8
 #define FB_LED_COUNT 8
 #define FB_PRESET_COUNT 4
@@ -55,16 +57,47 @@
 #define FB_LED_STATE_FAST_RAMP 4
 #define FB_LED_STATE_FAINT_ON 5
 
-#define FB_ADC_MUX_CHANNEL 14
+#define FB_ADC_IB1_CHAN 0
+#define FB_ADC_IB2_CHAN 1
+#define FB_ADC_MUX_CHAN 2
+
+#define FB_ADC_IA1_CHAN 3
+#define FB_ADC_IA2_CHAN 4
+#define FB_ADC_VMOT_CHAN 5
+
+#define FB_ADC_VSA1_CHAN 6
+#define FB_ADC_VSA2_CHAN 7
+#define FB_ADC_TEMP1_CHAN 8
+
+#define FB_ADC_VSB1_CHAN 9
+#define FB_ADC_VSB2_CHAN 10
+#define FB_ADC_TEMP2_CHAN 11
+
+#define FB_ADC_VSC1_CHAN 12
+#define FB_ADC_VSC2_CHAN 13
+#define FB_ADC_TEMP1_2_CHAN 14
+
+#define FB_CANOPEN_MASTER_ADDRESS 0x01
+#define FB_CANOPEN_SLAVE_ADDRESS 0x02
+
+#define FB_MOTOR_YAW_TICKS_PER_ROT ((2800 * 512 * 4) / 28)
+
+enum {
+	FB_ADCMUX_YAW_CHAN = 0,
+	FB_ADCMUX_PITCH_CHAN = 1,
+	FB_ADCMUX_YAW_SPEED_CHAN = 2,
+	FB_ADCMUX_YAW_ACC_CHAN = 3,
+	FB_ADCMUX_PITCH_ACC_CHAN = 4,
+	FB_ADCMUX_PITCH_SPEED_CHAN = 5,
+	FB_ADCMUX_CHAN_RESERVED15 = 6,
+	FB_ADCMUX_MOTOR_PITCH_CHAN = 7
+};
 
 #define FB_HOME_LONG_PRESS_TIME_US 1000000UL
 
 #define FB_PRESET_BIT_VALID (1 << 0)
 
 #define FB_REMOTE_TIMEOUT 50000
-
-#define CANOPEN_FB_MOTOR_PITCH 0x200100
-#define CANOPEN_FB_MOTOR_YAW 0x200200
 
 struct fb_config {
 	struct config_preset {
@@ -92,13 +125,44 @@ struct application {
 	analog_device_t oc_pot;
 	can_device_t can1, can2;
 	regmap_device_t regmap;
-	memory_device_t motor_mem;
+	memory_device_t canopen_mem, canopen_slave_mem;
 	memory_device_t can1_mem;
 	memory_device_t can2_mem;
 	gpio_device_t enc1_gpio;
 	gpio_device_t enc2_gpio;
 
 	struct fb_config config;
+
+	struct {
+		int16_t vsa_yaw;
+		int16_t vsb_yaw;
+		int16_t vsc_yaw;
+		int16_t vsa_pitch;
+		int16_t vsb_pitch;
+		int16_t vsc_pitch;
+		int16_t ia_yaw;
+		int16_t ib_yaw;
+		int16_t ia_pitch;
+		int16_t ib_pitch;
+		int16_t pitch;
+		int16_t yaw;
+	} sensors;
+
+	struct {
+		float vsa_yaw;
+		float vsb_yaw;
+		float vsc_yaw;
+		float vsa_pitch;
+		float vsb_pitch;
+		float vsc_pitch;
+		float ia_yaw;
+		float ib_yaw;
+		float ia_pitch;
+		float ib_pitch;
+		float pitch;
+		float yaw;
+	} measured;
+
 	struct {
 		timestamp_t prev_micros;
 		float pitch, yaw;
@@ -113,6 +177,7 @@ struct application {
 			int state;
 			int blinks;
 		} leds[FB_LED_COUNT];
+
 		float pitch_target, yaw_target;
 		float prev_err_pitch, prev_err_yaw;
 		float pitch_i, yaw_i;
@@ -124,8 +189,12 @@ struct application {
 	} state;
 
 	struct {
-		float pitch_rad, yaw_rad;
-	} actual;
+		int16_t yaw, pitch;
+		int16_t i_yaw, i_pitch;
+		uint32_t micros;
+		uint32_t last_update;
+		struct mutex lock;
+	} slave;
 
 	struct {
 		float yaw, pitch;
@@ -134,11 +203,15 @@ struct application {
 	} controls;
 
 	struct {
+		float pitch, yaw;
+	} target;
+
+	struct {
 		int16_t pitch, yaw;
 	} output;
 
 	struct {
-		uint16_t pitch, yaw;
+		int16_t pitch, yaw;
 		timestamp_t last_pitch_update, last_yaw_update;
 	} remote;
 
@@ -146,17 +219,6 @@ struct application {
 	int16_t mux_adc[8];
 
 	struct regmap_range comm_range, mfr_range, mfr_range_slave;
-};
-
-enum {
-	FB_ADC_YAW_CHAN = 0,
-	FB_ADC_PITCH_CHAN = 1,
-	FB_ADC_YAW_SPEED_CHAN = 2,
-	FB_ADC_YAW_ACC_CHAN = 3,
-	FB_ADC_PITCH_ACC_CHAN = 4,
-	FB_ADC_PITCH_SPEED_CHAN = 5,
-	FB_ADC_CHAN_RESERVED15 = 6,
-	FB_ADC_MOTOR_PITCH_CHAN = 7
 };
 
 static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
@@ -198,6 +260,11 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 				gpio_read(self->enc2_gpio, 2)
 		);
 
+		console_printf(con, "VS1:\t %5d %5d %5d\n", self->sensors.vsa_yaw, self->sensors.vsb_yaw, self->sensors.vsc_yaw);
+		console_printf(con, "VS2:\t %5d %5d %5d\n", self->sensors.vsa_pitch, self->sensors.vsb_pitch, self->sensors.vsc_pitch);
+		console_printf(con, "I1:\t %5d %5d\n", self->sensors.ia_yaw, self->sensors.ib_yaw);
+		console_printf(con, "I2:\t %5d %5d\n", self->sensors.ia_pitch, self->sensors.ib_pitch);
+
 		console_printf(con, "JOYSTICK:\tYAW %5d PITCH %5d\n",
 				(int32_t)(self->controls.yaw * 1000),
 				(int32_t)(self->controls.pitch * 1000)
@@ -211,14 +278,50 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 				(int32_t)(self->controls.pitch_speed * 1000)
 		);
 		console_printf(con, "ACTUAL:\t\tYAW %5d PITCH %5d\n",
-				(int32_t)(self->actual.yaw_rad * 1000),
-				(int32_t)(self->actual.pitch_rad * 1000)
+				(int32_t)(self->measured.yaw * 1000),
+				(int32_t)(self->measured.pitch * 1000)
 		);
 		console_printf(con, "REMOTE:\t\tYAW %5d PITCH %5d\n",
 				self->remote.yaw,
 				self->remote.pitch
 		);
 
+		thread_mutex_lock(&self->slave.lock);
+		console_printf(con, "SLAVE:\t\tYAW %5d PITCH %5d\n",
+				self->slave.yaw,
+				self->slave.pitch
+		);
+		thread_mutex_unlock(&self->slave.lock);
+	} else if(argc == 2 && strcmp(argv[1], "data") == 0){
+		while(1){
+			console_printf(con, "%5d;%5d;",
+					self->output.yaw,
+					self->output.pitch
+			);
+			
+			console_printf(con, "%5d;%5d",
+					self->remote.yaw,
+					self->remote.pitch
+			);
+
+			console_printf(con, "%5d;%5d",
+					self->sensors.ia_pitch,
+					self->sensors.ia_yaw
+			);
+
+			console_printf(con, "%5d;%5d",
+					self->slave.pitch,
+					self->slave.yaw
+			);
+
+			console_printf(con, "\n");
+			char ch;
+			if(console_read(con, &ch, 1, 0) == 1){
+				break;
+			}
+
+			thread_sleep_ms(10);
+		}
 	} else if(argc == 2 && strcmp(argv[1], "enc") == 0){
 		int32_t val = encoder_read(self->enc1);
 		console_printf(con, "ENC1: %d\n", val);
@@ -282,7 +385,7 @@ static int _motor_cmd(console_device_t con, void *userptr, int argc, char **argv
 		uint32_t addr = 0x02000000;
 		uint32_t type = 0, error = 0, mfr_status = 0;
 		int ret = 0;
-#define _read(reg, value) ret |= memory_read(self->motor_mem, addr | reg, &value, sizeof(value))
+#define _read(reg, value) ret |= memory_read(self->canopen_mem, addr | reg, &value, sizeof(value))
 		_read(CANOPEN_REG_DEVICE_TYPE, type);
 		_read(CANOPEN_REG_DEVICE_ERROR, error);
 		_read(CANOPEN_REG_DEVICE_MFR_STATUS, mfr_status);
@@ -294,7 +397,7 @@ static int _motor_cmd(console_device_t con, void *userptr, int argc, char **argv
 		for(uint32_t c = 0; c < 0x1fff00; c+=0x0100){
 			uint32_t reg = 0;
 			uint32_t ofs = 0x01000000 | c;
-			if(memory_read(self->motor_mem, ofs, &reg, sizeof(reg)) >= 0){
+			if(memory_read(self->canopen_mem, ofs, &reg, sizeof(reg)) >= 0){
 				console_printf(con, "%08x=%08x\n", ofs, reg);
 			} else {
 				console_printf(con, "%08x=--------\n", ofs);
@@ -359,17 +462,20 @@ static void _fb_indicator_loop(void *ptr){
 
 static void _fb_read_controls(struct application *self){
 	// read next adc mux channel
-	adc_read(self->adc, FB_ADC_MUX_CHANNEL, &self->mux_adc[self->mux_chan]);
+	adc_read(self->adc, FB_ADC_MUX_CHAN, &self->mux_adc[self->mux_chan]);
 
 	float duty = constrain_float((float)(self->mux_adc[self->mux_chan]) / 4096, 0.0f, 1.0f);
 	switch(self->mux_chan) {
-		case FB_ADC_YAW_CHAN: { self->controls.yaw = -1.f + 2.f * duty; } break;
-		case FB_ADC_PITCH_CHAN: { self->controls.pitch = -1.f + 2.f * duty; } break;
-		case FB_ADC_YAW_ACC_CHAN: { self->controls.yaw_acc = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
-		case FB_ADC_PITCH_ACC_CHAN: { self->controls.pitch_acc = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
-		case FB_ADC_YAW_SPEED_CHAN: { self->controls.yaw_speed = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
-		case FB_ADC_MOTOR_PITCH_CHAN: { self->actual.pitch_rad = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
-		case FB_ADC_PITCH_SPEED_CHAN: { self->controls.pitch_speed = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
+		case FB_ADCMUX_YAW_CHAN: { self->controls.yaw = -1.f + 2.f * duty; } break;
+		case FB_ADCMUX_PITCH_CHAN: { self->controls.pitch = -1.f + 2.f * duty; } break;
+		case FB_ADCMUX_YAW_ACC_CHAN: { self->controls.yaw_acc = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
+		case FB_ADCMUX_PITCH_ACC_CHAN: { self->controls.pitch_acc = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
+		case FB_ADCMUX_YAW_SPEED_CHAN: { self->controls.yaw_speed = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
+		case FB_ADCMUX_MOTOR_PITCH_CHAN: {
+			self->measured.pitch = constrain_float(2.f * (duty - 0.25), 0.f, 1.f);
+			self->sensors.pitch = self->mux_adc[self->mux_chan];
+		} break;
+		case FB_ADCMUX_PITCH_SPEED_CHAN: { self->controls.pitch_speed = constrain_float(2.f * (duty - 0.25), 0.f, 1.f); } break;
 	}
 
 	self->mux_chan = (self->mux_chan+1) & 0x7;
@@ -388,9 +494,21 @@ static void _fb_read_controls(struct application *self){
 		self->state.sw[c].pressed = on;
 	}
 
+	adc_read(self->adc, FB_ADC_VSA1_CHAN, &self->sensors.vsa_yaw);
+	adc_read(self->adc, FB_ADC_VSB1_CHAN, &self->sensors.vsb_yaw);
+	adc_read(self->adc, FB_ADC_VSC1_CHAN, &self->sensors.vsc_yaw);
+	adc_read(self->adc, FB_ADC_VSA2_CHAN, &self->sensors.vsa_pitch);
+	adc_read(self->adc, FB_ADC_VSB2_CHAN, &self->sensors.vsb_pitch);
+	adc_read(self->adc, FB_ADC_VSC2_CHAN, &self->sensors.vsc_pitch);
+	adc_read(self->adc, FB_ADC_IA1_CHAN, &self->sensors.ia_yaw);
+	adc_read(self->adc, FB_ADC_IB1_CHAN, &self->sensors.ib_yaw);
+	adc_read(self->adc, FB_ADC_IA2_CHAN, &self->sensors.ia_pitch);
+	adc_read(self->adc, FB_ADC_IB2_CHAN, &self->sensors.ib_pitch);
+
+	self->sensors.yaw = (int16_t)encoder_read(self->enc1);
+
 	// read motor positions
-	float yrad = M_PI * ((float)(int16_t)(encoder_read(self->enc1) & 0xffff) / (float)(int16_t)(0xffff >> 1));
-	self->actual.yaw_rad = yrad;
+	self->measured.yaw = self->sensors.yaw;
 }
 
 static void _fb_state_operational(struct application *self, float dt);
@@ -458,9 +576,9 @@ static void _fb_state_wait_home(struct application *self, float dt){
 		self->state.leds[FB_LED_HOME].state = FB_LED_STATE_ON;
 		// if it has been held for a number of seconds then we save the home position
 		if(time_after(micros(), home->pressed_time + FB_HOME_LONG_PRESS_TIME_US)){
-			printk("fb: saving home position %d %d\n", (int32_t)(self->actual.pitch_rad * 1000), (int32_t)(self->actual.yaw_rad * 1000));
-			self->config.home.pitch = self->actual.pitch_rad;
-			self->config.home.yaw = self->actual.yaw_rad;
+			printk("fb: saving home position %d %d\n", (int32_t)(self->measured.pitch * 1000), (int32_t)(self->measured.yaw * 1000));
+			self->config.home.pitch = self->measured.pitch;
+			self->config.home.yaw = self->measured.yaw;
 			_fb_enter_state(self, _fb_state_operational);
 		}
 	} else {
@@ -528,8 +646,8 @@ static void _fb_state_operational(struct application *self, float dt){
 			}
 		} else if(sw[preset]->pressed && time_after(micros(), sw[preset]->pressed_time + FB_HOME_LONG_PRESS_TIME_US)){
 			printk("saving preset %d\n", preset);
-			self->config.presets[preset].pitch = self->actual.pitch_rad;
-			self->config.presets[preset].yaw = self->actual.yaw_rad;
+			self->config.presets[preset].pitch = self->measured.pitch;
+			self->config.presets[preset].yaw = self->measured.yaw;
 			self->config.presets[preset].valid = true;
 			leds[preset]->state = FB_LED_STATE_ON;
 			_fb_enter_state(self, _fb_state_save_preset);
@@ -540,8 +658,8 @@ static void _fb_state_operational(struct application *self, float dt){
 static void _fb_state_auto(struct application *self, float dt){
 	float target_pitch = self->state.pitch_target;
 	float target_yaw = self->state.yaw_target;
-	float err_pitch = target_pitch - self->actual.pitch_rad;
-	float err_yaw = target_yaw - self->actual.yaw_rad;
+	float err_pitch = target_pitch - self->measured.pitch;
+	float err_yaw = target_yaw - self->measured.yaw;
 
 	self->controls.pitch = 10.f * err_pitch + 0.2f * self->state.pitch_i + 8.f * (err_pitch - self->state.prev_err_pitch) / dt;
 	self->controls.yaw = 1.f * err_yaw + 0.2f * self->state.yaw_i + 0.1 * (err_yaw - self->state.prev_err_yaw) / dt;
@@ -552,7 +670,7 @@ static void _fb_state_auto(struct application *self, float dt){
 	self->state.yaw_i = constrain_float(self->state.yaw_i + err_yaw * dt, -1.f, 1.f);
 
 	self->controls.pitch = constrain_float(self->controls.pitch, -1.f, 1.f);
-	self->controls.yaw = -constrain_float(self->controls.yaw, -1.f, 1.f);
+	self->controls.yaw = constrain_float(self->controls.yaw, -1.f, 1.f);
 
 	if(fabsf(err_pitch) < 0.01 && fabsf(err_yaw) < 0.01){
 		_fb_enter_state(self, _fb_state_operational);
@@ -621,8 +739,8 @@ static void _fb_update_state(struct application *self){
 		self->state.pitch = constrain_float(pitch, -self->controls.pitch_speed, self->controls.pitch_speed);
 		self->state.yaw = constrain_float(yaw, -self->controls.yaw_speed, self->controls.yaw_speed);
 	} else {
-		self->state.pitch = 500;
-		self->state.yaw = 500;
+		self->state.pitch = 0;
+		self->state.yaw = 0;
 	}
 
 	if(
@@ -636,11 +754,11 @@ static void _fb_update_state(struct application *self){
 }
 
 static void _fb_update_outputs(struct application *self){
-	float pitch = self->state.pitch * 0.5;
-	float yaw = self->state.yaw * 0.5;
+	float pitch = constrain_float(self->state.pitch * 0.5, -0.5, 0.5);
+	float yaw = constrain_float(self->state.yaw * 0.5, -0.5, 0.5);
 	if(self->state.remote){
-		pitch = ((float)constrain_u16(self->remote.pitch, 0, 1000) / 1000.f - 0.5f);
-		yaw = ((float)constrain_u16(self->remote.yaw, 0, 1000) / 1000.f - 0.5f);
+		pitch = (float)self->remote.pitch * 0.0005f;
+		yaw = (float)self->remote.yaw * 0.0005f;
 	}
 
 	analog_write(self->mot_y, 0, 0.5 + pitch);
@@ -652,8 +770,8 @@ static void _fb_update_outputs(struct application *self){
 	analog_write(self->mot_x, 2, 0.5 + yaw);
 
 	// save the values for sending over canopen
-	self->output.pitch = (int16_t)(pitch * 2000 + 1000);
-	self->output.yaw = (int16_t)(yaw * 2000 + 1000);
+	self->output.pitch = (int16_t)(pitch * 2000.f);
+	self->output.yaw = (int16_t)(yaw * 2000.f);
 }
 
 static void _fb_control_loop(void *ptr){
@@ -705,10 +823,10 @@ static ssize_t _mfr_range_read(regmap_range_t range, uint32_t addr, regmap_value
 	uint32_t id = addr & 0x00ffff00;
 	int ret = -ENOENT;
 	switch(id){
-		case CANOPEN_FB_MOTOR_PITCH: {
+		case CANOPEN_FB_PITCH_DEMAND: {
 			ret = regmap_convert_u32((uint16_t)self->output.pitch, type, data, size);
 		} break;
-		case CANOPEN_FB_MOTOR_YAW: {
+		case CANOPEN_FB_YAW_DEMAND: {
 			ret = regmap_convert_u32((uint16_t)self->output.yaw, type, data, size);
 		} break;
 	}
@@ -716,11 +834,77 @@ static ssize_t _mfr_range_read(regmap_range_t range, uint32_t addr, regmap_value
 }
 
 static ssize_t _mfr_range_write(regmap_range_t range, uint32_t addr, regmap_value_type_t type, const void *data, size_t size){
-	return -1;
+	struct application *self = container_of(range, struct application, mfr_range.ops);
+	uint32_t id = addr & 0x00ffffff;
+	int ret = -ENOENT;
+	switch(id){
+		case CANOPEN_FB_PITCH_CURRENT: {
+			int16_t val = 0;
+			ret = regmap_mem_to_u16(type, data, size, (uint16_t*)&val);
+			thread_mutex_lock(&self->slave.lock);
+			self->slave.i_pitch = val;
+			thread_mutex_unlock(&self->slave.lock);
+		} break;
+		case CANOPEN_FB_YAW_CURRENT: {
+			int16_t val = 0;
+			ret = regmap_mem_to_u16(type, data, size, (uint16_t*)&val);
+			thread_mutex_lock(&self->slave.lock);
+			self->slave.i_yaw = val;
+			thread_mutex_unlock(&self->slave.lock);
+		} break;
+		case CANOPEN_FB_PITCH_POSITION: {
+			int16_t val = 0;
+			ret = regmap_mem_to_u16(type, data, size, (uint16_t*)&val);
+			thread_mutex_lock(&self->slave.lock);
+			self->slave.pitch = val;
+			thread_mutex_unlock(&self->slave.lock);
+		} break;
+		case CANOPEN_FB_YAW_POSITION: {
+			int16_t val = 0;
+			ret = regmap_mem_to_u16(type, data, size, (uint16_t*)&val);
+			thread_mutex_lock(&self->slave.lock);
+			self->slave.yaw = val;
+			thread_mutex_unlock(&self->slave.lock);
+		} break;
+		case CANOPEN_FB_MICROS:{
+			int32_t val = 0;
+			ret = regmap_mem_to_u32(type, data, size, (uint32_t*)&val);
+			thread_mutex_lock(&self->slave.lock);
+			self->slave.micros = val;
+			thread_mutex_unlock(&self->slave.lock);
+		} break;
+	}
+	return ret;
 }
 
 static ssize_t _mfr_range_slave_read(regmap_range_t range, uint32_t addr, regmap_value_type_t type, void *data, size_t size){
-	return -1;
+	struct application *self = container_of(range, struct application, mfr_range_slave.ops);
+	uint32_t id = addr & 0x00ffffff;
+	int ret = -ENOENT;
+	switch(id){
+		case CANOPEN_FB_PITCH_DEMAND: {
+			ret = regmap_convert_u16((uint16_t)self->remote.pitch, type, data, size);
+		} break;
+		case CANOPEN_FB_YAW_DEMAND: {
+			ret = regmap_convert_u16((uint16_t)self->remote.yaw, type, data, size);
+		} break;
+		case CANOPEN_FB_PITCH_CURRENT: {
+			ret = regmap_convert_u16((uint16_t)(int16_t)(self->sensors.ia_pitch), type, data, size);
+		} break;
+		case CANOPEN_FB_YAW_CURRENT: {
+			ret = regmap_convert_u16((uint16_t)(int16_t)(self->sensors.ia_yaw), type, data, size);
+		} break;
+		case CANOPEN_FB_PITCH_POSITION: {
+			ret = regmap_convert_u16((uint16_t)(int16_t)(self->sensors.pitch), type, data, size);
+		} break;
+		case CANOPEN_FB_YAW_POSITION: {
+			ret = regmap_convert_u16((uint16_t)(int16_t)(self->sensors.yaw), type, data, size);
+		} break;
+		case CANOPEN_FB_MICROS:{
+			ret = regmap_convert_u32(micros(), type, data, size);
+		} break;
+	}
+	return ret;
 }
 
 static ssize_t _mfr_range_slave_write(regmap_range_t range, uint32_t addr, regmap_value_type_t type, const void *data, size_t size){
@@ -729,17 +913,17 @@ static ssize_t _mfr_range_slave_write(regmap_range_t range, uint32_t addr, regma
 	int ret = -ENOENT;
 	timestamp_t t = micros();
 	switch(id){
-		case CANOPEN_FB_MOTOR_PITCH: {
-			uint16_t pitch = 0;
-			regmap_mem_to_u16(type, data, size, &pitch);
-			self->remote.pitch = constrain_u16(pitch, 0, 1000);
+		case CANOPEN_FB_PITCH_DEMAND: {
+			int16_t pitch = 0;
+			regmap_mem_to_u16(type, data, size, (uint16_t*)&pitch);
+			self->remote.pitch = constrain_i16(pitch, -1000, 1000);
 			self->remote.last_pitch_update = t;
 			ret = (int)size;
 		} break;
-		case CANOPEN_FB_MOTOR_YAW: {
-			uint16_t yaw = 0;
-			regmap_mem_to_u16(type, data, size, &yaw);
-			self->remote.yaw = constrain_u16(yaw, 0, 1000);
+		case CANOPEN_FB_YAW_DEMAND: {
+			int16_t yaw = 0;
+			regmap_mem_to_u16(type, data, size, (uint16_t*)&yaw);
+			self->remote.yaw = constrain_i16(yaw, -1000, 1000);
 			self->remote.last_yaw_update = t;
 			ret = (int)size;
 		} break;
@@ -780,7 +964,8 @@ static int _fb_probe(void *fdt, int fdt_node){
 	memory_device_t can2_mem = memory_find_by_ref(fdt, fdt_node, "can2");
 	regmap_device_t regmap = regmap_find_by_ref(fdt, fdt_node, "regmap");
 	regmap_device_t regmap_slave = regmap_find_by_ref(fdt, fdt_node, "regmap_slave");
-	memory_device_t motor_mem = memory_find_by_ref(fdt, fdt_node, "canopen");
+	memory_device_t canopen_mem = memory_find_by_ref(fdt, fdt_node, "canopen");
+	memory_device_t canopen_slave_mem = memory_find_by_ref(fdt, fdt_node, "canopen_slave");
 	gpio_device_t enc1_gpio = gpio_find_by_ref(fdt, fdt_node, "enc1_gpio");
 	gpio_device_t enc2_gpio = gpio_find_by_ref(fdt, fdt_node, "enc2_gpio");
 	//canopen_device_t canopen = canopen_find_by_ref(fdt, fdt_node, "canopen");
@@ -796,19 +981,21 @@ static int _fb_probe(void *fdt, int fdt_node){
 	if(!can1){ printk(PRINT_ERROR "fb: can1 missing\n"); return -1; }
 	if(!can2){ printk(PRINT_ERROR "fb: can2 missing\n"); return -1; }
 	if(!regmap){ printk(PRINT_ERROR "fb: regmap missing\n"); return -1; }
-	if(!motor_mem){ printk(PRINT_ERROR "fb: canopen_slave missing\n"); return -1; }
+	if(!canopen_mem){ printk(PRINT_ERROR "fb: canopen missing\n"); return -1; }
+	if(!canopen_slave_mem){ printk(PRINT_ERROR "fb: canopen_slave missing\n"); return -1; }
 	if(!regmap_slave){ printk(PRINT_ERROR "fb: regmap_slave missing\n"); return -1; }
 	if(!enc1){ printk(PRINT_ERROR "fb: enc1 missing\n"); return -1; }
 	if(!enc2){ printk(PRINT_ERROR "fb: enc2 missing\n"); return -1; }
 	if(!enc1_gpio){ printk(PRINT_ERROR "fb: enc1_gpio missing\n"); return -1; }
 	if(!enc2_gpio){ printk(PRINT_ERROR "fb: enc2_gpio missing\n"); return -1; }
-	//if(!canopen){ printk(PRINT_ERROR "fb: canopen missing\n"); return -1; }
 
 	console_add_command(console, self, "fb", "Flying Bergman Control", "", _fb_cmd);
 	console_add_command(console, self, "reg", "Register ops", "", _reg_cmd);
 	console_add_command(console, self, "motor", "Motor slave board control", "", _motor_cmd);
 	console_add_command(console, self, "can1", "CAN1 control", "", _can_cmd);
 	console_add_command(console, self, "can2", "CAN2 control", "", _can_cmd);
+
+	thread_mutex_init(&self->slave.lock);
 
 	self->leds = leds;
 	self->console = console;
@@ -827,7 +1014,8 @@ static int _fb_probe(void *fdt, int fdt_node){
 	self->can2 = can2;
 	self->can2_mem = can2_mem;
 	self->regmap = regmap;
-	self->motor_mem = motor_mem;
+	self->canopen_mem = canopen_mem;
+	self->canopen_slave_mem = canopen_slave_mem;
 	self->enc1_gpio = enc1_gpio;
 	self->enc2_gpio = enc2_gpio;
 	//self->canopen = canopen;
@@ -868,29 +1056,53 @@ static int _fb_probe(void *fdt, int fdt_node){
 	thread_meminfo();
 
 	_fb_enter_state(self, _fb_state_wait_power);
-/*
+
+	printk("fb: setting up pitch demand PDO\n");
+
     struct canopen_pdo_config conf = {
-        .cob_id = 0x201,
+        .cob_id = 0x200 | FB_CANOPEN_SLAVE_ADDRESS,
         .index = 0,
         .type = CANOPEN_PDO_TYPE_CYCLIC(1),
         .inhibit_time = 100,
         .event_time = 100,
         .map = {
-            CANOPEN_PDO_MAP_ENTRY(CANOPEN_FB_MOTOR_PITCH, CANOPEN_PDO_SIZE_16),
-            CANOPEN_PDO_MAP_ENTRY(CANOPEN_FB_MOTOR_YAW, CANOPEN_PDO_SIZE_16),
+            CANOPEN_PDO_MAP_ENTRY(CANOPEN_FB_PITCH_DEMAND, CANOPEN_PDO_SIZE_16),
+            CANOPEN_PDO_MAP_ENTRY(CANOPEN_FB_YAW_DEMAND, CANOPEN_PDO_SIZE_16),
             0
         }
     };
 
-    if(canopen_pdo_tx(self->motor_mem, 0x01, &conf) < 0){
+	if(canopen_pdo_rx(self->canopen_mem, FB_CANOPEN_SLAVE_ADDRESS, &conf) < 0){
+		printk(PRINT_ERROR "fb: rx pdo setup failed\n");
+    }
+
+    if(canopen_pdo_tx(self->canopen_mem, FB_CANOPEN_MASTER_ADDRESS, &conf) < 0){
 		printk(PRINT_ERROR "fb: tx pdo setup failed\n");
 	}
 
-	conf.index = 0;
-	if(canopen_pdo_rx(self->motor_mem, 0x02, &conf) < 0){
-		printk(PRINT_ERROR "fb: rx pdo setup failed\n");
+	printk("fb: setting up drive sense PDO\n");
+
+    conf = (struct canopen_pdo_config){
+        .cob_id = 0x200 | FB_CANOPEN_MASTER_ADDRESS,
+        .index = 1,
+        .type = CANOPEN_PDO_TYPE_CYCLIC(1),
+        .inhibit_time = 100,
+        .event_time = 100,
+        .map = {
+            CANOPEN_PDO_MAP_ENTRY(CANOPEN_FB_PITCH_POSITION, CANOPEN_PDO_SIZE_16),
+            CANOPEN_PDO_MAP_ENTRY(CANOPEN_FB_YAW_POSITION, CANOPEN_PDO_SIZE_16),
+            0
+        }
+    };
+
+	if(canopen_pdo_rx(self->canopen_mem, FB_CANOPEN_MASTER_ADDRESS, &conf) < 0){
+		printk(PRINT_ERROR "fb: pos rx pdo setup failed\n");
     }
-*/
+
+    if(canopen_pdo_tx(self->canopen_mem, FB_CANOPEN_SLAVE_ADDRESS, &conf) < 0){
+		printk(PRINT_ERROR "fb: pos tx pdo setup failed\n");
+	}
+
 	thread_create(
 		  _fb_control_loop,
 		  "fb_ctrl",
