@@ -117,13 +117,32 @@
 			>;
 		};
 
-		mcp2317_2: gpio2 {
+		gpio_ex: gpio2 {
 			compatible = "fw,mcp2317";
 			spi = <&spi3>;
 			gpio = <&spi3_ctrl_pins>;
 			cs_pin = <0>;
 			reset_pin = <3>;
 			console = <&console>;
+			pinctrl = <
+				0 (MCP2317_DIR_OUT) 0 /* LCD_EN */
+				1 (MCP2317_DIR_OUT) 0 /* LCD_READ */
+				2 (MCP2317_DIR_OUT) 0 /* LCD_MDATA */
+				3 (MCP2317_DIR_OUT) 0 /* LCD_LED */
+				4 (MCP2317_DIR_IN | MCP2317_PULL_UP) 0 /* CAN_ADDR0 */
+				5 (MCP2317_DIR_IN | MCP2317_PULL_UP) 0 /* CAN_ADDR1 */
+				6 (MCP2317_DIR_IN | MCP2317_PULL_UP) 0 /* CAN_ADDR2 */
+				7 (MCP2317_DIR_IN | MCP2317_PULL_UP) 0 /* CAN_ADDR3 */
+				8 (MCP2317_DIR_OUT) 0 /* LCD_D0 */
+				9 (MCP2317_DIR_OUT) 0 /* LCD_D1 */
+				10 (MCP2317_DIR_OUT) 0 /* LCD_D2 */
+				11 (MCP2317_DIR_OUT) 0 /* LCD_D3 */
+				12 (MCP2317_DIR_OUT) 0 /* LCD_D4 */
+				13 (MCP2317_DIR_OUT) 0 /* LCD_D5 */
+				14 (MCP2317_DIR_OUT) 0 /* LCD_D6 */
+				15 (MCP2317_DIR_OUT) 0 /* LCD_D7 */
+			>;
+
 		};
 	};
 
@@ -224,7 +243,7 @@
 			mode = <TIM_OCMode_PWM1>;
 			pout_en = <1>;
 			nout_en = <1>;
-			pulse = <200>;
+			pulse = <500>;
 			ppol = <0>;
 			npol = <0>;
 			pidle = <0>;
@@ -235,7 +254,7 @@
 			mode = <TIM_OCMode_PWM1>;
 			pout_en = <1>;
 			nout_en = <1>;
-			pulse = <200>;
+			pulse = <500>;
 			ppol = <0>;
 			npol = <0>;
 			pidle = <0>;
@@ -246,7 +265,7 @@
 			mode = <TIM_OCMode_PWM1>;
 			pout_en = <1>;
 			nout_en = <1>;
-			pulse = <200>;
+			pulse = <500>;
 			ppol = <0>;
 			npol = <0>;
 			pidle = <0>;
@@ -584,6 +603,7 @@
 		leds = <&leds>;
 		console = <&console>;
 		sw_gpio = <&mcp2317_1>;
+		gpio_ex = <&gpio_ex>;
 		sw_pins = <8 9 10 11 12 13 14 15>;
 		sw_leds = <&sw_leds>;
 		adc = <&adc>;
