@@ -232,6 +232,65 @@
 		>;
 	};
 
+	tim8: tim8 {
+		compatible = "st,stm32_tim";
+		reg = <TIM8>;
+		mode = <TIM_CounterMode_CenterAligned1>;
+		freq = <18000>;
+		clock_div = <0>;
+		rep_count = <1>;
+		enable = <1>;
+		master_mode = <TIM_MasterSlaveMode_Enable>;
+		output_trigger = <TIM_TRGOSource_Update>;
+		slave_mode = <TIM_SlaveMode_Reset>;
+		input_trigger = <TIM_TS_ITR0>;
+		channel1 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		channel2 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		channel3 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOA GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLA */
+				GPIOC GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHA */
+				GPIOB GPIO_Pin_14 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLB */
+				GPIOC GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHB */
+				GPIOB GPIO_Pin_15 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLC */
+				GPIOC GPIO_Pin_8 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHC */
+				GPIOA GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_Mode_IN | GPIO_PuPd_UP) /* BRKIN */
+			>;
+		};
+	};
+
 	tim1: tim1 {
 		compatible = "st,stm32_tim";
 		reg = <TIM1>;
@@ -239,6 +298,8 @@
 		freq = <18000>;
 		clock_div = <0>;
 		rep_count = <0>;
+		master_mode = <TIM_MasterSlaveMode_Enable>;
+		output_trigger = <TIM_TRGOSource_Enable>;
 		channel1 {
 			mode = <TIM_OCMode_PWM1>;
 			pout_en = <1>;
@@ -286,83 +347,32 @@
 		};
 	};
 
-	tim8: tim8 {
-		compatible = "st,stm32_tim";
-		reg = <TIM8>;
-		mode = <TIM_CounterMode_CenterAligned1>;
-		freq = <18000>;
-		clock_div = <0>;
-		rep_count = <0>;
-		channel1 {
-			mode = <TIM_OCMode_PWM1>;
-			pout_en = <1>;
-			nout_en = <1>;
-			pulse = <200>;
-			ppol = <0>;
-			npol = <0>;
-			pidle = <0>;
-			nidle = <1>;
-			preload = <1>;
-		};
-		channel2 {
-			mode = <TIM_OCMode_PWM1>;
-			pout_en = <1>;
-			nout_en = <1>;
-			pulse = <200>;
-			ppol = <0>;
-			npol = <0>;
-			pidle = <0>;
-			nidle = <1>;
-			preload = <1>;
-		};
-		channel3 {
-			mode = <TIM_OCMode_PWM1>;
-			pout_en = <1>;
-			nout_en = <1>;
-			pulse = <200>;
-			ppol = <0>;
-			npol = <0>;
-			pidle = <0>;
-			nidle = <1>;
-			preload = <1>;
-		};
-		gpio {
-			compatible = "st,stm32_gpio";
-			pinctrl = <
-				GPIOA GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLA */
-				GPIOC GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHA */
-				GPIOB GPIO_Pin_14 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLB */
-				GPIOC GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHB */
-				GPIOB GPIO_Pin_15 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLC */
-				GPIOC GPIO_Pin_8 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHC */
-				GPIOA GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_Mode_IN | GPIO_PuPd_UP) /* BRKIN */
-			>;
-		};
-	};
-
-
 	adc: adc {
 		compatible = "st,stm32_adc";
+		prescaler = <ADC_Prescaler_Div8>;
+		trigger = <ADC_ExternalTrigConv_T8_TRGO>;
+		trigger_edge = <ADC_ExternalTrigConvEdge_RisingFalling>;
+		console = <&console>;
 		channels = <
-			ADC1 ADC_Channel_3 1 ADC_SampleTime_28Cycles
-			ADC2 ADC_Channel_5 1 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_14 1 ADC_SampleTime_28Cycles
+			ADC1 ADC_Channel_3 1 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_5 1 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_14 1 ADC_SampleTime_3Cycles
 
-			ADC1 ADC_Channel_4 2 ADC_SampleTime_28Cycles
-			ADC2 ADC_Channel_14 2 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_9 2 ADC_SampleTime_28Cycles
+			ADC1 ADC_Channel_4 2 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_14 2 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_9 2 ADC_SampleTime_3Cycles
 
-			ADC1 ADC_Channel_10 3 ADC_SampleTime_28Cycles
-			ADC2 ADC_Channel_13 3 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_15 3 ADC_SampleTime_28Cycles
+			ADC1 ADC_Channel_10 3 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_13 3 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_15 3 ADC_SampleTime_3Cycles
 
-			ADC1 ADC_Channel_11 4 ADC_SampleTime_28Cycles
-			ADC2 ADC_Channel_15 4 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_6 4 ADC_SampleTime_28Cycles
+			ADC1 ADC_Channel_11 4 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_15 4 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_6 4 ADC_SampleTime_3Cycles
 
-			ADC1 ADC_Channel_12 5 ADC_SampleTime_28Cycles
-			ADC2 ADC_Channel_9 5 ADC_SampleTime_28Cycles
-			ADC3 ADC_Channel_15 5 ADC_SampleTime_28Cycles
+			ADC1 ADC_Channel_12 5 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_9 5 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_15 5 ADC_SampleTime_3Cycles
 		>;
 		gpio {
 			compatible = "st,stm32_gpio";
