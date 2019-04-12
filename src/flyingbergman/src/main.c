@@ -24,6 +24,8 @@
 #include <libfirmware/regmap.h>
 #include <libfirmware/canopen.h>
 
+#include <libdriver/hbridge/drv8302.h>
+
 #include <libfdt/libfdt.h>
 
 #include "canopen.h"
@@ -146,6 +148,10 @@ struct fb_config {
 		struct fb_analog_limit temp_yaw;
 		struct fb_analog_limit temp_pitch;
 	} limit;
+	struct {
+		int32_t pitch_a, pitch_b;
+		int32_t yaw_a, yaw_b;
+	} dc_cal;
 };
 
 struct application {
@@ -168,6 +174,7 @@ struct application {
 	memory_device_t can2_mem;
 	gpio_device_t enc1_gpio;
 	gpio_device_t enc2_gpio;
+	drv8302_t drv_pitch, drv_yaw;
 
 	struct fb_config config;
 
@@ -410,10 +417,10 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 				);
 			} else {
 				console_printf(con, "%5d;%5d;%5d;%5d",
-						self->inputs.ia_pitch,
-						self->inputs.ib_pitch,
-						self->inputs.ia_yaw,
-						self->inputs.ib_yaw
+						(int32_t)(self->measured.ia_pitch * 1000),
+						(int32_t)(self->measured.ib_pitch * 1000),
+						(int32_t)(self->measured.ia_yaw * 1000),
+						(int32_t)(self->measured.ib_yaw * 1000)
 				);
 				console_printf(con, "%5d;%5d",
 						(int32_t)(self->slave.pitch * 1000),
@@ -666,6 +673,16 @@ static void _fb_update_measurements(struct application *self){
 	self->measured.pitch_speed = _scale_input((float)self->inputs.pitch_speed, &self->config.limit.pitch_speed);
 	self->measured.yaw_speed = _scale_input((float)self->inputs.yaw_speed, &self->config.limit.yaw_speed);
 	self->measured.vmot = _scale_input((float)self->inputs.vmot, &self->config.limit.vmot);
+
+	float gp = (float)drv8302_get_gain(self->drv_pitch);
+	float gy = (float)drv8302_get_gain(self->drv_yaw);
+	float res = 0.005;
+	float scale = 2048.f;
+	
+	self->measured.ia_pitch = ((float)self->inputs.ia_pitch - (float)self->config.dc_cal.pitch_a) / scale / gp / res;
+	self->measured.ib_pitch = ((float)self->inputs.ib_pitch - (float)self->config.dc_cal.pitch_b) / scale / gp / res;
+	self->measured.ia_yaw = ((float)self->inputs.ia_yaw - (float)self->config.dc_cal.yaw_a) / scale / gy / res;
+	self->measured.ib_yaw = ((float)self->inputs.ib_yaw - (float)self->config.dc_cal.yaw_b) / scale / gy / res;
 
 	float ntc_b = 3400;
 	float ambient_temp_k = 273.15f;
@@ -1283,7 +1300,51 @@ static void _fb_load_config(struct application *self){
 	self->config.limit.temp_pitch = (struct fb_analog_limit){ .min = 1070, .max = 3150, .omin = -100, .omax = 100.f };
 }
 
+static void _fb_calibrate_current_sensors(struct application *self){
+	self->config.dc_cal.pitch_a = 0;
+	self->config.dc_cal.pitch_b = 0;
+	self->config.dc_cal.yaw_a = 0;
+	self->config.dc_cal.yaw_b = 0;
 
+	drv8302_enable_calibration(self->drv_pitch, true);
+	drv8302_enable_calibration(self->drv_yaw, true);
+
+	thread_sleep_ms(10);
+
+	printk("Performing dc calibration...\n");
+
+	int loops = 10;
+	for(int c = 0; c < loops; c++){
+		uint16_t pa = 0, pb = 0, ya = 0, yb = 0;
+
+		adc_read(self->adc, FB_ADC_IA1_CHAN, &pa);
+		adc_read(self->adc, FB_ADC_IB1_CHAN, &pb);
+		adc_read(self->adc, FB_ADC_IA2_CHAN, &ya);
+		adc_read(self->adc, FB_ADC_IB2_CHAN, &yb);
+
+		self->config.dc_cal.pitch_a += pa;
+		self->config.dc_cal.pitch_b += pb;
+		self->config.dc_cal.yaw_a += ya;
+		self->config.dc_cal.yaw_b += yb;
+
+		thread_sleep_ms(10);
+	}
+
+	self->config.dc_cal.pitch_a /= loops;
+	self->config.dc_cal.pitch_b /= loops;
+	self->config.dc_cal.yaw_a /= loops;
+	self->config.dc_cal.yaw_b /= loops;
+
+	printk("Using calibration values: %d %d %d %d\n", 
+		self->config.dc_cal.pitch_a,
+		self->config.dc_cal.pitch_b,
+		self->config.dc_cal.yaw_a,
+		self->config.dc_cal.yaw_b
+	);
+
+	drv8302_enable_calibration(self->drv_pitch, false);
+	drv8302_enable_calibration(self->drv_yaw, false);
+}
 
 static int _fb_probe(void *fdt, int fdt_node){
 	struct application *self = kzmalloc(sizeof(struct application));
@@ -1313,6 +1374,8 @@ static int _fb_probe(void *fdt, int fdt_node){
 	memory_device_t canopen_slave_mem = memory_find_by_ref(fdt, fdt_node, "canopen_slave");
 	gpio_device_t enc1_gpio = gpio_find_by_ref(fdt, fdt_node, "enc1_gpio");
 	gpio_device_t enc2_gpio = gpio_find_by_ref(fdt, fdt_node, "enc2_gpio");
+	drv8302_t drv_pitch = memory_find_by_ref(fdt, fdt_node, "drv_pitch");
+	drv8302_t drv_yaw = memory_find_by_ref(fdt, fdt_node, "drv_yaw");
 	//canopen_device_t canopen = canopen_find_by_ref(fdt, fdt_node, "canopen");
 
 	if(!leds || !sw_leds || !mux || !sw_gpio || !adc || !mot_x || !mot_y){
@@ -1334,6 +1397,8 @@ static int _fb_probe(void *fdt, int fdt_node){
 	if(!enc1_gpio){ printk(PRINT_ERROR "fb: enc1_gpio missing\n"); return -1; }
 	if(!enc2_gpio){ printk(PRINT_ERROR "fb: enc2_gpio missing\n"); return -1; }
 	if(!gpio_ex){ printk(PRINT_ERROR "fb: gpio_ex missing\n"); return -1; }
+	if(!drv_pitch){ printk(PRINT_ERROR "fb: drv_pitch missing\n"); return -1; }
+	if(!drv_yaw){ printk(PRINT_ERROR "fb: drv_yaw missing\n"); return -1; }
 
 	console_add_command(console, self, "fb", "Flying Bergman Control", "", _fb_cmd);
 	console_add_command(console, self, "reg", "Register ops", "", _reg_cmd);
@@ -1365,6 +1430,8 @@ static int _fb_probe(void *fdt, int fdt_node){
 	self->canopen_slave_mem = canopen_slave_mem;
 	self->enc1_gpio = enc1_gpio;
 	self->enc2_gpio = enc2_gpio;
+	self->drv_pitch = drv_pitch;
+	self->drv_yaw = drv_yaw;
 	//self->canopen = canopen;
 
 	_fb_load_config(self);
@@ -1406,6 +1473,8 @@ static int _fb_probe(void *fdt, int fdt_node){
 
 	_fb_read_inputs(self);
 	printk("running in mode: %s\n", (self->inputs.can_addr == FB_CANOPEN_MASTER_ADDRESS)?"MASTER":"SLAVE");
+
+	_fb_calibrate_current_sensors(self);
 
 	_fb_enter_state(self, _fb_state_wait_power);
 

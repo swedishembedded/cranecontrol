@@ -206,32 +206,6 @@
 		};
 	};
 
-	motor1_gpio: motor1_gpio {
-		compatible = "st,stm32_gpio";
-		/* order is important! */
-		pinctrl = <
-			GPIOF GPIO_Pin_11 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* EN_GATE */
-			GPIOF GPIO_Pin_13 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* GAIN */
-			GPIOF GPIO_Pin_14 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* MOC */
-			GPIOF GPIO_Pin_12 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
-			GPIOF GPIO_Pin_9 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
-			GPIOF GPIO_Pin_10 (GPIO_Mode_IN | GPIO_PuPd_UP) /* FAULT */
-		>;
-	};
-
-	motor2_gpio: motor2_gpio {
-		compatible = "st,stm32_gpio";
-		/* order is important! */
-		pinctrl = <
-			GPIOD GPIO_Pin_9 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* EN_GATE */
-			GPIOF GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* GAIN */
-			GPIOD GPIO_Pin_8 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* MOC */
-			GPIOG GPIO_Pin_5 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
-			GPIOD GPIO_Pin_10 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
-			GPIOD GPIO_Pin_7 (GPIO_Mode_IN | GPIO_PuPd_UP) /* FAULT */
-		>;
-	};
-
 	tim8: tim8 {
 		compatible = "st,stm32_tim";
 		reg = <TIM8>;
@@ -519,7 +493,33 @@
 		};
 	};
 
-	motor1 {
+	motor1_gpio: motor1_gpio {
+		compatible = "st,stm32_gpio";
+		/* order is important! */
+		pinctrl = <
+			GPIOF GPIO_Pin_11 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* EN_GATE */
+			GPIOF GPIO_Pin_13 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* GAIN */
+			GPIOF GPIO_Pin_14 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* MOC */
+			GPIOF GPIO_Pin_12 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
+			GPIOF GPIO_Pin_9 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
+			GPIOF GPIO_Pin_10 (GPIO_Mode_IN | GPIO_PuPd_UP) /* FAULT */
+		>;
+	};
+
+	motor2_gpio: motor2_gpio {
+		compatible = "st,stm32_gpio";
+		/* order is important! */
+		pinctrl = <
+			GPIOD GPIO_Pin_9 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* EN_GATE */
+			GPIOF GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* GAIN */
+			GPIOD GPIO_Pin_8 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* MOC */
+			GPIOG GPIO_Pin_5 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
+			GPIOD GPIO_Pin_10 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
+			GPIOD GPIO_Pin_7 (GPIO_Mode_IN | GPIO_PuPd_UP) /* FAULT */
+		>;
+	};
+
+	drv8302_yaw: drv8302_1 {
 		compatible = "fw,drv8302";
 		console = <&console>;
 		pwm = <&tim1>;
@@ -531,7 +531,7 @@
 		v_chan = <2 3 4>;
 	};
 
-	motor2 {
+	drv8302_pitch: drv8302_2 {
 		compatible = "fw,drv8302";
 		console = <&console>;
 		pwm = <&tim8>;
@@ -631,6 +631,8 @@
 		regmap = <&regmap>;
 		canopen = <&canopen>;
 		canopen_slave = <&canopen_slave>;
+		drv_pitch = <&drv8302_pitch>;
+		drv_yaw = <&drv8302_yaw>;
 
 		//canopen_slave = <&canopen_slave>;
 		regmap_slave = <&regmap_slave>;
