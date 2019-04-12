@@ -563,6 +563,7 @@
 		sjw = <1>;
 		bs1 = <13>;
 		bs2 = <2>;
+		console = <&console>;
 		can1_gpio {
 			compatible = "st,stm32_gpio";
 			pinctrl = <
@@ -579,6 +580,7 @@
 		sjw = <1>;
 		bs1 = <13>;
 		bs2 = <2>;
+		console = <&console>;
 		can2_gpio {
 			compatible = "st,stm32_gpio";
 			pinctrl = <

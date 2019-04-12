@@ -439,16 +439,6 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 	} else if(argc == 2 && strcmp(argv[1], "enc") == 0){
 		int32_t val = encoder_read(self->enc1);
 		console_printf(con, "ENC1: %d\n", val);
-	} else if(argc == 2 && strcmp(argv[1], "ee") == 0){
-		console_printf(con, "Writing eeprom\n");
-		static uint8_t buf[] = { 1, 2, 3, 4 };
-		memory_write(self->eeprom, 0, buf, 4);
-		console_printf(con, "Reading eeprom\n");
-		static uint8_t rbuf[4];
-		memory_read(self->eeprom, 0, rbuf, 4);
-		for(size_t c = 0; c < 4; c++){
-			console_printf(con, "%d\n", rbuf[c]);
-		}
 	} else if(argc == 2 && strcmp(argv[1], "can") == 0){
 		struct can_message msg;
 		msg.id = 0xaa;
@@ -519,33 +509,6 @@ static int _motor_cmd(console_device_t con, void *userptr, int argc, char **argv
 		}
 	} else {
 		return -EINVAL;
-	}
-	return 0;
-}
-
-static int _can_cmd(console_device_t con, void *userptr, int argc, char **argv){
-	struct application *self = (struct application*)userptr;
-
-	memory_device_t mem = 0;
-	if(strcmp(argv[0], "can1") == 0) mem = self->can1_mem;
-	if(strcmp(argv[0], "can2") == 0) mem = self->can2_mem;
-	if(!mem) return -EINVAL;
-
-	if(argc == 2 && strcmp(argv[1], "info") == 0){
-		struct can_counters cnt;
-		memory_read(mem, 0, &cnt, sizeof(cnt));
-		console_printf(con, "\tTX count: %d\n", cnt.tme); 
-		console_printf(con, "\tTX dropped: %d\n", cnt.txdrop);
-		console_printf(con, "\tRX count: %d\n", cnt.rxp); 
-		console_printf(con, "\tRX dropped: %d\n", cnt.rxdrop);
-		console_printf(con, "\tTX timeout: %d\n", cnt.txto);
-		console_printf(con, "\tRX on FIFO0: %d\n", cnt.fmp0);
-		console_printf(con, "\tRX on FIFO1: %d\n", cnt.fmp1);
-		console_printf(con, "\tTotal errors: %d\n", cnt.lec);
-		console_printf(con, "\tBus off errors: %d\n", cnt.bof);
-		console_printf(con, "\tBus passive errors: %d\n", cnt.epv);
-		console_printf(con, "\tBus errors warnings: %d\n", cnt.ewg);
-		console_printf(con, "\tFIFO Overflow errors: %d\n", cnt.fov);
 	}
 	return 0;
 }
@@ -1403,8 +1366,6 @@ static int _fb_probe(void *fdt, int fdt_node){
 	console_add_command(console, self, "fb", "Flying Bergman Control", "", _fb_cmd);
 	console_add_command(console, self, "reg", "Register ops", "", _reg_cmd);
 	console_add_command(console, self, "motor", "Motor slave board control", "", _motor_cmd);
-	console_add_command(console, self, "can1", "CAN1 control", "", _can_cmd);
-	console_add_command(console, self, "can2", "CAN2 control", "", _can_cmd);
 
 	thread_mutex_init(&self->slave.lock);
 
