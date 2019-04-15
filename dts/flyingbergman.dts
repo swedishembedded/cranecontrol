@@ -157,8 +157,8 @@
 	i2c1_gpio {
 		compatible = "st,stm32_gpio";
 		pinctrl = <
-			GPIOB GPIO_Pin_7 (GPIO_AF_I2C1 | GPIO_OType_OD | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
-			GPIOB GPIO_Pin_8 (GPIO_AF_I2C1 | GPIO_OType_OD | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+			GPIOB GPIO_Pin_7 (GPIO_AF_I2C1 | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_2MHz)
+			GPIOB GPIO_Pin_8 (GPIO_AF_I2C1 | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_2MHz)
 		>;
 		default = <1 1>;
 	};
@@ -174,7 +174,7 @@
 	i2c1: i2c1 {
 		compatible = "st,stm32_i2c";
 		reg = <I2C1>;
-		baud = <50000>;
+		baud = <400000>;
 
 		mcp4461_1: mcp4461_1 {
 			compatible = "fw,mcp4461";
@@ -185,12 +185,13 @@
 			wp_pin = <6>;
 		};
 
+/*
 		mcp4461_2 {
 			compatible = "fw,mcp4461";
 			i2c = <&i2c1>;
 			reg = <0x2c>;
 		};
-
+*/
 		sw_leds: extleds {
 			compatible = "fw,lp55231";
 			i2c = <&i2c1>;

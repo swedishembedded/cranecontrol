@@ -104,6 +104,11 @@ enum {
 	FB_ADCMUX_MOTOR_PITCH_CHAN = 7
 };
 
+typedef enum {
+	FB_MODE_MASTER = 0,
+	FB_MODE_SLAVE = 1
+} fb_mode_t;
+
 #define FB_HOME_LONG_PRESS_TIME_US 1000000UL
 
 #define FB_PRESET_BIT_VALID (1 << 0)
@@ -281,6 +286,7 @@ struct application {
 	} remote;
 
 	fb_control_mode_t control_mode;
+	fb_mode_t mode;
 
 	int ticks_on_target;
 	int mux_chan;
@@ -451,6 +457,15 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 				printk(PRINT_ERROR "can error: %d %s\n", err, strerror(-err));
 			}
 		}
+	} else if(argc == 2 && strcmp(argv[1], "leds") == 0){
+		for(unsigned c = 0; c < 8; c++){
+			float volts = 0;
+			if(analog_read(self->sw_leds, c, &volts) == 0){
+				printk("[%d]: %dmV\n", c, (int32_t)(volts * 1000));
+			} else {
+				printk(PRINT_ERROR "[%d]: could not read voltage!\n", c);
+			}
+		}
 	} else {
 		console_printf(con, "Invalid option\n");
 	}
@@ -596,6 +611,7 @@ static void _fb_read_inputs(struct application *self){
 	self->inputs.enc1_aux2 = gpio_read(self->enc1_gpio, 2);
 	self->inputs.enc2_aux1 = gpio_read(self->enc2_gpio, 1);
 	self->inputs.enc2_aux2 = gpio_read(self->enc2_gpio, 2);
+
 }
 
 static float _scale_input(float in, const struct fb_analog_limit *lim){
@@ -1298,7 +1314,7 @@ static void _fb_calibrate_current_sensors(struct application *self){
 	self->config.dc_cal.yaw_a /= loops;
 	self->config.dc_cal.yaw_b /= loops;
 
-	printk("Using calibration values: %d %d %d %d\n", 
+	printk("Current sensing calibration values: %d %d %d %d\n", 
 		self->config.dc_cal.pitch_a,
 		self->config.dc_cal.pitch_b,
 		self->config.dc_cal.yaw_a,
@@ -1307,6 +1323,31 @@ static void _fb_calibrate_current_sensors(struct application *self){
 
 	drv8302_enable_calibration(self->drv_pitch, false);
 	drv8302_enable_calibration(self->drv_yaw, false);
+}
+
+static void _fb_check_connected_devices(struct application *self){
+	if(self->mode == FB_MODE_MASTER){
+		// check that all leds are connected
+		const struct {
+			const char *name;
+			unsigned int idx;
+		} leds[5] = {
+			{ .name = "HOME", .idx = 3 },
+			{ .name = "PRESET1", .idx = 4 },
+			{ .name = "PRESET2", .idx = 5 },
+			{ .name = "PRESET3", .idx = 6 },
+			{ .name = "PRESET4", .idx = 7 }
+		};
+		for(unsigned c = 0; c < sizeof(leds) / sizeof(leds[0]); c++){
+			float volts = 0;
+			int r = analog_read(self->sw_leds, leds[c].idx, &volts);
+			if(r != 0 || volts < 0.5){
+				printk(PRINT_ERROR "LED \"%s\" is not connected!\n", leds[c].name);
+			} else {
+				printk(PRINT_SUCCESS "LED \"%s\" OK\n", leds[c].name);
+			}
+		}
+	}
 }
 
 static int _fb_probe(void *fdt, int fdt_node){
@@ -1433,9 +1474,17 @@ static int _fb_probe(void *fdt, int fdt_node){
 	thread_meminfo();
 
 	_fb_read_inputs(self);
-	printk("running in mode: %s\n", (self->inputs.can_addr == FB_CANOPEN_MASTER_ADDRESS)?"MASTER":"SLAVE");
+	if(self->inputs.can_addr == FB_CANOPEN_MASTER_ADDRESS){
+		self->mode = FB_MODE_MASTER;
+	} else {
+		self->mode = FB_MODE_SLAVE;
+	}
+
+	printk("running in mode: %s\n", (self->mode == FB_MODE_MASTER)?"MASTER":"SLAVE");
 
 	_fb_calibrate_current_sensors(self);
+
+	_fb_check_connected_devices(self);
 
 	_fb_enter_state(self, _fb_state_wait_power);
 
@@ -1454,8 +1503,6 @@ static int _fb_probe(void *fdt, int fdt_node){
 		  self,
 		  1,
 		  NULL);
-
-	printk("FB Rev A\n");
 
 	return 0;
 }
