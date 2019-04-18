@@ -26,7 +26,7 @@
 	serial {
 		debug_uart: debug {
 			compatible = "st,stm32_uart";
-			baud = <115200>;
+			baud = <921600>;
 			reg = <USART1>;
 			interrupt = <USART1_IRQn>;
             printk_port = <1>;
@@ -77,19 +77,43 @@
 				compatible = "st,stm32_gpio";
 				pinctrl = <
 					GPIOC GPIO_Pin_10 (GPIO_AF_SPI3 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* SCK */
-					GPIOC GPIO_Pin_11 (GPIO_AF_SPI3 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* MISO */
+					GPIOC GPIO_Pin_11 (GPIO_AF_SPI3 | GPIO_OType_OD | GPIO_PuPd_DOWN | GPIO_Speed_100MHz) /* MISO */
 					GPIOC GPIO_Pin_12 (GPIO_AF_SPI3 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* MOSI */
 				>;
 			};
 			spi3_ctrl_pins: spi3_ctrl_pins {
 				compatible = "st,stm32_gpio";
 				pinctrl = <
-					GPIOG GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_25MHz) /*GPEX_CS*/
-					GPIOG GPIO_Pin_3 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_25MHz)  /*GPIO_CS*/
-					GPIOG GPIO_Pin_4 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_25MHz)  /*GPIO_RESET*/
-					GPIOD GPIO_Pin_3 (GPIO_Mode_OUT| GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_25MHz)  /*GPEX_RESET*/
+					GPIOG GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /*GPEX_CS*/
+					GPIOG GPIO_Pin_3 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPIO_CS*/
+					GPIOG GPIO_Pin_4 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPIO_RESET*/
+					GPIOD GPIO_Pin_3 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPEX_RESET*/
+					GPIOD GPIO_Pin_2 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPEX_INTA*/
+					GPIOD GPIO_Pin_6 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPEX_INTB*/
 				>;
+				defaults = <1 1 1 1 1 1>;
 			};
+
+			encoder1_gpio: encoder1_gpio {
+				compatible = "st,stm32_gpio";
+				pinctrl = <
+					GPIOD GPIO_Pin_4 (GPIO_Mode_OUT| GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /* CS */
+					GPIOD GPIO_Pin_5 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* ENCSH1 (P40) */
+					GPIOF GPIO_Pin_6 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* PWM_IN1 (P39) */
+				>;
+				defaults = <1 1 1>;
+			};
+
+			encoder2_gpio: encoder2_gpio {
+				compatible = "st,stm32_gpio";
+				pinctrl = <
+					GPIOD GPIO_Pin_15 (GPIO_Mode_OUT| GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /* CS */
+					GPIOD GPIO_Pin_11 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* ENCSH2 (P44) */
+					GPIOF GPIO_Pin_7 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* PWM_IN2 (P43) */
+				>;
+				defaults = <1 1 1>;
+			};
+
 		};
 
 		mcp2317_1: gpio1 {
@@ -390,26 +414,6 @@
 		defaults = <1 1>;
 	};
 
-	encoder1_gpio: encoder1_gpio {
-		compatible = "st,stm32_gpio";
-		pinctrl = <
-			GPIOD GPIO_Pin_4 (GPIO_Mode_OUT| GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)  /* CS */
-			GPIOD GPIO_Pin_5 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* ENCSH1 (P40) */
-			GPIOF GPIO_Pin_6 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* PWM_IN1 (P39) */
-		>;
-		defaults = <1 1 1>;
-	};
-
-	encoder2_gpio: encoder2_gpio {
-		compatible = "st,stm32_gpio";
-		pinctrl = <
-			GPIOD GPIO_Pin_15 (GPIO_Mode_OUT| GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)  /* CS */
-			GPIOD GPIO_Pin_11 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* ENCSH2 (P44) */
-			GPIOF GPIO_Pin_7 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* PWM_IN2 (P43) */
-		>;
-		defaults = <1 1 1>;
-	};
-
 	encoder1 {
 		compatible = "fw,max14890";
 		spi = <&spi3>;
@@ -593,12 +597,13 @@
 
 	canopen: canopen {
 		compatible = "fw,canopen";
-		mode = <CANOPEN_MODE_MASTER>;
+		mode = <CANOPEN_MODE_SLAVE>;
 		can = <&can1>;
-		address = <0x01>;
+		address = <0x0>;
 		regmap = <&regmap>;
 	};
 
+/*
 	regmap_slave: regmap_slave {
 		compatible = "fw,regmap";
 	};
@@ -610,6 +615,7 @@
 		can = <&can2>;
 		regmap = <&regmap_slave>;
 	};
+*/
 
     application {
         compatible = "app,flyingbergman";
@@ -633,11 +639,11 @@
 		can2 = <&can2>;
 		regmap = <&regmap>;
 		canopen = <&canopen>;
-		canopen_slave = <&canopen_slave>;
+		//canopen_slave = <&canopen_slave>;
 		drv_pitch = <&drv8302_pitch>;
 		drv_yaw = <&drv8302_yaw>;
 
 		//canopen_slave = <&canopen_slave>;
-		regmap_slave = <&regmap_slave>;
+		//regmap_slave = <&regmap_slave>;
     };
 };
