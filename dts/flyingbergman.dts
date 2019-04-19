@@ -7,6 +7,7 @@
 #include <libfirmware/dts/stm32f4xx_adc.h>
 #include <libfirmware/dts/canopen.h>
 #include <libdriver/dts/mcp2317.h>
+#include "flyingbergman-dts.h"
 
 / {
 	cpu {
@@ -21,6 +22,11 @@
 		plln = <320>;
 		pllp = <2>;
 		pllq = <4>;
+	};
+
+	events: events {
+		compatible = "fw,events";
+		priority = <5>;
 	};
 
 	serial {
@@ -231,18 +237,38 @@
 		};
 	};
 
+	uext_gpio: uext_gpio {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOE GPIO_Pin_0 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
+			GPIOE GPIO_Pin_1 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
+			GPIOE GPIO_Pin_2 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
+			GPIOE GPIO_Pin_3 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
+			GPIOE GPIO_Pin_4 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
+			GPIOE GPIO_Pin_5 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
+			GPIOE GPIO_Pin_6 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
+		>;
+	};
+
 	tim8: tim8 {
 		compatible = "st,stm32_tim";
 		reg = <TIM8>;
 		mode = <TIM_CounterMode_CenterAligned1>;
 		freq = <18000>;
 		clock_div = <0>;
-		rep_count = <1>;
+		rep_count = <8>;
 		enable = <1>;
 		master_mode = <TIM_MasterSlaveMode_Enable>;
 		output_trigger = <TIM_TRGOSource_Update>;
 		slave_mode = <TIM_SlaveMode_Reset>;
 		input_trigger = <TIM_TS_ITR0>;
+
+/*
+		events {
+			publisher = <&events>;
+			update = <FB_EVENT_MOTOR2_UPDATE>;
+		};
+*/
 		channel1 {
 			mode = <TIM_OCMode_PWM1>;
 			pout_en = <1>;
@@ -296,9 +322,15 @@
 		mode = <TIM_CounterMode_CenterAligned1>;
 		freq = <18000>;
 		clock_div = <0>;
-		rep_count = <0>;
+		rep_count = <8>;
 		master_mode = <TIM_MasterSlaveMode_Enable>;
 		output_trigger = <TIM_TRGOSource_Enable>;
+/*
+		events {
+			publisher = <&events>;
+			update = <FB_EVENT_MOTOR1_UPDATE>;
+		};
+		*/
 		channel1 {
 			mode = <TIM_OCMode_PWM1>;
 			pout_en = <1>;
@@ -564,7 +596,7 @@
 	can1: can1 {
 		compatible = "st,stm32_can";
 		reg = <CAN1>;
-		prescaler = <5>;
+		prescaler = <10>;
 		sjw = <1>;
 		bs1 = <13>;
 		bs2 = <2>;
@@ -601,6 +633,7 @@
 		can = <&can1>;
 		address = <0x0>;
 		regmap = <&regmap>;
+		console = <&console>;
 	};
 
 /*
@@ -642,7 +675,8 @@
 		//canopen_slave = <&canopen_slave>;
 		drv_pitch = <&drv8302_pitch>;
 		drv_yaw = <&drv8302_yaw>;
-
+		events = <&events>;
+		debug_gpio = <&uext_gpio>;
 		//canopen_slave = <&canopen_slave>;
 		//regmap_slave = <&regmap_slave>;
     };
