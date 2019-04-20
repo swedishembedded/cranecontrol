@@ -17,9 +17,10 @@ subplot(3, 2, 1);
 plot(
 	dat.t, dat.joy_pitch, 'r',
 	dat.t, dat.pitch_vel, 'g',
+	dat.t, dat.pitch_acc, 'c',
 	dat.t, dat.ipitch, 'b');
 title('Pitch motor');
-legend('Joystick', 'Pitch velocity truth', 'Pitch motor current (A)');
+legend('Joystick', 'Pitch velocity truth', 'Pitch accel', 'Pitch motor current (A)');
 
 % YAW manual & current
 subplot(3, 2, 2);

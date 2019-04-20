@@ -40,14 +40,21 @@ function [dat] = load_data(fname)
     dat.pitch_duty = interp1(time, dat.pitch_duty, t);
     dat.yaw_duty = interp1(time, dat.yaw_duty, t);
 
-	[b, a] = butter(4, 400, 's');
-	[b, a] = tfdata(c2d(tf(b, a), 0.001));
-	dat.pitch_truth = filter(b{1}, a{1}, dat.pitch);
+	dt = 0.001;
 
-	[b, a] = butter(4, 40, 's');
-	[b, a] = tfdata(c2d(tf(b, a), 0.001));
+	[b, a] = butter(4, 5 * 2 * pi, 's');
+	[b, a] = tfdata(c2d(tf(b, a), dt));
+	dat.pitch = filtfilt(b{1}, a{1}, dat.pitch);
+
+	[b, a] = butter(4, 10 * 2 * pi, 's');
+	[b, a] = tfdata(c2d(tf(b, a), dt));
     %dat.pitch_vel = sgolayfilt(gradient(dat.pitch) ./ gradient(t), 3, 41);
-	dat.pitch_vel = filter(b{1}, a{1}, gradient(dat.pitch) / 0.001);
+	dat.pitch_vel = filtfilt(b{1}, a{1}, gradient(dat.pitch) / dt);
     dat.yaw_vel = sgolayfilt(gradient(dat.yaw) ./ gradient(t), 3, 101);
+
+	[b, a] = butter(4, 5 * 2 * pi, 's');
+	[b, a] = tfdata(c2d(tf(b, a), dt));
+    %dat.pitch_acc = sgolayfilt(gradient(dat.pitch_vel) ./ gradient(t), 3, 101);
+	dat.pitch_acc = filtfilt(b{1}, a{1}, gradient(dat.pitch_vel) / dt);
 end
 

@@ -11,7 +11,7 @@ AC_CONFIG_MACRO_DIR([m4])
 LT_PREREQ([2.2])
 LT_INIT([dlopen shared])
 
-AC_CONFIG_FILES([src/Makefile Makefile])
+AC_CONFIG_FILES([src/Makefile include/Makefile Makefile])
 
 AC_OUTPUT
 

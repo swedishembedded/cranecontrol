@@ -7,7 +7,7 @@
 #include <libfirmware/dts/stm32f4xx_adc.h>
 #include <libfirmware/dts/canopen.h>
 #include <libdriver/dts/mcp2317.h>
-#include "flyingbergman-dts.h"
+#include <libflyingbergman/dts/flyingbergman.h>
 
 / {
 	cpu {
@@ -193,7 +193,7 @@
 		default = <1 1>;
 	};
 
-	an_out_gpio {
+	an_out_gpio: an_out_gpio {
 		compatible = "st,stm32_gpio";
 		pinctrl = <
 			GPIOB GPIO_Pin_9 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz) /* AP_RESET */
@@ -204,7 +204,7 @@
 	i2c1: i2c1 {
 		compatible = "st,stm32_i2c";
 		reg = <I2C1>;
-		baud = <400000>;
+		baud = <100000>;
 
 		mcp4461_1: mcp4461_1 {
 			compatible = "fw,mcp4461";
@@ -215,13 +215,14 @@
 			wp_pin = <6>;
 		};
 
-/*
 		mcp4461_2 {
 			compatible = "fw,mcp4461";
 			i2c = <&i2c1>;
 			reg = <0x2c>;
+			gpio = <&an_out_gpio>;
+			reset_pin = <0>;
 		};
-*/
+
 		sw_leds: extleds {
 			compatible = "fw,lp55231";
 			i2c = <&i2c1>;
@@ -256,7 +257,7 @@
 		mode = <TIM_CounterMode_CenterAligned1>;
 		freq = <18000>;
 		clock_div = <0>;
-		rep_count = <8>;
+		rep_count = <1>;
 		enable = <1>;
 		master_mode = <TIM_MasterSlaveMode_Enable>;
 		output_trigger = <TIM_TRGOSource_Update>;
@@ -322,7 +323,7 @@
 		mode = <TIM_CounterMode_CenterAligned1>;
 		freq = <18000>;
 		clock_div = <0>;
-		rep_count = <8>;
+		rep_count = <1>;
 		master_mode = <TIM_MasterSlaveMode_Enable>;
 		output_trigger = <TIM_TRGOSource_Enable>;
 /*

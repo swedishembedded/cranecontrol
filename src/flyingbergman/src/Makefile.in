@@ -136,8 +136,8 @@ am__v_AR_0 = @echo "  AR      " $@;
 am__v_AR_1 = 
 libflyingbergman_a_AR = $(AR) $(ARFLAGS)
 libflyingbergman_a_LIBADD =
-am_libflyingbergman_a_OBJECTS = main.$(OBJEXT) \
-	motion_profile.$(OBJEXT)
+am_libflyingbergman_a_OBJECTS = libflyingbergman_a-main.$(OBJEXT) \
+	libflyingbergman_a-motion_profile.$(OBJEXT)
 libflyingbergman_a_OBJECTS = $(am_libflyingbergman_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -155,12 +155,12 @@ DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/aux-dist/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
 	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
@@ -323,6 +323,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LIBRARIES = libflyingbergman.a
 libflyingbergman_a_SOURCES = main.c motion_profile.c
+libflyingbergman_a_CFLAGS = -I$(top_srcdir)/include
 all: all-am
 
 .SUFFIXES:
@@ -399,8 +400,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/motion_profile.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-motion_profile.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -422,6 +423,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+libflyingbergman_a-main.o: main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-main.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-main.Tpo -c -o libflyingbergman_a-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-main.Tpo $(DEPDIR)/libflyingbergman_a-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='libflyingbergman_a-main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+
+libflyingbergman_a-main.obj: main.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-main.obj -MD -MP -MF $(DEPDIR)/libflyingbergman_a-main.Tpo -c -o libflyingbergman_a-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-main.Tpo $(DEPDIR)/libflyingbergman_a-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='libflyingbergman_a-main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+
+libflyingbergman_a-motion_profile.o: motion_profile.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-motion_profile.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-motion_profile.Tpo -c -o libflyingbergman_a-motion_profile.o `test -f 'motion_profile.c' || echo '$(srcdir)/'`motion_profile.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-motion_profile.Tpo $(DEPDIR)/libflyingbergman_a-motion_profile.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='motion_profile.c' object='libflyingbergman_a-motion_profile.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-motion_profile.o `test -f 'motion_profile.c' || echo '$(srcdir)/'`motion_profile.c
+
+libflyingbergman_a-motion_profile.obj: motion_profile.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-motion_profile.obj -MD -MP -MF $(DEPDIR)/libflyingbergman_a-motion_profile.Tpo -c -o libflyingbergman_a-motion_profile.obj `if test -f 'motion_profile.c'; then $(CYGPATH_W) 'motion_profile.c'; else $(CYGPATH_W) '$(srcdir)/motion_profile.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-motion_profile.Tpo $(DEPDIR)/libflyingbergman_a-motion_profile.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='motion_profile.c' object='libflyingbergman_a-motion_profile.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-motion_profile.obj `if test -f 'motion_profile.c'; then $(CYGPATH_W) 'motion_profile.c'; else $(CYGPATH_W) '$(srcdir)/motion_profile.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

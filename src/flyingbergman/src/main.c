@@ -31,7 +31,7 @@
 
 #include "canopen.h"
 #include "motion_profile.h"
-#include "flyingbergman-dts.h"
+#include "dts/flyingbergman.h"
 
 #define FB_SWITCH_COUNT 8
 #define FB_LED_COUNT 8
@@ -54,6 +54,7 @@
 #define FB_LED_PRESET3 FB_SW_PRESET3
 #define FB_LED_PRESET4 FB_SW_PRESET4
 #define FB_LED_HOME FB_SW_HOME
+#define FB_LED_CONN_STATUS 2
 
 #define FB_LED_STATE_OFF 0
 #define FB_LED_STATE_SLOW_RAMP 1
@@ -99,8 +100,8 @@
 #define FB_PITCH_MAX_ACC 0.4f
 #define FB_PITCH_MAX_VEL 0.15f
 
-#define FB_YAW_MAX_ACC 2.f
-#define FB_YAW_MAX_VEL 1.3f
+#define FB_YAW_MAX_ACC (2.f / (90.f / 17.f))
+#define FB_YAW_MAX_VEL (1.3f / (90.f / 17.f))
 
 enum {
 	FB_ADCMUX_YAW_CHAN = 0,
@@ -142,6 +143,15 @@ enum {
 struct fb_analog_limit {
 	float min, max;
 	float omin, omax;
+};
+
+struct fb_filter_config {
+	float a0, a1;
+	float b0, b1;
+};
+
+struct fb_filter {
+	float in[2], out[2];
 };
 
 struct fb_config {
@@ -251,13 +261,18 @@ struct application {
 
 	struct {
 		timestamp_t prev_micros;
-		float pitch, yaw;
+
 		struct fb_led_state {
 			float intensity;
 			int dim;
 			int state;
 			int blinks;
 		} leds[FB_LED_COUNT];
+
+		struct {
+			struct fb_filter pfilt;
+			struct fb_filter vfilt;
+		} pitch, yaw;
 
 		int32_t yaw_ticks;
 		int16_t prev_yaw_ticks;
@@ -272,17 +287,17 @@ struct application {
 			float output;
 			float target;
 			float start;
+			struct motion_profile trajectory;
+			struct fb_filter efilt;
 		} pitch, yaw;
 	} controller;
-
-	struct motion_profile profile_pitch, profile_yaw;
 
 	// data received from canopen slave (motor)
 	struct {
 		int16_t yaw, pitch;
 		int16_t i_yaw, i_pitch;
 		uint32_t micros;
-		uint32_t last_valid;
+		timestamp_t last_valid;
 		uint32_t valid_bits;
 		uint16_t vmot;
 		struct mutex lock;
@@ -309,6 +324,14 @@ struct application {
 	struct regmap_range comm_range, mfr_range, mfr_range_slave;
 };
 
+static float _fb_filter(struct fb_filter *self, struct fb_filter_config conf, float in){
+	float out = conf.b0 * in + conf.b1 * self->in[0] - conf.a0 * self->out[0] - conf.a1 * self->out[1];
+	self->in[0] = in;
+	self->out[1] = self->out[0];
+	self->out[0] = out;
+	return out;
+}
+
 static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 	struct application *self = (struct application*)userptr;
 	if(argc == 2 && strcmp(argv[1], "sw") == 0){
@@ -317,6 +340,7 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 			console_printf(con, "SW%d: %d\n", c, val);
 		}
 	} else if(argc == 2 && strcmp(argv[1], "inputs") == 0){
+		console_printf(con, "US: %u\n", micros());
 		console_printf(con, "SW: ");
 		for(int c = 0; c < FB_SWITCH_COUNT; c++){
 			console_printf(con, "(%d): %d ", c, self->inputs.sw[c].pressed);
@@ -421,7 +445,7 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 		console_printf(con, "TEMP_PITCH:\t\t%d mC\n", (int32_t)(self->measured.temp_pitch * 1000));
 	} else if(argc == 2 && strcmp(argv[1], "data") == 0){
 		while(1){
-			console_printf(con, "%d;", micros());
+			console_printf(con, "%u;", micros());
 			console_printf(con, "%d;%d;",
 					(int32_t)(self->output.pitch * 10000),	// output pitch
 					(int32_t)(self->output.yaw * 10000)		// output yaw
@@ -460,9 +484,13 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 						(int32_t)(self->measured.ia_yaw * 10000),
 						(int32_t)(self->measured.ib_yaw * 10000)
 				);
-				console_printf(con, "%5d;%5d",
-						(int32_t)(self->slave.pitch * 10000),
-						(int32_t)(self->slave.yaw * 10000)
+				console_printf(con, "%5d;%5d;",
+						(int32_t)(self->remote.pitch),
+						(int32_t)(self->remote.yaw)
+				);
+				console_printf(con, "%d;%d;",
+						(int32_t)(self->output.pitch * 1000),
+						(int32_t)(self->output.yaw * 1000)
 				);
 			}
 
@@ -830,7 +858,6 @@ static void _fb_enter_state(struct application *self, void (*fp)(struct applicat
 		_fb_leds_off(self);
 		self->control_mode = FB_CONTROL_MODE_MANUAL;
 		self->state.leds[FB_LED_HOME].state = FB_LED_STATE_ON;
-		printk("fb: operational\n");
 		for(unsigned c = 0; c < FB_PRESET_COUNT; c++){
 			struct fb_led_state *led = &self->state.leds[FB_LED_PRESET1];
 			switch(c){
@@ -943,18 +970,11 @@ static void _fb_state_operational(struct application *self, float dt){
 				struct timeval ts;
 				time_gettime(&ts);
 
-				float min_value = 0.2;
-				float pitch_acc = FB_PITCH_MAX_ACC * min_value + (self->measured.pitch_acc * FB_PITCH_MAX_ACC * (1 - min_value));
-				float pitch_vel = FB_PITCH_MAX_VEL * min_value + (self->measured.pitch_speed * FB_PITCH_MAX_VEL * (1 - min_value));
+				motion_profile_init(&self->controller.pitch.trajectory, self->measured.pitch_acc, self->measured.pitch_speed, self->measured.pitch_acc);
+				motion_profile_init(&self->controller.yaw.trajectory, self->measured.yaw_acc, self->measured.yaw_speed, self->measured.yaw_acc);
 
-				float yaw_acc = FB_YAW_MAX_ACC * min_value + (self->measured.yaw_acc * FB_YAW_MAX_ACC * (1 - min_value));
-				float yaw_vel = FB_YAW_MAX_VEL * min_value + (self->measured.yaw_speed * FB_YAW_MAX_VEL * (1 - min_value));
-
-				motion_profile_init(&self->profile_pitch, pitch_acc, pitch_vel, pitch_acc);
-				motion_profile_init(&self->profile_yaw, yaw_acc, yaw_vel, yaw_acc);
-
-				motion_profile_plan_move(&self->profile_pitch, &ts, self->measured.pitch, 0, target_pitch, 0);
-				motion_profile_plan_move(&self->profile_yaw, &ts, 0, 0, target_yaw, 0);
+				motion_profile_plan_move(&self->controller.pitch.trajectory, &ts, self->measured.pitch, 0, target_pitch, 0);
+				motion_profile_plan_move(&self->controller.yaw.trajectory, &ts, 0, 0, target_yaw, 0);
 
 				//self->controller.pitch.target = target_pitch;
 				//self->controller.yaw.target = target_yaw;
@@ -1053,6 +1073,12 @@ static void _fb_output_constrained_fastest(struct application *self, float deman
 
 	self->output.pitch = constrain_float(pitch, -1.f, 1.f);
 	self->output.yaw = constrain_float(yaw, -1.f, 1.f);
+
+	if(self->measured.pitch > 0.9f){
+		self->output.pitch = constrain_float(self->output.pitch, 0, 1);
+	} else if(self->measured.pitch < -0.9f){
+		self->output.pitch = constrain_float(self->output.pitch, -1, 0);
+	}
 }
 
 //! this function constrains the demanded pitch and yaw output to be compliant with controls for speed and intensity
@@ -1068,8 +1094,16 @@ static void _fb_output_constrained(struct application *self, float demand_pitch,
 	if(yaw < demand_yaw) yaw = constrain_float(yaw + 4.f * self->measured.yaw_acc * dt, yaw, demand_yaw);
 	else if(yaw > demand_yaw) yaw = constrain_float(yaw - 4.f * self->measured.yaw_acc * dt, demand_yaw, yaw);
 
-	self->output.pitch = constrain_float(pitch, -self->measured.pitch_speed, self->measured.pitch_speed);
-	self->output.yaw = constrain_float(yaw, -self->measured.yaw_speed, self->measured.yaw_speed);
+	float pitch_speed = self->measured.pitch_speed / FB_PITCH_MAX_VEL;
+	float yaw_speed = self->measured.yaw_speed / FB_YAW_MAX_VEL;
+	self->output.pitch = constrain_float(pitch, -pitch_speed, pitch_speed);
+	self->output.yaw = constrain_float(yaw, -yaw_speed, yaw_speed);
+
+	if(self->measured.pitch > 0.9f){
+		self->output.pitch = constrain_float(self->output.pitch, 0, 1);
+	} else if(self->measured.pitch < -0.9f){
+		self->output.pitch = constrain_float(self->output.pitch, -1, 0);
+	}
 }
 
 static void _fb_update_control(struct application *self, float dt){
@@ -1106,41 +1140,21 @@ static void _fb_update_control(struct application *self, float dt){
 
 			time_gettime(&ts);
 
-			motion_profile_get_pva(&self->profile_pitch, &ts, &target_pitch, &target_pitch_vel, &target_pitch_acc);
-			motion_profile_get_pva(&self->profile_yaw, &ts, &target_yaw_calc, &target_yaw_vel, &target_yaw_acc);
+			motion_profile_get_pva(&self->controller.pitch.trajectory, &ts, &target_pitch, &target_pitch_vel, &target_pitch_acc);
+			motion_profile_get_pva(&self->controller.yaw.trajectory, &ts, &target_yaw_calc, &target_yaw_vel, &target_yaw_acc);
 
 			float target_yaw = normalize_angle(self->controller.yaw.start + target_yaw_calc);
 
 			self->controller.pitch.target = target_pitch;
 			self->controller.yaw.target = target_yaw;
 
-			//float target_pitch = self->controller.pitch.target;
-			//float target_yaw = self->controller.yaw.target;
-
-			// mix in a bit of manual control
-			/*
-			target_pitch = constrain_float(target_pitch + self->measured.joy_pitch, -1.f, 1.f);
-			target_yaw = target_yaw + self->measured.joy_yaw;
-			target_yaw = normalize_angle(target_yaw);
-			*/
-	
 			float err_pitch = target_pitch - self->measured.pitch;
 			float err_yaw = target_yaw - self->measured.yaw;
-	
-			float in = err_pitch;
-			static float prev_in1 = 0;
-			static float prev_out1 = 0;
-			static float prev_out2 = 0;
-			float a0 = -1.94345;
-			float a1 = 0.945002;
-			float b0 = 0.000785022;
-			float b1 = 0.000770357;
-			float out = b0 * in + b1 * prev_in1 - a0 * prev_out1 - a1 * prev_out2;
-			prev_in1 = in;
-			prev_out2 = prev_out1;
-			prev_out1 = out;
-			err_pitch = out;
 
+			err_pitch = _fb_filter(
+					&self->controller.pitch.efilt,
+					(struct fb_filter_config){.a0 = -1.9112, .a1 = 0.914976, .b0 = 0.0019161, .b1 = 0.00186018}, // cutoff 10Hz
+					err_pitch);
 			// since yaw is an angle we need to normalize the error
 			err_yaw = normalize_angle(err_yaw);
 
@@ -1151,7 +1165,7 @@ static void _fb_update_control(struct application *self, float dt){
 			float pkp = 18.f;
 			float pki = 0.0f;
 			float pkd = 0.2f;
-			float yff = 0.74f;
+			float yff = 0.74f * (90.f / 17.f);
 			float ykp = 2.f;
 			float yki = 0.0f;
 			float ykd = 0.2f;
@@ -1192,6 +1206,7 @@ static void _fb_update_motors(struct application *self){
 	float pitch = self->output.pitch;
 	float yaw = self->output.yaw;
 
+	// pitch hard limit protection
 	/*
 	if(self->measured.vmot > 10){
 		pitch = pitch * (24.f /  self->measured.vmot);
@@ -1199,7 +1214,7 @@ static void _fb_update_motors(struct application *self){
 	}
 	*/
 
-	pitch = constrain_float(yaw * 0.5, -0.5, 0.5);
+	pitch = constrain_float(pitch * 0.5, -0.5, 0.5);
 	yaw = constrain_float(yaw * 0.5, -0.5, 0.5);
 
 	// it is important that the following finishes in one block
@@ -1218,28 +1233,42 @@ static void _fb_update_motors(struct application *self){
 	thread_sched_resume();
 }
 
-static void _fb_monitor_slaves(struct application *self){
-	if(self->mode != FB_MODE_MASTER) return;
-
+static bool _fb_slave_timed_out(struct application *self){
 	timestamp_t t = micros();
+
 	uint32_t mask =
 		FB_SLAVE_VALID_PITCH |
 		FB_SLAVE_VALID_YAW |
 		FB_SLAVE_VALID_I_PITCH |
 		FB_SLAVE_VALID_I_YAW;
 
+	thread_mutex_lock(&self->slave.lock);
 	if((self->slave.valid_bits & mask) == mask){
 		// if all items were received then reset the bits and update timestamp
 		self->slave.valid_bits = 0;
 		self->slave.last_valid = t;
+		self->state.leds[FB_LED_CONN_STATUS].state = FB_LED_STATE_OFF;
 	} else {
 		// otherwise wait until timeout and reconfigure slave
-		if(time_after(t, self->slave.last_valid + FB_SLAVE_TIMEOUT_MS * 1000)){
-			_fb_enter_state(self, _fb_state_wait_power);
-			_fb_configure_slave(self);
+		timestamp_t tout = self->slave.last_valid + FB_SLAVE_TIMEOUT_MS * 1000;
+		if(time_after(t, tout)){
 			self->slave.valid_bits = 0;
 			self->slave.last_valid = t;
+			self->state.leds[FB_LED_CONN_STATUS].state = FB_LED_STATE_ON;
+			thread_mutex_unlock(&self->slave.lock);
+			return true;
 		}
+	}
+	thread_mutex_unlock(&self->slave.lock);
+	return false;
+}
+
+static void _fb_monitor_slaves(struct application *self){
+	if(self->mode != FB_MODE_MASTER) return;
+
+	if(_fb_slave_timed_out(self)){
+		_fb_enter_state(self, _fb_state_wait_power);
+		_fb_configure_slave(self);
 	}
 }
 
@@ -1418,10 +1447,10 @@ static void _fb_load_config(struct application *self){
 	self->config.limit.pitch = (struct fb_analog_limit){ .min = 0, .max = 3790, .omin = -1.f, .omax = 1.f };
 	self->config.limit.joy_pitch = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = -1.f, .omax = 1.f };
 	self->config.limit.joy_yaw = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = -1.f, .omax = 1.f };
-	self->config.limit.pitch_acc = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = 0, .omax = 1.f };
-	self->config.limit.yaw_acc = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = 0, .omax = 1.f };
-	self->config.limit.pitch_speed = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = 0, .omax = 1.f };
-	self->config.limit.yaw_speed = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = 0, .omax = 1.f };
+	self->config.limit.pitch_acc = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = FB_PITCH_MAX_ACC * 0.2, .omax = FB_PITCH_MAX_ACC };
+	self->config.limit.yaw_acc = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = FB_YAW_MAX_ACC * 0.2, .omax = FB_YAW_MAX_ACC };
+	self->config.limit.pitch_speed = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = FB_PITCH_MAX_VEL * 0.2, .omax = FB_PITCH_MAX_VEL };
+	self->config.limit.yaw_speed = (struct fb_analog_limit){ .min = 0, .max = 4096, .omin = FB_YAW_MAX_VEL * 0.2, .omax = FB_YAW_MAX_VEL };
 	self->config.limit.vmot = (struct fb_analog_limit){ .min = 0, .max = 3470, .omin = 0, .omax = 80 };
 	self->config.limit.temp_yaw = (struct fb_analog_limit){ .min = 860, .max = 2000, .omin = 100, .omax = 100.f };
 	self->config.limit.temp_pitch = (struct fb_analog_limit){ .min = 1070, .max = 3150, .omin = -100, .omax = 100.f };
@@ -1604,6 +1633,10 @@ static int _fb_probe(void *fdt, int fdt_node){
 	self->debug_gpio = gpio_find_by_ref(fdt, fdt_node, "debug_gpio");
 	//self->canopen = canopen;
 
+	self->slave.last_valid = micros();
+	self->remote.last_pitch_update = micros();
+	self->remote.last_yaw_update = micros();
+
 	_fb_load_config(self);
 
 	for(int c = 0; c < FB_LED_COUNT; c++){
@@ -1643,6 +1676,7 @@ static int _fb_probe(void *fdt, int fdt_node){
 	*/
 
 	_fb_read_inputs(self);
+	_fb_update_measurements(self);
 
 	// add the device profile map
 	regmap_range_init(&self->comm_range, CANOPEN_COMM_RANGE_START, CANOPEN_COMM_RANGE_END, &_comm_range_ops);
