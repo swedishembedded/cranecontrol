@@ -5,333 +5,11 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <libfirmware/serial.h>
-#include <libfirmware/math.h>
-#include <libfirmware/chip.h>
-#include <libfirmware/driver.h>
-#include <libfirmware/thread.h>
-#include <libfirmware/console.h>
-#include <libfirmware/leds.h>
-#include <libfirmware/usb.h>
-#include <libfirmware/timestamp.h>
-#include <libfirmware/gpio.h>
-#include <libfirmware/adc.h>
-#include <libfirmware/analog.h>
-#include <libfirmware/encoder.h>
-#include <libfirmware/memory.h>
-#include <libfirmware/timestamp.h>
-#include <libfirmware/can.h>
-#include <libfirmware/regmap.h>
-#include <libfirmware/canopen.h>
-#include <libfirmware/events.h>
-
-#include <libdriver/hbridge/drv8302.h>
-
 #include <libfdt/libfdt.h>
-
-#include "canopen.h"
-#include "motion_profile.h"
 #include "dts/flyingbergman.h"
+#include "flyingbergman.h"
 
-#define FB_SWITCH_COUNT 8
-#define FB_LED_COUNT 8
-#define FB_PRESET_COUNT 5
-#define OC_POT_OC_ADJ_MOTOR1 2
-#define OC_POT_OC_ADJ_MOTOR2 3
-
-#define FB_SW_PRESET1 7
-#define FB_SW_PRESET2 6
-#define FB_SW_PRESET3 5
-#define FB_SW_PRESET4 4
-#define FB_SW_HOME 3
-#define FB_SW_DIR_YAW_NORMAL 0
-#define FB_SW_DIR_YAW_REVERSED 0
-#define FB_SW_DIR_PITCH_NORMAL 0
-#define FB_SW_DIR_PITCH_REVERSED 0
-
-#define FB_LED_PRESET1 FB_SW_PRESET1
-#define FB_LED_PRESET2 FB_SW_PRESET2
-#define FB_LED_PRESET3 FB_SW_PRESET3
-#define FB_LED_PRESET4 FB_SW_PRESET4
-#define FB_LED_HOME FB_SW_HOME
-#define FB_LED_CONN_STATUS 2
-
-#define FB_LED_STATE_OFF 0
-#define FB_LED_STATE_SLOW_RAMP 1
-#define FB_LED_STATE_ON 2
-#define FB_LED_STATE_3BLINKS_OFF 3
-#define FB_LED_STATE_FAST_RAMP 4
-#define FB_LED_STATE_FAINT_ON 5
-
-#define FB_ADC_IB1_CHAN 0
-#define FB_ADC_IB2_CHAN 1
-#define FB_ADC_MUX_CHAN 2
-
-#define FB_ADC_IA1_CHAN 3
-#define FB_ADC_IA2_CHAN 4
-#define FB_ADC_VMOT_CHAN 5
-
-#define FB_ADC_VSA1_CHAN 6
-#define FB_ADC_VSA2_CHAN 7
-#define FB_ADC_TEMP1_CHAN 8
-
-#define FB_ADC_VSB1_CHAN 9
-#define FB_ADC_VSB2_CHAN 10
-#define FB_ADC_TEMP2_CHAN 11
-
-#define FB_ADC_VSC1_CHAN 12
-#define FB_ADC_VSC2_CHAN 13
-#define FB_ADC_TEMP1_2_CHAN 14
-
-#define FB_CANOPEN_MASTER_ADDRESS 0x01
-#define FB_CANOPEN_SLAVE_ADDRESS 0x02
-
-#define FB_GPIO_CAN_ADDR0 4
-#define FB_GPIO_CAN_ADDR1 5
-#define FB_GPIO_CAN_ADDR2 6
-#define FB_GPIO_CAN_ADDR3 7
-
-#define FB_MOTOR_YAW_GEAR_RATIO (90.f / 17.f)
-#define FB_MOTOR_YAW_TICKS_PER_ROT (FB_MOTOR_YAW_GEAR_RATIO * ((2800 * 512 * 4) / 28))
-
-#define FB_SLAVE_TIMEOUT_MS 1000
-#define FB_TICKS_ON_TARGET 2000
-
-#define FB_PITCH_MAX_ACC 0.4f
-#define FB_PITCH_MAX_VEL 0.15f
-
-#define FB_YAW_MAX_ACC (2.f / (90.f / 17.f))
-#define FB_YAW_MAX_VEL (1.3f / (90.f / 17.f))
-
-enum {
-	FB_ADCMUX_YAW_CHAN = 0,
-	FB_ADCMUX_PITCH_CHAN = 1,
-	FB_ADCMUX_YAW_SPEED_CHAN = 2,
-	FB_ADCMUX_YAW_ACC_CHAN = 3,
-	FB_ADCMUX_PITCH_ACC_CHAN = 4,
-	FB_ADCMUX_PITCH_SPEED_CHAN = 5,
-	FB_ADCMUX_CHAN_RESERVED15 = 6,
-	FB_ADCMUX_MOTOR_PITCH_CHAN = 7
-};
-
-typedef enum {
-	FB_MODE_MASTER = 0,
-	FB_MODE_SLAVE = 1
-} fb_mode_t;
-
-#define FB_HOME_LONG_PRESS_TIME_US 1000000UL
-
-#define FB_PRESET_BIT_VALID (1 << 0)
-
-#define FB_REMOTE_TIMEOUT 50000
-
-typedef enum {
-	FB_CONTROL_MODE_NO_MOTION = 0,
-	FB_CONTROL_MODE_REMOTE,
-	FB_CONTROL_MODE_MANUAL,
-	FB_CONTROL_MODE_AUTO
-} fb_control_mode_t;
-
-enum {
-	FB_SLAVE_VALID_PITCH	= (1 << 0),
-	FB_SLAVE_VALID_YAW		= (1 << 1),
-	FB_SLAVE_VALID_I_PITCH	= (1 << 2),
-	FB_SLAVE_VALID_I_YAW	= (1 << 3),
-	FB_SLAVE_VALID_MICROS	= (1 << 4)
-};
-
-struct fb_analog_limit {
-	float min, max;
-	float omin, omax;
-};
-
-struct fb_filter_config {
-	float a0, a1;
-	float b0, b1;
-};
-
-struct fb_filter {
-	float in[2], out[2];
-};
-
-struct fb_config {
-	struct config_preset {
-		uint8_t flags;
-		float pitch, yaw;
-		bool valid;
-	} presets[FB_PRESET_COUNT];
-	struct {
-		struct fb_analog_limit pitch;
-		struct fb_analog_limit joy_pitch;
-		struct fb_analog_limit joy_yaw;
-		struct fb_analog_limit pitch_acc;
-		struct fb_analog_limit yaw_acc;
-		struct fb_analog_limit pitch_speed;
-		struct fb_analog_limit yaw_speed;
-		struct fb_analog_limit vmot;
-		struct fb_analog_limit temp_yaw;
-		struct fb_analog_limit temp_pitch;
-	} limit;
-	struct {
-		int32_t pitch_a, pitch_b;
-		int32_t yaw_a, yaw_b;
-	} dc_cal;
-};
-
-struct application {
-    led_controller_t leds;
-	console_device_t console;
-	gpio_device_t sw_gpio;
-	gpio_device_t gpio_ex;
-	analog_device_t sw_leds;
-	adc_device_t adc;
-	analog_device_t mot_x;
-	analog_device_t mot_y;
-	gpio_device_t mux;
-	encoder_device_t enc1, enc2;
-	memory_device_t eeprom;
-	analog_device_t oc_pot;
-	can_device_t can1, can2;
-	regmap_device_t regmap;
-	memory_device_t canopen_mem;
-	memory_device_t can1_mem;
-	memory_device_t can2_mem;
-	gpio_device_t enc1_gpio;
-	gpio_device_t enc2_gpio;
-	drv8302_t drv_pitch, drv_yaw;
-	events_device_t events;
-	gpio_device_t debug_gpio;
-
-	struct events_subscriber sub;
-
-	struct fb_config config;
-
-	// raw sensor values
-	struct {
-		uint16_t vsa_yaw;
-		uint16_t vsb_yaw;
-		uint16_t vsc_yaw;
-		uint16_t vsa_pitch;
-		uint16_t vsb_pitch;
-		uint16_t vsc_pitch;
-		uint16_t ia_yaw;
-		uint16_t ib_yaw;
-		uint16_t ia_pitch;
-		uint16_t ib_pitch;
-		uint16_t pitch;
-		int16_t yaw;
-
-		struct fb_switch_state {
-			bool pressed;
-			bool toggled;
-			timestamp_t pressed_time;
-		} sw[FB_SWITCH_COUNT];
-
-		uint16_t joy_yaw, joy_pitch;
-		uint16_t yaw_acc, pitch_acc;
-		uint16_t yaw_speed, pitch_speed;
-		uint16_t vmot;
-		uint16_t temp_yaw, temp_pitch;
-		uint8_t can_addr;
-
-		bool enc1_aux1, enc1_aux2, enc2_aux1, enc2_aux2;
-	} inputs;
-
-	// processed measurements based on sensor values
-	struct {
-		float vsa_yaw;
-		float vsb_yaw;
-		float vsc_yaw;
-		float vsa_pitch;
-		float vsb_pitch;
-		float vsc_pitch;
-		float ia_yaw;
-		float ib_yaw;
-		float ia_pitch;
-		float ib_pitch;
-		float pitch;
-		float yaw;
-
-		float joy_yaw, joy_pitch;
-		float yaw_acc, pitch_acc;
-		float yaw_speed, pitch_speed;
-		float vmot;
-		float temp_yaw, temp_pitch;
-	} measured;
-
-	struct {
-		timestamp_t prev_micros;
-
-		struct fb_led_state {
-			float intensity;
-			int dim;
-			int state;
-			int blinks;
-		} leds[FB_LED_COUNT];
-
-		struct {
-			struct fb_filter pfilt;
-			struct fb_filter vfilt;
-		} pitch, yaw;
-
-		int32_t yaw_ticks;
-		int16_t prev_yaw_ticks;
-
-		void (*fn)(struct application *self, float dt);
-	} state;
-
-	struct {
-		struct {
-			float error;
-			float integral;
-			float output;
-			float target;
-			float start;
-			struct motion_profile trajectory;
-			struct fb_filter efilt;
-		} pitch, yaw;
-	} controller;
-
-	// data received from canopen slave (motor)
-	struct {
-		int16_t yaw, pitch;
-		int16_t i_yaw, i_pitch;
-		uint32_t micros;
-		timestamp_t last_valid;
-		uint32_t valid_bits;
-		uint16_t vmot;
-		struct mutex lock;
-	} slave;
-
-	struct {
-		float pitch, yaw;
-	} output;
-
-	struct {
-		int16_t pitch, yaw;
-		timestamp_t last_pitch_update, last_yaw_update;
-	} remote;
-
-	uint8_t can_addr;
-
-	fb_control_mode_t control_mode;
-	fb_mode_t mode;
-
-	int ticks_on_target;
-	int mux_chan;
-	uint16_t mux_adc[8];
-
-	struct regmap_range comm_range, mfr_range, mfr_range_slave;
-};
-
-static float _fb_filter(struct fb_filter *self, struct fb_filter_config conf, float in){
-	float out = conf.b0 * in + conf.b1 * self->in[0] - conf.a0 * self->out[0] - conf.a1 * self->out[1];
-	self->in[0] = in;
-	self->out[1] = self->out[0];
-	self->out[0] = out;
-	return out;
-}
-
+#define print_status(name, ok) do { console_printf(con, PRINT_DEFAULT "%16s: %s\n" PRINT_DEFAULT, name, (ok)?PRINT_SUCCESS "OK":PRINT_ERROR "FAIL"); } while(0)
 static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 	struct application *self = (struct application*)userptr;
 	if(argc == 2 && strcmp(argv[1], "sw") == 0){
@@ -339,6 +17,23 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 			int val = (int)gpio_read(self->sw_gpio, (uint32_t)(8+c));
 			console_printf(con, "SW%d: %d\n", c, val);
 		}
+	} else if(argc == 2 && strcmp(argv[1], "status") == 0){
+		console_printf(con, "Pitch: \n");
+		print_status("h-bridge",
+			!drv8302_is_in_error(self->drv_pitch) &&
+			!drv8302_is_in_overcurrent(self->drv_pitch)
+		);
+		print_status("dc-cal", 
+			abs(self->config.dc_cal.pitch_a - 2048) < 100 &&
+			abs(self->config.dc_cal.pitch_b - 2048) < 100);
+		console_printf(con, "Yaw: \n");
+		print_status("h-bridge",
+			!drv8302_is_in_error(self->drv_yaw) &&
+			!drv8302_is_in_overcurrent(self->drv_yaw)
+		);
+		print_status("dc-cal",
+			abs(self->config.dc_cal.yaw_a - 2048) < 100 &&
+			abs(self->config.dc_cal.yaw_b - 2048) < 100);
 	} else if(argc == 2 && strcmp(argv[1], "inputs") == 0){
 		console_printf(con, "US: %u\n", micros());
 		console_printf(con, "SW: ");
@@ -409,40 +104,40 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 		);
 		thread_mutex_unlock(&self->slave.lock);
 	} else if(argc == 2 && strcmp(argv[1], "meas") == 0){
-		console_printf(con, "VS1 (mV):\t %5d %5d %5d\n",
+		#define TAB "\033[16G"
+		console_printf(con, "VS1 (mV):" TAB "%6d %6d %6d\n",
 				(int32_t)(self->measured.vsa_yaw * 1000),
 				(int32_t)(self->measured.vsb_yaw * 1000),
 				(int32_t)(self->measured.vsc_yaw * 1000));
-		console_printf(con, "VS2 (mV):\t %5d %5d %5d\n",
+		console_printf(con, "VS2 (mV):" TAB "%6d %6d %6d\n",
 				(int32_t)(self->measured.vsa_pitch * 1000),
 				(int32_t)(self->measured.vsb_pitch * 1000),
 				(int32_t)(self->measured.vsc_pitch * 1000));
-		console_printf(con, "I1 (mA):\t %5d %5d\n",
+		console_printf(con, "I1 (mA):" TAB "%6d %6d\n",
 				(int32_t)(self->measured.ia_yaw * 1000),
 				(int32_t)(self->measured.ib_yaw * 1000));
-		console_printf(con, "I2 (mA):\t %5d %5d\n",
+		console_printf(con, "I2 (mA):" TAB "%6d %6d\n",
 				(int32_t)(self->measured.ia_pitch * 1000),
 				(int32_t)(self->measured.ib_pitch * 1000));
-
-		console_printf(con, "JOYSTICK:\tYAW %5d PITCH %5d\n",
+		console_printf(con, "JOYSTICK:" TAB "YAW %5d PITCH %5d\n",
 				(int32_t)(self->measured.joy_yaw * 1000),
 				(int32_t)(self->measured.joy_pitch * 1000)
 		);
-		console_printf(con, "INTENSITY:\tYAW %5d PITCH %5d\n",
+		console_printf(con, "INTENSITY:" TAB "YAW %5d PITCH %5d\n",
 				(int32_t)(self->measured.yaw_acc * 1000),
 				(int32_t)(self->measured.pitch_acc * 1000)
 		);
-		console_printf(con, "SPEED:\t\tYAW %5d PITCH %5d\n",
+		console_printf(con, "SPEED:" TAB "YAW %5d PITCH %5d\n",
 				(int32_t)(self->measured.yaw_speed * 1000),
 				(int32_t)(self->measured.pitch_speed * 1000)
 		);
-		console_printf(con, "POS:\t\tYAW %5d PITCH %5d\n",
+		console_printf(con, "LOCAL POS:" TAB "YAW %5d PITCH %5d\n",
 				(int32_t)(self->measured.yaw * 1000),
 				(int32_t)(self->measured.pitch * 1000)
 		);
-		console_printf(con, "VMOT:\t\t%dmV\n", (int32_t)(self->measured.vmot * 1000));
-		console_printf(con, "TEMP_YAW:\t\t%d mC\n", (int32_t)(self->measured.temp_yaw * 1000));
-		console_printf(con, "TEMP_PITCH:\t\t%d mC\n", (int32_t)(self->measured.temp_pitch * 1000));
+		console_printf(con, "VMOT:" TAB "%dmV\n", (int32_t)(self->measured.vmot * 1000));
+		console_printf(con, "TEMP_YAW:" TAB "%d mC\n", (int32_t)(self->measured.temp_yaw * 1000));
+		console_printf(con, "TEMP_PITCH:" TAB "%d mC\n", (int32_t)(self->measured.temp_pitch * 1000));
 	} else if(argc == 2 && strcmp(argv[1], "data") == 0){
 		while(1){
 			console_printf(con, "%u;", micros());
@@ -535,6 +230,12 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv){
 			(drv8302_is_in_error(self->drv_yaw))?"FAULT":"NOFAULT",
 			(drv8302_is_in_overcurrent(self->drv_yaw))?"OCW":"NOOCW"
 		);
+		float gp = (float)drv8302_get_gain(self->drv_pitch);
+		float gy = (float)drv8302_get_gain(self->drv_yaw);
+		console_printf(con, "Gains: PITCH %d, YAW %d\n",
+			(int32_t)(gp * 1000),
+			(int32_t)(gy * 1000)
+		);
 	} else {
 		console_printf(con, "Invalid option\n");
 	}
@@ -620,155 +321,6 @@ static void _fb_indicator_loop(void *ptr){
 	}
 }
 
-static void _fb_read_inputs(struct application *self){
-	// read next adc mux channel
-	adc_read(self->adc, FB_ADC_MUX_CHAN, &self->mux_adc[self->mux_chan]);
-
-	uint16_t value = self->mux_adc[self->mux_chan];
-	switch(self->mux_chan) {
-		case FB_ADCMUX_YAW_CHAN: { self->inputs.joy_yaw = value; } break;
-		case FB_ADCMUX_PITCH_CHAN: { self->inputs.joy_pitch = value; } break;
-		case FB_ADCMUX_YAW_ACC_CHAN: { self->inputs.yaw_acc = value; } break;
-		case FB_ADCMUX_PITCH_ACC_CHAN: { self->inputs.pitch_acc = value; } break;
-		case FB_ADCMUX_YAW_SPEED_CHAN: { self->inputs.yaw_speed = value; } break;
-		case FB_ADCMUX_MOTOR_PITCH_CHAN: { self->inputs.pitch = value; } break;
-		case FB_ADCMUX_PITCH_SPEED_CHAN: { self->inputs.pitch_speed = value; } break;
-	}
-
-	self->mux_chan = (self->mux_chan+1) & 0x7;
-
-	gpio_write(self->mux, 0, (self->mux_chan >> 0) & 1);
-	gpio_write(self->mux, 1, (self->mux_chan >> 1) & 1);
-	gpio_write(self->mux, 2, (self->mux_chan >> 2) & 1);
-
-	// read switches
-	for(unsigned int c = 0; c < 8; c++){
-		bool on = !gpio_read(self->sw_gpio, 8 + c);
-		self->inputs.sw[c].toggled = on != self->inputs.sw[c].pressed;
-		if(self->inputs.sw[c].toggled || !on){
-			self->inputs.sw[c].pressed_time = micros();
-		}
-		self->inputs.sw[c].pressed = on;
-	}
-
-	adc_read(self->adc, FB_ADC_VSA1_CHAN, &self->inputs.vsa_yaw);
-	adc_read(self->adc, FB_ADC_VSB1_CHAN, &self->inputs.vsb_yaw);
-	adc_read(self->adc, FB_ADC_VSC1_CHAN, &self->inputs.vsc_yaw);
-	adc_read(self->adc, FB_ADC_VSA2_CHAN, &self->inputs.vsa_pitch);
-	adc_read(self->adc, FB_ADC_VSB2_CHAN, &self->inputs.vsb_pitch);
-	adc_read(self->adc, FB_ADC_VSC2_CHAN, &self->inputs.vsc_pitch);
-	adc_read(self->adc, FB_ADC_IA1_CHAN, &self->inputs.ia_yaw);
-	adc_read(self->adc, FB_ADC_IB1_CHAN, &self->inputs.ib_yaw);
-	adc_read(self->adc, FB_ADC_IA2_CHAN, &self->inputs.ia_pitch);
-	adc_read(self->adc, FB_ADC_IB2_CHAN, &self->inputs.ib_pitch);
-	adc_read(self->adc, FB_ADC_VMOT_CHAN, &self->inputs.vmot);
-	adc_read(self->adc, FB_ADC_TEMP1_CHAN, &self->inputs.temp_yaw);
-	adc_read(self->adc, FB_ADC_TEMP2_CHAN, &self->inputs.temp_pitch);
-
-	self->inputs.yaw = (int16_t)(uint16_t)encoder_read(self->enc1);
-
-	// read CAN address switch
-	self->inputs.can_addr = ~(
-		(gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR3) << 3) |
-		(gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR2) << 2) |
-		(gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR1) << 1) |
-		(gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR0) << 0)) & 0x0f;
-
-	self->inputs.enc1_aux1 = gpio_read(self->enc1_gpio, 1);
-	self->inputs.enc1_aux2 = gpio_read(self->enc1_gpio, 2);
-	self->inputs.enc2_aux1 = gpio_read(self->enc2_gpio, 1);
-	self->inputs.enc2_aux2 = gpio_read(self->enc2_gpio, 2);
-}
-
-static float _scale_input(float in, const struct fb_analog_limit *lim){
-	in = constrain_float(in, lim->min, lim->max);
-	float iscale = lim->max - lim->min;
-	float oscale = lim->omax - lim->omin;
-	float res = 0;
-	if(iscale > 0)
-		res = (in - lim->min) / iscale;
-	return lim->omin + res * oscale;
-}
-
-static void _fb_update_measurements(struct application *self){
-	if(self->mode == FB_MODE_MASTER){
-		//self->measured.pitch = self->slave.pitch / 1000.f;
-		float pitch = self->slave.pitch / 1000.f;
-		static float prev_pitch1 = 0;
-		static float prev_out_pitch1 = 0;
-		static float prev_out_pitch2 = 0;
-		float a0 = -1.44739;
-		float a1 = 0.567971;
-		float b0 = 0.0659765;
-		float b1 = 0.0546078;
-		self->measured.pitch = b0 * pitch + b1 * prev_pitch1 - a0 * prev_out_pitch1 - a1 * prev_out_pitch2;
-		prev_pitch1 = pitch;
-		prev_out_pitch2 = prev_out_pitch1;
-		prev_out_pitch1 = self->measured.pitch;
-
-		self->measured.yaw = self->slave.yaw / 1000.f;
-	} else {
-		self->measured.pitch = _scale_input((float)self->inputs.pitch, &self->config.limit.pitch);
-		int16_t yaw_ticks = self->inputs.yaw;
-
-		// convert ticks to radians. How this is done is important.
-		self->state.yaw_ticks += (int16_t)(yaw_ticks - self->state.prev_yaw_ticks);
-		int32_t ticks_per_pi = (int32_t)(FB_MOTOR_YAW_TICKS_PER_ROT / 2.f);
-		if(self->state.yaw_ticks > ticks_per_pi) self->state.yaw_ticks -= 2 * ticks_per_pi;
-		if(self->state.yaw_ticks < -ticks_per_pi) self->state.yaw_ticks += 2 * ticks_per_pi;
-		self->state.prev_yaw_ticks = yaw_ticks;
-		self->measured.yaw = M_PI * ((float)self->state.yaw_ticks / (float)ticks_per_pi);
-	}
-
-	float _joy_pitch_dir = (self->inputs.enc2_aux1 == 0)?-1:((self->inputs.enc1_aux1 == 0)?1:0);
-	float _joy_yaw_dir = (self->inputs.enc2_aux2 == 0)?-1:((self->inputs.enc1_aux2 == 0)?1:0);
-
-	self->measured.joy_pitch = _joy_pitch_dir * _scale_input((float)self->inputs.joy_pitch, &self->config.limit.joy_pitch);
-	self->measured.joy_yaw = _joy_yaw_dir * _scale_input((float)self->inputs.joy_yaw, &self->config.limit.joy_yaw);
-	self->measured.pitch_acc = _scale_input((float)self->inputs.pitch_acc, &self->config.limit.pitch_acc);
-	self->measured.yaw_acc = _scale_input((float)self->inputs.yaw_acc, &self->config.limit.yaw_acc);
-	self->measured.pitch_speed = _scale_input((float)self->inputs.pitch_speed, &self->config.limit.pitch_speed);
-	self->measured.yaw_speed = _scale_input((float)self->inputs.yaw_speed, &self->config.limit.yaw_speed);
-	self->measured.vmot = _scale_input((float)self->inputs.vmot, &self->config.limit.vmot);
-
-	float gp = (float)drv8302_get_gain(self->drv_pitch);
-	float gy = (float)drv8302_get_gain(self->drv_yaw);
-	float res = 0.005;
-	float scale = 2048.f;
-	
-	self->measured.ia_pitch = ((float)self->inputs.ia_pitch - (float)self->config.dc_cal.pitch_a) / scale / gp / res;
-	self->measured.ib_pitch = ((float)self->inputs.ib_pitch - (float)self->config.dc_cal.pitch_b) / scale / gp / res;
-	self->measured.ia_yaw = ((float)self->inputs.ia_yaw - (float)self->config.dc_cal.yaw_a) / scale / gy / res;
-	self->measured.ib_yaw = ((float)self->inputs.ib_yaw - (float)self->config.dc_cal.yaw_b) / scale / gy / res;
-
-	float ntc_b = 3400;
-	float ambient_temp_k = 273.15f;
-
-	self->measured.temp_yaw = 1.f / (1.f / ambient_temp_k + 1.f / ntc_b * logf((float)self->inputs.temp_yaw / 4096.f)) - ambient_temp_k;
-	self->measured.temp_pitch = 1.f / (1.f / ambient_temp_k + 1.f / ntc_b * logf((float)self->inputs.temp_pitch / 4096.f)) - ambient_temp_k;
-
-	if(self->can_addr != self->inputs.can_addr){
-		fb_mode_t mode = 0;
-		if(self->inputs.can_addr == FB_CANOPEN_MASTER_ADDRESS){
-			mode = FB_MODE_MASTER;
-		} else {
-			mode = FB_MODE_SLAVE;
-		}
-
-		canopen_set_address(self->canopen_mem, self->inputs.can_addr);
-		canopen_set_mode(self->canopen_mem, (mode == FB_MODE_MASTER)?CANOPEN_MASTER:CANOPEN_SLAVE);
-
-		if(mode == FB_MODE_MASTER){
-			printk("fb: configuring as canopen master\n");
-			regmap_write_u32(self->regmap, CANOPEN_REG_DEVICE_CYCLE_PERIOD, 1000);
-		}
-
-		printk("running in mode: %s, address 0x%02x\n", (mode == FB_MODE_MASTER)?"MASTER":"SLAVE", self->inputs.can_addr);
-
-		self->mode = mode;
-		self->can_addr = self->inputs.can_addr;
-	}
-}
 
 static int _fb_configure_slave(struct application *self){
     struct canopen_pdo_config conf = {
@@ -1473,10 +1025,10 @@ static void _fb_calibrate_current_sensors(struct application *self){
 	for(int c = 0; c < loops; c++){
 		uint16_t pa = 0, pb = 0, ya = 0, yb = 0;
 
-		adc_read(self->adc, FB_ADC_IA1_CHAN, &pa);
-		adc_read(self->adc, FB_ADC_IB1_CHAN, &pb);
-		adc_read(self->adc, FB_ADC_IA2_CHAN, &ya);
-		adc_read(self->adc, FB_ADC_IB2_CHAN, &yb);
+		adc_read(self->adc, FB_ADC_IA1_CHAN, &ya);
+		adc_read(self->adc, FB_ADC_IB1_CHAN, &yb);
+		adc_read(self->adc, FB_ADC_IA2_CHAN, &pa);
+		adc_read(self->adc, FB_ADC_IB2_CHAN, &pb);
 
 		self->config.dc_cal.pitch_a += pa;
 		self->config.dc_cal.pitch_b += pb;
@@ -1603,8 +1155,11 @@ static int _fb_probe(void *fdt, int fdt_node){
 	console_add_command(console, self, "fb", "Flying Bergman Control", "", _fb_cmd);
 	console_add_command(console, self, "reg", "Register ops", "", _reg_cmd);
 	console_add_command(console, self, "motor", "Motor slave board control", "", _motor_cmd);
+	console_add_command(console, self, "ui", "GUI interface", "", _ui_cmd);
 
 	thread_mutex_init(&self->slave.lock);
+	thread_mutex_init(&self->inputs.lock);
+	thread_mutex_init(&self->measured.lock);
 
 	self->leds = leds;
 	self->console = console;
