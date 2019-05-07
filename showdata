@@ -1,0 +1,5 @@
+#!/bin/sh
+
+DIRECTORY=$(date +%Y-%m-%d)
+MOST_RECENT=$(ls -Art testruns/${DIRECTORY}/|tail -n 1)
+(cd testruns/; octave 01-checkdata.m ${DIRECTORY}/${MOST_RECENT})

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+DIRECTORY=$(date +%Y-%m-%d)
+mkdir -p testruns/${DIRECTORY}
+./crane -o testruns/${DIRECTORY}/$(date +%Y-%m-%d-%H%M%S).csv status
