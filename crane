@@ -1,0 +1,76 @@
+#!/bin/sh
+
+# this is a bot controller script that we can use on botpc to quickly run tests and get data
+
+TTY="/dev/ttyUSB0"
+OUTFILE=""
+
+while [ $# -gt 0 ]
+do
+    case "$1" in 
+        -o|--output)
+            OUTFILE="$2"
+            if ! [ -d $(dirname $OUTFILE) ]; then
+                echo "Output directory does not exist!"
+                exit 1
+            fi
+            echo "Saving to output file '$OUTFILE'";
+            shift 2
+            ;;
+        start)
+            COMMAND="xy start";
+            shift 1
+            ;;
+        reboot)
+            COMMAND="reboot";
+            shift 1
+            ;;
+        move)
+            MOVETYPE="$2"
+            MOVEPOS="$3"
+            if ! [ "$MOVETYPE" = "abs" ] && ! [ "$MOVETYPE" = "rel" ] && ! [ "$MOVETYPE" = "none" ]; then
+                echo "Move type must be rel (relative) or abs (absolute) or none (dry run)"
+                exit 1
+            fi
+            if [ "$MOVETYPE" = "none" ]; then
+                COMMAND="move $MOVETYPE"
+                shift 2
+            else
+                COMMAND="move $MOVETYPE $MOVEPOS"
+                shift 3
+            fi
+            ;;
+        test)
+            COMMAND="move test";
+            shift 1;
+            ;;
+        status)
+            COMMAND="fb data"
+            shift 1
+            ;;
+    esac
+done
+
+echo "Running '$COMMAND'"
+stty igncr -F "$TTY" -raw 921600 -echo
+printf "\r$COMMAND\r" > $TTY
+
+# start as a child process and intercept ctrl-c so we can explicitly kill the child and cleanup
+trap 'kill -TERM $PID' INT
+if ! [ "$OUTFILE" = "" ]; then
+    cat $TTY > $OUTFILE &
+else
+    cat $TTY &
+fi
+PID=$!
+wait $PID
+trap INT
+
+# send a return key so that current action is aborted
+echo "Stopping.."
+printf "\r" > $TTY
+
+# clear the command line
+sleep 1
+echo ""
+

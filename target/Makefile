@@ -5,4 +5,3 @@ endef
 
 $(eval $(call DefineTarget,flyingbergman))
 
-

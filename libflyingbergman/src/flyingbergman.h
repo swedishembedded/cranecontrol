@@ -256,7 +256,7 @@ struct application {
 	} measured;
 
 	struct {
-		timestamp_t prev_micros;
+		timestamp_t prev_loop_time;
 
 		struct fb_led_state {
 			float intensity;
@@ -297,8 +297,8 @@ struct application {
 	struct {
 		int16_t yaw, pitch;
 		int16_t i_yaw, i_pitch;
-		uint32_t micros;
-		timestamp_t last_valid;
+		usec_t micros;
+		timestamp_t timeout;
 		uint32_t valid_bits;
 		uint16_t vmot;
 		struct mutex lock;
@@ -310,7 +310,7 @@ struct application {
 
 	struct {
 		int16_t pitch, yaw;
-		timestamp_t last_pitch_update, last_yaw_update;
+		timestamp_t pitch_update_timeout, yaw_update_timeout;
 	} remote;
 
 	uint8_t can_addr;

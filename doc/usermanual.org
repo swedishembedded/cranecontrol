@@ -1,0 +1,65 @@
+#+TITLE: User Manual
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://gongzhitaao.org/orgcss/org.css"/>
+
+* User Manual
+This is a user manual for a piece of hardware designed by Martin Schröder
+(Swedish Embedded) in the begining of 2019. This manual targets revision A of
+the board below:
+
+[[./FlyingBergman-Board.jpg]]
+
+** About this board
+This board is designed to control the "Flying Bergman" crane system. The system
+consists of a control unit and a motor control board both of which are connected
+together by a cable. The same board design is intended to be used in both the
+motor control application as well as the user hand held control panel. The CAN
+bus address switch ([[S2][S2]]) is used to switch software mode between master
+(control panel) and slave (motor drive).
+
+** Connecting motors
+Motors are connected to two motor connectors: [[P45]] and [[P46][P46]]. Each connector has
+wires which are labeled [[A][A]], [[B][B]] and [[C][C]]. Each pair of outputs (ie A + B) supports
+fully sinusoidal differential output suitable for driving inductive loads and
+motors.
+
+NOTE: the FB project uses only DC motors so the three phase functionality of the
+inverter is never used.
+
+Motors
+* Hardware
+[[./FlyingBergmanPinout.jpg]]
+*** Switches
+**** <<S2>>S2 switch located next to the can bus connector
+*** Motors
+**** <<P45>><<MYAW>> Yaw motor connector (Motor nr 1)
+**** <<P46>><<MPITCH>> Pitch motor connector (Motor nr 2)
+
+** User manual
+*** Connectors
+**** Supported voltage levels
+**** Picture of expected signal
+**** Accessability inside the firmware
+**** Serial interface test command(s)
+*** Firmware flashing
+**** ST-Link-V2 debugger
+**** Serial port
+**** USB
+*** Usage
+**** Powering the system
+**** Setting home position
+**** Manual control
+***** Joystick motion
+****** Reversing direction
+****** Deadband
+***** Intensity
+***** Speed
+**** Automatic control
+***** Saving a preset
+***** Invoking a presets
+***** Aborting motion
+**** Configuring the settings
+***** Motion limits
+
+* Footnotes
+
+[fn:1]

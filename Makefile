@@ -1,18 +1,22 @@
-all:
-	make -C theboss PROJECT=$(PWD) package/firmware/flyingbergman/compile
+all: compile
+	echo "Done"
 
-flyingbergman.csv:
-	sh update_symbols.sh theboss/build_dir/flyingbergman/firmware/src/theboss
+test/compile:
+	theboss/bossc -o flyingbergman-test flyingbergman-test.dts
 
-flyingbergman:
-	make -C theboss PROJECT=$(PWD) package/firmware/flyingbergman/compile
-	make flyingbergman.csv
+test/reconfigure:
+	theboss/bossc -c -o flyingbergman-test flyingbergman-test.dts
 
-flyingbergman-flash:
-	make -C theboss PROJECT=$(PWD) package/firmware/flyingbergman/flash-stlink
+submodules:
+	git submodule update --init --recursive .
 
-tags:
-	rm -f tags
-	ctags --exclude=*staging_dir* -R .
+reconfigure:
+	theboss/bossc -c -o flyingbergman.bin flyingbergman.dts
 
-.PHONY: tags flyingbergman.csv
+compile:
+	theboss/bossc -o flyingbergman.bin flyingbergman.dts
+
+flash: compile
+	theboss/bossc -w -o flyingbergman.bin flyingbergman.dts
+
+.PHONY: submodumes compile flash

@@ -27,7 +27,7 @@ void _fb_read_inputs(struct application *self){
 		bool on = !gpio_read(self->sw_gpio, 8 + c);
 		self->inputs.sw[c].toggled = on != self->inputs.sw[c].pressed;
 		if(self->inputs.sw[c].toggled || !on){
-			self->inputs.sw[c].pressed_time = micros();
+			self->inputs.sw[c].pressed_time = timestamp();
 		}
 		self->inputs.sw[c].pressed = on;
 	}

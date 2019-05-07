@@ -80,8 +80,8 @@ static void _ui_update(struct application *self){
 	_hslider(con, 1, 20, (int)self->ui.joy_yaw, 0, 4096, 32);
 }
 
-static int _ui_process_input(struct fb_ui *self, unsigned char ch){
-	ch = tolower(ch);
+static int _ui_process_input(struct fb_ui *self, char ch){
+	ch = (char)tolower(ch);
 	switch(ch){
 		case 'a': {
 			self->joy_yaw -= 100;
