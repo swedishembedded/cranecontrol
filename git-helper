@@ -1,0 +1,62 @@
+#!/bin/sh
+
+set -e
+
+check_repo() {
+	DIRECTORY=$1;
+	if [ ! -d ${DIRECTORY} ]; then
+		echo "'${DIRECTORY}' does not exist!";
+		return 1
+	fi
+	if [ ! -d ${DIRECTORY}/.git ] && [ ! -f ${DIRECTORY}/.git ]; then
+		echo "'${DIRECTORY}' is not a git repo!";
+		return 1
+	fi
+	BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD);
+	if [ "${BRANCH}" != "master" ]; then
+		echo "${DIRECTORY}: git is not on master! Bailing out!"
+		return 1
+	fi
+	return 0
+}
+
+push_repo() {
+	DIRECTORY=$1;
+	check_repo ${DIRECTORY};
+	if [ ! $? -eq 0 ]; then
+		return 1;
+	fi
+	echo "Pushing ${DIRECTORY}.."
+	(
+		cd	${DIRECTORY};
+		tig &&
+		git push origin master
+	);
+}
+
+REPOS=$(echo \
+	theboss/src/libfirmware\
+	theboss/src/libdriver\
+	theboss/src/bossinit\
+	theboss/src/libfdt\
+	theboss\
+	${PWD})
+
+while [ $# -gt 0 ]
+do
+	case "$1" in
+		push)
+			for REPO in ${REPOS}; do
+				check_repo ${REPO};
+				if [ ! $? -eq 0 ]; then
+					echo "Command returned $?"
+					return 1;
+				fi
+			done
+			for REPO in ${REPOS}; do
+				push_repo ${REPO};
+			done
+			shift 1
+			;;
+	esac
+done

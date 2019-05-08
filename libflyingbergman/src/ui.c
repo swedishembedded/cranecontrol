@@ -80,8 +80,8 @@ static void _ui_update(struct application *self){
 	_hslider(con, 1, 20, (int)self->ui.joy_yaw, 0, 4096, 32);
 }
 
-static int _ui_process_input(struct fb_ui *self, char ch){
-	ch = (char)tolower(ch);
+static int _ui_process_input(struct fb_ui *self, uint8_t ch){
+	ch = (uint8_t)tolower(ch);
 	switch(ch){
 		case 'a': {
 			self->joy_yaw -= 100;
@@ -107,7 +107,7 @@ int _ui_cmd(console_device_t con, void *userptr, int argc, char **argv){
 		_ui_update(self);
 		char ch;
 		if(console_read(con, &ch, 1, UI_UPDATE_INTERVAL_MS) == 1){
-			if(_ui_process_input(&self->ui, ch) < 0){
+			if(_ui_process_input(&self->ui, (uint8_t)ch) < 0){
 				break;
 			}
 		}

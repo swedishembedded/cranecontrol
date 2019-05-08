@@ -19,17 +19,7 @@
 
 / {
 	cpu {
-		/* SystemCoreClock = ((HSE_VALUE / PLL_M) * PLL_N) / PLL_P; */
-		/* USBClock = ((HSE_VALUE / PLL_M) * PLL_N) / PLL_Q; */
-		compatible = "st,stm32_cpu";
-		hse_value = <8000000>;
-		hclk_div = <1>;
-		pclk1_div = <1>;
-		pclk2_div = <1>;
-		pllm = <8>;
-		plln = <336>;
-		pllp = <2>;
-		pllq = <7>;
+		compatible = "cpu,x86";
 	};
 
 	events: events {
@@ -39,9 +29,8 @@
 
 	serial {
 		debug_uart: debug {
-			compatible = "st,stm32_uart";
+			compatible = "gnu,linux_uart";
 			baud = <921600>;
-			reg = <USART1>;
 			//interrupt = <USART1_IRQn>;
             printk_port = <1>;
             insert-cr-before-lf = <1>;

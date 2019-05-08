@@ -5,7 +5,7 @@
 #+PROPERTY: Rating_ALL + ++ +++ ++++ +++++
 
 #+BEGIN: clocktable :scope file :maxlevel 6 :block untilnow
-#+CAPTION: Clock summary at [2019-05-07 Tue 12:55], for now.
+#+CAPTION: Clock summary at [2019-05-08 Wed 01:06], for now.
 | Headline                                     | Time       |           |          |
 |----------------------------------------------+------------+-----------+----------|
 | *Total time*                                 | *22d 7:30* |           |          |
@@ -766,7 +766,11 @@ CLOCK: [2019-05-04 Sat 03:30]--[2019-05-04 Sat 04:00] =>  0:30
 - [X] Pitch current (A)
 - [X] Yaw current (A)
 - [X] Supply voltage (V)
-** User manual
+** NEXT User manual
+SCHEDULED: <2019-05-08 Wed>
+:PROPERTIES:
+:Effort:   6:00
+:END:
 :LOGBOOK:
 CLOCK: [2019-05-02 Thu 14:00]--[2019-05-02 Thu 15:30] =>  1:30
 :END:
