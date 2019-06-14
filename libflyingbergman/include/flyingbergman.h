@@ -24,10 +24,12 @@
 
 #include "canopen.h"
 #include "motion_profile.h"
+#include "fb_config.h"
+#include "fb_filter.h"
+#include "fb_control.h"
 
 #define FB_SWITCH_COUNT 8
 #define FB_LED_COUNT 8
-#define FB_PRESET_COUNT 5
 #define OC_POT_OC_ADJ_MOTOR1 2
 #define OC_POT_OC_ADJ_MOTOR2 3
 
@@ -83,8 +85,10 @@
 #define FB_GPIO_CAN_ADDR2 6
 #define FB_GPIO_CAN_ADDR3 7
 
+#define FB_MOTOR_YAW_GEARBOX_IN_RPM 2000
+#define FB_MOTOR_YAW_GEARBOX_OUT_RPM 28
 #define FB_MOTOR_YAW_GEAR_RATIO (90.f / 17.f)
-#define FB_MOTOR_YAW_TICKS_PER_ROT (FB_MOTOR_YAW_GEAR_RATIO * ((2800 * 512 * 4) / 28))
+#define FB_MOTOR_YAW_TICKS_PER_ROT (FB_MOTOR_YAW_GEAR_RATIO * ((FB_MOTOR_YAW_GEARBOX_IN_RPM * 512 * 4) / FB_MOTOR_YAW_GEARBOX_OUT_RPM))
 
 #define FB_SLAVE_TIMEOUT_MS 1000
 #define FB_TICKS_ON_TARGET 2000
@@ -93,7 +97,7 @@
 #define FB_PITCH_MAX_VEL 0.15f
 
 #define FB_YAW_MAX_ACC (2.f / (90.f / 17.f))
-#define FB_YAW_MAX_VEL (1.3f / (90.f / 17.f))
+#define FB_YAW_MAX_VEL (4 * 1.3f / (90.f / 17.f))
 
 enum {
 	FB_ADCMUX_YAW_CHAN = 0,
@@ -111,7 +115,7 @@ typedef enum {
 	FB_MODE_SLAVE = 1
 } fb_mode_t;
 
-#define FB_HOME_LONG_PRESS_TIME_US 1000000UL
+#define FB_BTN_LONG_PRESS_TIME_US 1000000UL
 
 #define FB_PRESET_BIT_VALID (1 << 0)
 
@@ -120,6 +124,7 @@ typedef enum {
 typedef enum {
 	FB_CONTROL_MODE_NO_MOTION = 0,
 	FB_CONTROL_MODE_REMOTE,
+	FB_CONTROL_MODE_LOCAL,
 	FB_CONTROL_MODE_MANUAL,
 	FB_CONTROL_MODE_AUTO
 } fb_control_mode_t;
@@ -130,44 +135,6 @@ enum {
 	FB_SLAVE_VALID_I_PITCH	= (1 << 2),
 	FB_SLAVE_VALID_I_YAW	= (1 << 3),
 	FB_SLAVE_VALID_MICROS	= (1 << 4)
-};
-
-struct fb_analog_limit {
-	float min, max;
-	float omin, omax;
-};
-
-struct fb_filter_config {
-	float a0, a1;
-	float b0, b1;
-};
-
-struct fb_filter {
-	float in[2], out[2];
-};
-
-struct fb_config {
-	struct config_preset {
-		uint8_t flags;
-		float pitch, yaw;
-		bool valid;
-	} presets[FB_PRESET_COUNT];
-	struct {
-		struct fb_analog_limit pitch;
-		struct fb_analog_limit joy_pitch;
-		struct fb_analog_limit joy_yaw;
-		struct fb_analog_limit pitch_acc;
-		struct fb_analog_limit yaw_acc;
-		struct fb_analog_limit pitch_speed;
-		struct fb_analog_limit yaw_speed;
-		struct fb_analog_limit vmot;
-		struct fb_analog_limit temp_yaw;
-		struct fb_analog_limit temp_pitch;
-	} limit;
-	struct {
-		int32_t pitch_a, pitch_b;
-		int32_t yaw_a, yaw_b;
-	} dc_cal;
 };
 
 struct application {
@@ -276,6 +243,8 @@ struct application {
 		void (*fn)(struct application *self, float dt);
 	} state;
 
+	struct fb_control axis[FB_AXIS_COUNT];
+/*
 	struct {
 		struct {
 			float error;
@@ -287,7 +256,7 @@ struct application {
 			struct fb_filter efilt;
 		} pitch, yaw;
 	} controller;
-
+*/
 	struct fb_ui {
 		bool valid;
 		float joy_yaw, joy_pitch;
@@ -313,6 +282,10 @@ struct application {
 		timestamp_t pitch_update_timeout, yaw_update_timeout;
 	} remote;
 
+	struct {
+		int16_t pitch, yaw;
+	} local;
+
 	uint8_t can_addr;
 
 	fb_control_mode_t control_mode;
@@ -329,4 +302,4 @@ int _ui_cmd(console_device_t con, void *userptr, int argc, char **argv);
 
 void _fb_update_measurements(struct application *self);
 void _fb_read_inputs(struct application *self);
-float _fb_filter(struct fb_filter *self, struct fb_filter_config conf, float in);
+float _fb_filter(struct fb_filter *self, const struct fb_config_filter *conf, float in);

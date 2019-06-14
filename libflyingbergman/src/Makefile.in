@@ -136,10 +136,12 @@ am__v_AR_0 = @echo "  AR      " $@;
 am__v_AR_1 = 
 libflyingbergman_a_AR = $(AR) $(ARFLAGS)
 libflyingbergman_a_LIBADD =
-am_libflyingbergman_a_OBJECTS = libflyingbergman_a-main.$(OBJEXT) \
+am_libflyingbergman_a_OBJECTS =  \
+	libflyingbergman_a-fb_config.$(OBJEXT) \
+	libflyingbergman_a-fb_control.$(OBJEXT) \
+	libflyingbergman_a-main.$(OBJEXT) \
 	libflyingbergman_a-motion_profile.$(OBJEXT) \
 	libflyingbergman_a-ui.$(OBJEXT) \
-	libflyingbergman_a-tests.$(OBJEXT) \
 	libflyingbergman_a-measured.$(OBJEXT) \
 	libflyingbergman_a-inputs.$(OBJEXT) \
 	libflyingbergman_a-util.$(OBJEXT)
@@ -223,6 +225,10 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CXX = @CXX@
+CXXCPP = @CXXCPP@
+CXXDEPMODE = @CXXDEPMODE@
+CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -279,6 +285,7 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
@@ -327,8 +334,18 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LIBRARIES = libflyingbergman.a
-libflyingbergman_a_SOURCES = main.c motion_profile.c ui.c tests.c measured.c inputs.c util.c
-libflyingbergman_a_CFLAGS = -I$(top_srcdir)/include
+libflyingbergman_a_SOURCES = \
+	fb_config.c\
+	fb_control.c\
+	main.c\
+	motion_profile.c\
+	ui.c\
+	measured.c\
+	inputs.c\
+	util.c
+
+libflyingbergman_a_CFLAGS = -I$(top_srcdir)/include -I$(abs_top_builddir)/include/
+AC_LOCAL_AMFLAGS = -I m4
 all: all-am
 
 .SUFFIXES:
@@ -405,11 +422,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-inputs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-measured.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-motion_profile.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-ui.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-util.Po@am__quote@
 
@@ -433,6 +451,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+libflyingbergman_a-fb_config.o: fb_config.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_config.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_config.Tpo -c -o libflyingbergman_a-fb_config.o `test -f 'fb_config.c' || echo '$(srcdir)/'`fb_config.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-fb_config.Tpo $(DEPDIR)/libflyingbergman_a-fb_config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_config.c' object='libflyingbergman_a-fb_config.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_config.o `test -f 'fb_config.c' || echo '$(srcdir)/'`fb_config.c
+
+libflyingbergman_a-fb_config.obj: fb_config.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_config.obj -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_config.Tpo -c -o libflyingbergman_a-fb_config.obj `if test -f 'fb_config.c'; then $(CYGPATH_W) 'fb_config.c'; else $(CYGPATH_W) '$(srcdir)/fb_config.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-fb_config.Tpo $(DEPDIR)/libflyingbergman_a-fb_config.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_config.c' object='libflyingbergman_a-fb_config.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_config.obj `if test -f 'fb_config.c'; then $(CYGPATH_W) 'fb_config.c'; else $(CYGPATH_W) '$(srcdir)/fb_config.c'; fi`
+
+libflyingbergman_a-fb_control.o: fb_control.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_control.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_control.Tpo -c -o libflyingbergman_a-fb_control.o `test -f 'fb_control.c' || echo '$(srcdir)/'`fb_control.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-fb_control.Tpo $(DEPDIR)/libflyingbergman_a-fb_control.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_control.c' object='libflyingbergman_a-fb_control.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_control.o `test -f 'fb_control.c' || echo '$(srcdir)/'`fb_control.c
+
+libflyingbergman_a-fb_control.obj: fb_control.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_control.obj -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_control.Tpo -c -o libflyingbergman_a-fb_control.obj `if test -f 'fb_control.c'; then $(CYGPATH_W) 'fb_control.c'; else $(CYGPATH_W) '$(srcdir)/fb_control.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-fb_control.Tpo $(DEPDIR)/libflyingbergman_a-fb_control.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_control.c' object='libflyingbergman_a-fb_control.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_control.obj `if test -f 'fb_control.c'; then $(CYGPATH_W) 'fb_control.c'; else $(CYGPATH_W) '$(srcdir)/fb_control.c'; fi`
 
 libflyingbergman_a-main.o: main.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-main.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-main.Tpo -c -o libflyingbergman_a-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
@@ -475,20 +521,6 @@ libflyingbergman_a-ui.obj: ui.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ui.c' object='libflyingbergman_a-ui.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-ui.obj `if test -f 'ui.c'; then $(CYGPATH_W) 'ui.c'; else $(CYGPATH_W) '$(srcdir)/ui.c'; fi`
-
-libflyingbergman_a-tests.o: tests.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-tests.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-tests.Tpo -c -o libflyingbergman_a-tests.o `test -f 'tests.c' || echo '$(srcdir)/'`tests.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-tests.Tpo $(DEPDIR)/libflyingbergman_a-tests.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests.c' object='libflyingbergman_a-tests.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-tests.o `test -f 'tests.c' || echo '$(srcdir)/'`tests.c
-
-libflyingbergman_a-tests.obj: tests.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-tests.obj -MD -MP -MF $(DEPDIR)/libflyingbergman_a-tests.Tpo -c -o libflyingbergman_a-tests.obj `if test -f 'tests.c'; then $(CYGPATH_W) 'tests.c'; else $(CYGPATH_W) '$(srcdir)/tests.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-tests.Tpo $(DEPDIR)/libflyingbergman_a-tests.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests.c' object='libflyingbergman_a-tests.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-tests.obj `if test -f 'tests.c'; then $(CYGPATH_W) 'tests.c'; else $(CYGPATH_W) '$(srcdir)/tests.c'; fi`
 
 libflyingbergman_a-measured.o: measured.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-measured.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-measured.Tpo -c -o libflyingbergman_a-measured.o `test -f 'measured.c' || echo '$(srcdir)/'`measured.c

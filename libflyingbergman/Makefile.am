@@ -1,3 +1,3 @@
-SUBDIRS = include src 
+SUBDIRS = include src tests
 AUTOMAKE_OPTIONS = subdir-objects
-AM_LDFLAGS = -shared -O3
+include Makefile.am.coverage

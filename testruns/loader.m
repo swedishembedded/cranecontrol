@@ -1,31 +1,28 @@
 pkg load control miscellaneous
 
 function [dat] = load_data(fname)
-    data = dlmread(fname, ";");
+	data = dlmread(fname, ";");
 
-    time = ((data(:,1) - data(1, 1)) * 1e-6);
-    dat.vpitch = data(:, 2) / 10000;
-    dat.vyaw = data(:, 3) / 10000;
-    dat.ipitch = data(:, 4) / 1000;
-    dat.iyaw = data(:, 5) / 1000;
-    dat.joy_pitch = data(:, 6) / 10000;
-    dat.joy_yaw = data(:,7) / 10000;
-    dat.pitch = data(:,8) / 10000;
-    dat.yaw = data(:,9) / 10000;
-    dat.pitch_ctrl = data(:,10) / 10000;
-    dat.yaw_ctrl = data(:,11) / 10000;
-    dat.pitch_sp = data(:,12) / 10000;
-    dat.yaw_sp = data(:,13) / 10000;
-	dat.vmot = data(:,14) / 1000;
-	dat.pitch_duty = data(:,15) / 1000;
-	dat.yaw_duty = data(:,16) / 1000;
+	time = ((data(:,1) - data(1, 1)) * 1e-6);
+	i = 2;
+	dat.pitch_duty = data(:, i++) / 10000;
+	dat.yaw_duty = data(:, i++) / 10000;
+	dat.ipitch = data(:, i++) / 1000;
+	dat.iyaw = data(:, i++) / 1000;
+	dat.joy_pitch = data(:, i++) / 10000;
+	dat.joy_yaw = data(:,i++) / 10000;
+	dat.pitch = data(:,i++) / 10000;
+	dat.yaw = data(:,i++) / 10000;
+	dat.pitch_ctrl = data(:,i++) / 10000;
+	dat.yaw_ctrl = data(:,i++) / 10000;
+	dat.pitch_sp = data(:,i++) / 10000;
+	dat.yaw_sp = data(:,i++) / 10000;
+	dat.vmot = data(:,i++) / 1000;
 
 	dyaw = [0; diff(dat.yaw)];
 	dat.yaw = cumsum(atan2(sin(dyaw), cos(dyaw)));
 
     t = dat.t = interp1(time, time, linspace(time(1), time(end), (time(end) - time(1)) * 1000));
-    dat.vpitch = interp1(time, dat.vpitch, t);
-    dat.vyaw = interp1(time, dat.vyaw, t);
     dat.ipitch = interp1(time, dat.ipitch, t);
     dat.iyaw = interp1(time, dat.iyaw, t);
     dat.joy_pitch = interp1(time, dat.joy_pitch, t);

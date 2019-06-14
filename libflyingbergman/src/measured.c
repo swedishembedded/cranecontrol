@@ -16,7 +16,8 @@ void _fb_update_measurements(struct application *self){
 	if(self->mode == FB_MODE_MASTER){
 		//self->measured.pitch = self->slave.pitch / 1000.f;
 		float pitch = self->slave.pitch / 1000.f;
-		self->measured.pitch = _fb_filter(&self->measured.pfilt, (struct fb_filter_config){.a0 = -1.44739, .a1 = 0.567971, .b0 = 0.0659765, .b1 = 0.0546078}, pitch);
+		static const struct fb_config_filter _pfilt = {.a0 = -1.44739, .a1 = 0.567971, .b0 = 0.0659765, .b1 = 0.0546078};
+		self->measured.pitch = _fb_filter(&self->measured.pfilt, &_pfilt, pitch);
 		self->measured.yaw = self->slave.yaw / 1000.f;
 	} else {
 		self->measured.pitch = _scale_input((float)self->inputs.pitch, &self->config.limit.pitch);
@@ -36,6 +37,8 @@ void _fb_update_measurements(struct application *self){
 
 	self->measured.joy_pitch = _joy_pitch_dir * _scale_input((float)self->inputs.joy_pitch, &self->config.limit.joy_pitch);
 	self->measured.joy_yaw = _joy_yaw_dir * _scale_input((float)self->inputs.joy_yaw, &self->config.limit.joy_yaw);
+	if(fabsf(self->measured.joy_pitch) < 0.08) self->measured.joy_pitch = 0;
+	if(fabsf(self->measured.joy_yaw) < 0.08) self->measured.joy_yaw = 0;
 	self->measured.pitch_acc = _scale_input((float)self->inputs.pitch_acc, &self->config.limit.pitch_acc);
 	self->measured.yaw_acc = _scale_input((float)self->inputs.yaw_acc, &self->config.limit.yaw_acc);
 	self->measured.pitch_speed = _scale_input((float)self->inputs.pitch_speed, &self->config.limit.pitch_speed);

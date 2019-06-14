@@ -525,9 +525,6 @@ Mouser crp
 CLOCK: [2019-04-26 Fri 16:00]--[2019-04-26 Fri 17:30] =>  1:30
 - Note taken on [2019-04-26 Fri 16:00] \\
 Fix stlink and serial
-CLOCK: [2019-04-29 Mon 09:00]--[2019-04-29 Mon 11:00] =>  2:00
-- Note taken on [2019-04-29 Mon 09:00] \\
-Make plan for wiseled
 CLOCK: [2019-04-29 Mon 14:00]--[2019-04-29 Mon 16:00] =>  2:00
 - Note taken on [2019-04-29 Mon 14:00] \\
 Plan in org mode
@@ -740,27 +737,32 @@ CLOCK: [2019-04-25 Thu 19:00]--[2019-04-25 Thu 21:00] =>  2:00
 - Note taken on [2019-04-25 Thu 19:00] \\
 Vcp working
 :END:
-** NEXT Fix the time interval bug
-SCHEDULED: <2019-05-01 Wed> DEADLINE: <2019-05-01 Wed>
+** DONE Fix the time interval bug
+CLOSED: [2019-06-14 Fri 14:53] SCHEDULED: <2019-05-01 Wed> DEADLINE: <2019-05-01 Wed>
 :LOGBOOK:
+CLOCK: [2019-06-09 Sun 20:00]--[2019-06-09 Sun 22:00] =>  2:00
 CLOCK: [2019-05-06 Mon 08:30]--[2019-05-06 Mon 10:00] =>  1:30
 :END:
-** NEXT Get the invoice paid
-** WAITING Add unit tests
+** DONE Get the invoice paid
+CLOSED: [2019-06-09 Sun 20:02]
+** TODO Add unit tests
+:LOGBOOK:
+CLOCK: [2019-06-14 Fri 10:00]--[2019-06-14 Fri 16:30] =>  6:30
+:END:
 ** DONE Account project time from start to end of april
-** Add support for saving config
+** TODO Add support for saving config
 *** PID values
 *** Limits
-** Implement current based control
+** TODO Implement current based control
 *** DC motor
 *** PMSM motor
-** Finish joystick control
+** TODO Finish joystick control
 *** Add deadband
-** Finish encoder driver and update [[file:doc/usermanual.org::Universal%20encoder%20inputs][encoder inputs section]]
+** TODO Finish encoder driver and update [[file:doc/usermanual.org::Universal%20encoder%20inputs][encoder inputs section]]
 *** Add reconfiguration of encoder inputs to different modes
 *** Add support for checking encoder errors and update
-** Document gpio connections based on the device tree
-** DONE Port to the new boss
+** TODO Document gpio connections based on the device tree
+** DONE Port to the new api
 :LOGBOOK:
 CLOCK: [2019-05-04 Sat 03:30]--[2019-05-04 Sat 04:00] =>  0:30
 :END:
@@ -770,13 +772,13 @@ CLOCK: [2019-05-04 Sat 03:30]--[2019-05-04 Sat 04:00] =>  0:30
 - [X] Pitch current (A)
 - [X] Yaw current (A)
 - [X] Supply voltage (V)
-** NEXT User manual
+** DONE User manual
 SCHEDULED: <2019-05-08 Wed>
 :PROPERTIES:
 :Effort:   6:00
 :END:
 :LOGBOOK:
-CLOCK: [2019-05-08 Wed 14:00]
+CLOCK: [2019-05-08 Wed 14:00]--[2019-05-08 Wed 16:30] =>  2:30
 CLOCK: [2019-05-08 Wed 12:30]--[2019-05-08 Wed 13:30] =>  1:00
 CLOCK: [2019-05-08 Wed 10:00]--[2019-05-08 Wed 12:00] =>  2:00
 CLOCK: [2019-05-02 Thu 14:00]--[2019-05-02 Thu 15:30] =>  1:30
@@ -805,8 +807,19 @@ CLOCK: [2019-05-02 Thu 14:00]--[2019-05-02 Thu 15:30] =>  1:30
 ***** Aborting motion
 **** Configuring the settings
 ***** Motion limits
-** Package up the system for delivery
+** TODO Package up the system for delivery
 - [ ] 2 working motor control boards
 - [ ] 2 working control panel boards
 - [ ] 1 Printed user manual
 - [ ] Connectors
+** Live testing
+:LOGBOOK:
+CLOCK: [2019-06-10 Mon 11:30]--[2019-06-10 Mon 20:30] =>  9:00
+:END:
+
+* Documentation
+** DONE Upload everything to git
+CLOSED: [2019-05-27 Mon 11:44]
+:LOGBOOK:
+CLOCK: [2019-05-27 Mon 11:00]--[2019-05-27 Mon 12:00] =>  1:00
+:END:
