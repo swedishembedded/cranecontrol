@@ -143,6 +143,7 @@ am_libflyingbergman_a_OBJECTS = libflyingbergman_a-fb.$(OBJEXT) \
 	libflyingbergman_a-fb_control.$(OBJEXT) \
 	libflyingbergman_a-fb_filter.$(OBJEXT) \
 	libflyingbergman_a-fb_leds.$(OBJEXT) \
+	libflyingbergman_a-fb_output.$(OBJEXT) \
 	libflyingbergman_a-fb_preset.$(OBJEXT) \
 	libflyingbergman_a-fb_state_operational.$(OBJEXT) \
 	libflyingbergman_a-inputs.$(OBJEXT) \
@@ -358,6 +359,7 @@ libflyingbergman_a_SOURCES = \
 	fb_control.c\
 	fb_filter.c\
 	fb_leds.c\
+	fb_output.c\
 	fb_preset.c\
 	fb_state_operational.c\
 	inputs.c\
@@ -454,6 +456,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_filter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_leds.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_output.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_preset.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_state_operational.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-inputs.Po@am__quote@
@@ -579,6 +582,20 @@ libflyingbergman_a-fb_leds.obj: fb_leds.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_leds.c' object='libflyingbergman_a-fb_leds.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_leds.obj `if test -f 'fb_leds.c'; then $(CYGPATH_W) 'fb_leds.c'; else $(CYGPATH_W) '$(srcdir)/fb_leds.c'; fi`
+
+libflyingbergman_a-fb_output.o: fb_output.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_output.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_output.Tpo -c -o libflyingbergman_a-fb_output.o `test -f 'fb_output.c' || echo '$(srcdir)/'`fb_output.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-fb_output.Tpo $(DEPDIR)/libflyingbergman_a-fb_output.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_output.c' object='libflyingbergman_a-fb_output.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_output.o `test -f 'fb_output.c' || echo '$(srcdir)/'`fb_output.c
+
+libflyingbergman_a-fb_output.obj: fb_output.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_output.obj -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_output.Tpo -c -o libflyingbergman_a-fb_output.obj `if test -f 'fb_output.c'; then $(CYGPATH_W) 'fb_output.c'; else $(CYGPATH_W) '$(srcdir)/fb_output.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-fb_output.Tpo $(DEPDIR)/libflyingbergman_a-fb_output.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_output.c' object='libflyingbergman_a-fb_output.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_output.obj `if test -f 'fb_output.c'; then $(CYGPATH_W) 'fb_output.c'; else $(CYGPATH_W) '$(srcdir)/fb_output.c'; fi`
 
 libflyingbergman_a-fb_preset.o: fb_preset.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_preset.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_preset.Tpo -c -o libflyingbergman_a-fb_preset.o `test -f 'fb_preset.c' || echo '$(srcdir)/'`fb_preset.c

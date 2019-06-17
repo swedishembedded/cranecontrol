@@ -33,6 +33,8 @@
 #define OC_POT_OC_ADJ_MOTOR1 2
 #define OC_POT_OC_ADJ_MOTOR2 3
 
+#define FB_DEFAULT_DT 0.001f
+
 #define FB_SW_PRESET_1 7
 #define FB_SW_PRESET_2 6
 #define FB_SW_PRESET_3 5
@@ -117,6 +119,13 @@ enum {
 	FB_SLAVE_VALID_MICROS	= (1 << 4)
 };
 
+		struct fb_switch_state {
+			bool pressed;
+			bool long_pressed;
+			bool toggled;
+			timestamp_t pressed_time;
+		};
+
 struct fb {
     led_controller_t leds;
 	console_device_t console;
@@ -160,12 +169,7 @@ struct fb {
 		uint16_t pitch;
 		int16_t yaw;
 
-		struct fb_switch_state {
-			bool pressed;
-			bool long_pressed;
-			bool toggled;
-			timestamp_t pressed_time;
-		} sw[FB_SWITCH_COUNT];
+		struct fb_switch_state sw[FB_SWITCH_COUNT];
 
 		uint16_t joy_yaw, joy_pitch;
 		uint16_t yaw_acc, pitch_acc;
@@ -281,3 +285,4 @@ void _fb_read_inputs(struct fb *self);
 float _fb_filter(struct fb_filter *self, const struct fb_config_filter *conf, float in);
 
 int fb_try_load_preset(struct fb *self, unsigned preset);
+void fb_output_limited(struct fb *self, float pitch, float yaw, float pitch_acc, float yaw_acc);

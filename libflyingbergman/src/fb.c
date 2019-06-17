@@ -15,9 +15,9 @@
 
 #include "dts/flyingbergman.h"
 #include "fb.h"
+#include "fb_can.h"
 #include "fb_cmd.h"
 #include "fb_state.h"
-#include "fb_can.h"
 #include <libfdt/libfdt.h>
 
 static void _fb_indicator_loop(void *ptr) {
@@ -128,45 +128,6 @@ void _fb_update_state(struct fb *self, float dt) {
 	}
 }
 
-//! this function constrains the demanded pitch and yaw output to be compliant with
-//! controls for speed and intensity
-static void _fb_output_constrained(struct fb *self, float demand_pitch,
-                                   float demand_yaw, float pitch_acc, float yaw_acc,
-                                   float dt) {
-	demand_pitch = constrain_float(demand_pitch, -1.f, 1.f);
-	demand_yaw = constrain_float(demand_yaw, -1.f, 1.f);
-
-	float pitch = self->output.pitch;
-	if(pitch < demand_pitch)
-		pitch = constrain_float(pitch + 4.f * pitch_acc * dt, pitch, demand_pitch);
-	else if(pitch > demand_pitch)
-		pitch = constrain_float(pitch - 4.f * pitch_acc * dt, demand_pitch, pitch);
-
-	float yaw = self->output.yaw;
-	if(yaw < demand_yaw)
-		yaw = constrain_float(yaw + 4.f * yaw_acc * dt, yaw, demand_yaw);
-	else if(yaw > demand_yaw)
-		yaw = constrain_float(yaw - 4.f * yaw_acc * dt, demand_yaw, yaw);
-
-	float pitch_speed = self->measured.pitch_speed / FB_PITCH_MAX_VEL;
-	float yaw_speed = self->measured.yaw_speed / FB_YAW_MAX_VEL;
-
-	pitch = constrain_float(pitch, -pitch_speed, pitch_speed);
-	yaw = constrain_float(yaw, -yaw_speed, yaw_speed);
-
-	// limit pitch if measured pitch is outside of allowed limit
-	if(self->measured.pitch > self->config.axis[FB_AXIS_UPDOWN].limits.pos_max) {
-		pitch = constrain_float(pitch, 0, 1.f);
-	} else if(self->measured.pitch <
-	          self->config.axis[FB_AXIS_UPDOWN].limits.pos_min) {
-		pitch = constrain_float(pitch, -1.f, 0);
-	}
-
-	// write final output value
-	self->output.pitch = pitch;
-	self->output.yaw = yaw;
-}
-
 static void _fb_update_control(struct fb *self, float dt) {
 	switch(self->control_mode) {
 		case FB_CONTROL_MODE_NO_MOTION: {
@@ -176,7 +137,7 @@ static void _fb_update_control(struct fb *self, float dt) {
 		case FB_CONTROL_MODE_LOCAL: {
 			float pitch = (float)self->local.pitch * 0.0005f;
 			float yaw = (float)self->local.yaw * 0.0005f;
-			_fb_output_constrained(self, pitch, yaw, 1, 1, dt);
+			fb_output_limited(self, pitch, yaw, FB_PITCH_MAX_ACC, FB_YAW_MAX_ACC);
 		} break;
 		case FB_CONTROL_MODE_REMOTE: {
 			/**
@@ -186,15 +147,15 @@ static void _fb_update_control(struct fb *self, float dt) {
 			 */
 			float pitch = (float)self->remote.pitch * 0.0005f;
 			float yaw = (float)self->remote.yaw * 0.0005f;
-			_fb_output_constrained(self, pitch, yaw, self->measured.pitch_acc,
-			                       self->measured.yaw_acc, dt);
+			fb_output_limited(self, pitch, yaw, self->measured.pitch_acc,
+			                  self->measured.yaw_acc);
 		} break;
 		case FB_CONTROL_MODE_MANUAL: {
 			/**
 			 * In manual mode we generate output directly based on joystick input
 			 */
-			_fb_output_constrained(self, self->measured.joy_pitch, self->measured.joy_yaw,
-			                       self->measured.pitch_acc, self->measured.yaw_acc, dt);
+			fb_output_limited(self, self->measured.joy_pitch, self->measured.joy_yaw,
+			                  self->measured.pitch_acc, self->measured.yaw_acc);
 		} break;
 		case FB_CONTROL_MODE_AUTO: {
 			/*
@@ -207,12 +168,11 @@ static void _fb_update_control(struct fb *self, float dt) {
 			float co_pitch = fb_control_get_output(&self->axis[FB_AXIS_UPDOWN]);
 			float co_yaw = fb_control_get_output(&self->axis[FB_AXIS_LEFTRIGHT]);
 
-			_fb_output_constrained(self, -co_pitch, -co_yaw, 1, 1, dt);
+			fb_output_limited(self, -co_pitch, -co_yaw, FB_PITCH_MAX_ACC, FB_YAW_MAX_ACC);
 
 			// if joystick is moved during automatic move then we switch back to manual
-			// mode
-			if(fabsf(self->measured.joy_pitch) > 0.1 ||
-			   fabsf(self->measured.joy_yaw) > 0.1) {
+			if(fabsf(self->measured.joy_pitch) > self->config.deadband.pitch ||
+			   fabsf(self->measured.joy_yaw) > self->config.deadband.yaw) {
 				self->control_mode = FB_CONTROL_MODE_MANUAL;
 			}
 		} break;
@@ -223,7 +183,6 @@ static void _fb_update_motors(struct fb *self) {
 	float pitch = self->output.pitch;
 	// FIXME: remove the 2.0f here
 	float yaw = self->output.yaw * 2.f;
-
 
 	pitch = constrain_float(pitch * 0.5, -0.5, 0.5);
 	yaw = constrain_float(yaw * 0.5, -0.5, 0.5);
@@ -398,7 +357,7 @@ static int _fb_events_handler(struct events_subscriber *sub, uint32_t ev) {
 }
 
 static int _fb_probe(void *fdt, int fdt_node) {
-	struct fb *self = kzmalloc(sizeof(struct fb));
+	struct fb *self = (struct fb *)kzmalloc(sizeof(struct fb));
 
 	BUG_ON(!self);
 
@@ -535,7 +494,7 @@ static int _fb_probe(void *fdt, int fdt_node) {
 	fb_leds_reset(&self->button_leds);
 
 	static const struct fb_config_filter _pfilt = {
-		    .a0 = -1.44739, .a1 = 0.567971, .b0 = 0.0659765, .b1 = 0.0546078};
+	    .a0 = -1.44739, .a1 = 0.567971, .b0 = 0.0659765, .b1 = 0.0546078};
 	fb_filter_init(&self->measured.pfilt, &_pfilt);
 
 	analog_write(self->oc_pot, OC_POT_OC_ADJ_MOTOR1, 1.f);

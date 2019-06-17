@@ -104,14 +104,16 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__EXEEXT_1 = motion_profile$(EXEEXT) fb$(EXEEXT) fb_control$(EXEEXT) \
 	fb_state_operational$(EXEEXT)
-am_fb_OBJECTS = fb.$(OBJEXT)
+am__dirstamp = $(am__leading_dot)dirstamp
+am_fb_OBJECTS = ../src/fb_filter.$(OBJEXT) ../src/fb_control.$(OBJEXT) \
+	../src/fb_leds.$(OBJEXT) ../src/motion_profile.$(OBJEXT) \
+	fb.$(OBJEXT)
 fb_OBJECTS = $(am_fb_OBJECTS)
 fb_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am__dirstamp = $(am__leading_dot)dirstamp
 am_fb_control_OBJECTS = ../src/fb_control.$(OBJEXT) \
 	../src/fb_filter.$(OBJEXT) fb_control.$(OBJEXT)
 fb_control_OBJECTS = $(am_fb_control_OBJECTS)
@@ -562,6 +564,10 @@ AM_LDFLAGS = \
 	-lm -lgtest -lgmock -lpthread
 
 fb_SOURCES = \
+	../src/fb_filter.c\
+	../src/fb_control.c\
+	../src/fb_leds.c\
+	../src/motion_profile.c\
 	fb.cpp
 
 fb_control_SOURCES = \
@@ -622,20 +628,24 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-
-fb$(EXEEXT): $(fb_OBJECTS) $(fb_DEPENDENCIES) $(EXTRA_fb_DEPENDENCIES) 
-	@rm -f fb$(EXEEXT)
-	$(AM_V_CXXLD)$(CXXLINK) $(fb_OBJECTS) $(fb_LDADD) $(LIBS)
 ../src/$(am__dirstamp):
 	@$(MKDIR_P) ../src
 	@: > ../src/$(am__dirstamp)
 ../src/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) ../src/$(DEPDIR)
 	@: > ../src/$(DEPDIR)/$(am__dirstamp)
-../src/fb_control.$(OBJEXT): ../src/$(am__dirstamp) \
-	../src/$(DEPDIR)/$(am__dirstamp)
 ../src/fb_filter.$(OBJEXT): ../src/$(am__dirstamp) \
 	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_control.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_leds.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/motion_profile.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+
+fb$(EXEEXT): $(fb_OBJECTS) $(fb_DEPENDENCIES) $(EXTRA_fb_DEPENDENCIES) 
+	@rm -f fb$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fb_OBJECTS) $(fb_LDADD) $(LIBS)
 
 fb_control$(EXEEXT): $(fb_control_OBJECTS) $(fb_control_DEPENDENCIES) $(EXTRA_fb_control_DEPENDENCIES) 
 	@rm -f fb_control$(EXEEXT)
@@ -648,8 +658,6 @@ fb_control$(EXEEXT): $(fb_control_OBJECTS) $(fb_control_DEPENDENCIES) $(EXTRA_fb
 fb_state_operational$(EXEEXT): $(fb_state_operational_OBJECTS) $(fb_state_operational_DEPENDENCIES) $(EXTRA_fb_state_operational_DEPENDENCIES) 
 	@rm -f fb_state_operational$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fb_state_operational_OBJECTS) $(fb_state_operational_LDADD) $(LIBS)
-../src/motion_profile.$(OBJEXT): ../src/$(am__dirstamp) \
-	../src/$(DEPDIR)/$(am__dirstamp)
 ../../theboss/src/libfirmware/src/$(am__dirstamp):
 	@$(MKDIR_P) ../../theboss/src/libfirmware/src
 	@: > ../../theboss/src/libfirmware/src/$(am__dirstamp)
@@ -675,6 +683,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../../theboss/src/libfirmware/src/$(DEPDIR)/timestamp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_leds.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_preset.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_state_operational.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/motion_profile.Po@am__quote@

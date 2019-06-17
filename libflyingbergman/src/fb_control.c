@@ -6,8 +6,8 @@
  * |_|   |_|\__, |_|_| |_|\__, |____/ \___|_|  \__, |_| |_| |_|\__,_|_| |_|
  *          |___/         |___/                |___/
  **/
-#include "fb_control.h"
 #include "fb.h"
+#include "fb_control.h"
 
 #define FB_CONTROL_CLOCK_HZ 1000
 

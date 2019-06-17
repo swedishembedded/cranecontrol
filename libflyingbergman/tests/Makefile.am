@@ -20,6 +20,10 @@ AM_LDFLAGS=\
 	-lm -lgtest -lgmock -lpthread
 
 fb_SOURCES=\
+	../src/fb_filter.c\
+	../src/fb_control.c\
+	../src/fb_leds.c\
+	../src/motion_profile.c\
 	fb.cpp
 
 fb_control_SOURCES=\

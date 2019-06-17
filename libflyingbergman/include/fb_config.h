@@ -11,11 +11,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define FB_PITCH_MAX_ACC 0.4f
-#define FB_PITCH_MAX_VEL 0.15f
+#define FB_PITCH_MAX_ACC 1.f
+#define FB_PITCH_MAX_VEL 1.f
 
-#define FB_YAW_MAX_ACC (2.f / (90.f / 17.f))
-#define FB_YAW_MAX_VEL (4 * 1.3f / (90.f / 17.f))
+#define FB_YAW_MAX_ACC 1.f
+#define FB_YAW_MAX_VEL 1.f
 
 #define FB_AXIS_UPDOWN 0
 #define FB_AXIS_LEFTRIGHT 1
@@ -63,6 +63,9 @@ struct fb_config {
 		bool valid;
 	} presets[FB_PRESET_COUNT];
 	struct fb_config_control axis[FB_AXIS_COUNT];
+	struct {
+		float pitch, yaw;
+	} deadband;
 	struct {
 		struct fb_analog_limit pitch;
 		struct fb_analog_limit joy_pitch;

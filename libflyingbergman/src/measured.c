@@ -44,10 +44,12 @@ void _fb_update_measurements(struct fb *self) {
 	    _scale_input((float)self->inputs.joy_pitch, &self->config.limit.joy_pitch);
 	self->measured.joy_yaw = _joy_yaw_dir * _scale_input((float)self->inputs.joy_yaw,
 	                                                     &self->config.limit.joy_yaw);
-	if(fabsf(self->measured.joy_pitch) < 0.08)
+	// add deadband
+	if(fabsf(self->measured.joy_pitch) < self->config.deadband.pitch)
 		self->measured.joy_pitch = 0;
-	if(fabsf(self->measured.joy_yaw) < 0.08)
+	if(fabsf(self->measured.joy_yaw) < self->config.deadband.yaw)
 		self->measured.joy_yaw = 0;
+
 	self->measured.pitch_acc =
 	    _scale_input((float)self->inputs.pitch_acc, &self->config.limit.pitch_acc);
 	self->measured.yaw_acc =

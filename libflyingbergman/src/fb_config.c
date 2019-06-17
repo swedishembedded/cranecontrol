@@ -34,6 +34,9 @@ void fb_config_init(struct fb_config *self) {
 		ax->Kd = 0.2f;
 	} while(0);
 
+	self->deadband.pitch = 0.1f;
+	self->deadband.yaw = 0.1f;
+
 	// set default limits
 	self->limit.pitch =
 	    (struct fb_analog_limit){.min = 0, .max = 3790, .omin = -1.f, .omax = 1.f};

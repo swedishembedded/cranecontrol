@@ -7,6 +7,7 @@ libflyingbergman_a_SOURCES = \
 	fb_control.c\
 	fb_filter.c\
 	fb_leds.c\
+	fb_output.c\
 	fb_preset.c\
 	fb_state_operational.c\
 	inputs.c\

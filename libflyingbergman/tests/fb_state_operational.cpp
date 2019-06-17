@@ -104,7 +104,7 @@ TEST_F(StateOperationalTest, preset_activation) {
 	fb.inputs.sw[FB_SW_HOME].long_pressed = false;
 	// check preset button activations
 	for(unsigned c = 0; c < FB_PRESET_COUNT; c++) {
-		struct fb::fb_inputs_data::fb_switch_state *sw = NULL;
+		struct fb_switch_state *sw = NULL;
 		switch(c) {
 			case FB_PRESET_HOME:
 				continue;

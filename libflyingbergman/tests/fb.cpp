@@ -10,6 +10,7 @@ extern "C" {
 #include "fb.h"
 #include "fb_state.h"
 #include "fb_leds.h"
+
 }
 
 class FlyingBergmanTest : public ::testing::Test{
