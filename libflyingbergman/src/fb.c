@@ -108,36 +108,39 @@ void _fb_state_save_preset(struct fb *self, float dt) {
 	}
 }
 
+static void _fb_check_mode(struct fb *self) {
+	if(self->can_addr != self->inputs.can_addr) {
+		fb_mode_t mode = FB_MODE_UNDEFINED;
+		if(self->inputs.can_addr == FB_CANOPEN_MASTER_ADDRESS) {
+			mode = FB_MODE_MASTER;
+		} else {
+			mode = FB_MODE_SLAVE;
+		}
+
+		canopen_set_address(self->canopen_mem, self->inputs.can_addr);
+		canopen_set_mode(self->canopen_mem,
+		                 (mode == FB_MODE_MASTER) ? CANOPEN_MASTER : CANOPEN_SLAVE);
+
+		if(mode == FB_MODE_MASTER) {
+			regmap_write_u32(self->regmap, CANOPEN_REG_DEVICE_CYCLE_PERIOD, 1000);
+		}
+
+		self->mode = mode;
+		self->can_addr = self->inputs.can_addr;
+	}
+}
+
 void _fb_update_state(struct fb *self, float dt) {
 	self->state.fn(self, dt);
 
-	// FIXME: this is wrong place to put this
-	if(self->mode == FB_MODE_SLAVE) {
-		if(timestamp_expired(self->remote.pitch_update_timeout) ||
-		   timestamp_expired(self->remote.yaw_update_timeout)) {
-			if(self->control_mode == FB_CONTROL_MODE_REMOTE) {
-				self->control_mode = FB_CONTROL_MODE_NO_MOTION;
-			}
-			self->remote.pitch_update_timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);
-			self->remote.yaw_update_timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);
-		} else if(self->local.pitch != 0 || self->local.yaw != 0) {
-			self->control_mode = FB_CONTROL_MODE_LOCAL;
-		} else {
-			self->control_mode = FB_CONTROL_MODE_REMOTE;
-		}
-	}
+	_fb_check_mode(self);
 }
 
 static void _fb_update_control(struct fb *self, float dt) {
 	switch(self->control_mode) {
 		case FB_CONTROL_MODE_NO_MOTION: {
-			self->output.pitch = 0;
-			self->output.yaw = 0;
-		} break;
-		case FB_CONTROL_MODE_LOCAL: {
-			float pitch = (float)self->local.pitch * 0.0005f;
-			float yaw = (float)self->local.yaw * 0.0005f;
-			fb_output_limited(self, pitch, yaw, FB_PITCH_MAX_ACC, FB_YAW_MAX_ACC);
+			// important to apply the limit even when we want no output at all
+			fb_output_limited(self, 0, 0, FB_PITCH_MAX_ACC, FB_YAW_MAX_ACC);
 		} break;
 		case FB_CONTROL_MODE_REMOTE: {
 			/**
@@ -165,6 +168,13 @@ static void _fb_update_control(struct fb *self, float dt) {
 			 * controls are added to the control action to still make it possible to
 			 * control using joystick
 			 */
+			// FIXME: set the current velocity
+			fb_control_set_input(&self->axis[FB_AXIS_UPDOWN], self->measured.pitch, 0.f);
+			fb_control_set_input(&self->axis[FB_AXIS_LEFTRIGHT], self->measured.yaw, 0.f);
+
+			fb_control_clock(&self->axis[FB_AXIS_UPDOWN]);
+			fb_control_clock(&self->axis[FB_AXIS_LEFTRIGHT]);
+
 			float co_pitch = fb_control_get_output(&self->axis[FB_AXIS_UPDOWN]);
 			float co_yaw = fb_control_get_output(&self->axis[FB_AXIS_LEFTRIGHT]);
 
@@ -203,40 +213,27 @@ static void _fb_update_motors(struct fb *self) {
 	thread_sched_resume();
 }
 
-static bool _fb_slave_timed_out(struct fb *self) {
-	timestamp_t timeout = timestamp_from_now_ms(FB_SLAVE_TIMEOUT_MS);
-
-	uint32_t mask = FB_SLAVE_VALID_PITCH | FB_SLAVE_VALID_YAW |
-	                FB_SLAVE_VALID_I_PITCH | FB_SLAVE_VALID_I_YAW;
-
-	thread_mutex_lock(&self->slave.lock);
-	if((self->slave.valid_bits & mask) == mask) {
-		// if all items were received then reset the bits and update timestamp
-		self->slave.valid_bits = 0;
-		self->slave.timeout = timeout;
-		fb_leds_set_state(&self->button_leds, FB_LED_CONN_STATUS, FB_LED_STATE_OFF);
-	} else {
-		// otherwise wait until timeout and reconfigure slave
-		if(timestamp_expired(self->slave.timeout)) {
-			self->slave.valid_bits = 0;
-			self->slave.timeout = timeout;
-			fb_leds_set_state(&self->button_leds, FB_LED_CONN_STATUS, FB_LED_STATE_ON);
-			thread_mutex_unlock(&self->slave.lock);
-			return true;
+static void fb_check_link_state(struct fb *self) {
+	if(self->mode == FB_MODE_SLAVE && !self->inputs.use_local) {
+		if(self->can.timed_out) {
+			if(self->control_mode == FB_CONTROL_MODE_REMOTE) {
+				self->control_mode = FB_CONTROL_MODE_NO_MOTION;
+			}
+		}
+	} else if(self->mode == FB_MODE_MASTER) {
+		if(self->can.timed_out) {
+			_fb_enter_state(self, _fb_state_wait_power);
 		}
 	}
-	thread_mutex_unlock(&self->slave.lock);
-	return false;
 }
 
-static void _fb_monitor_slaves(struct fb *self) {
-	if(self->mode != FB_MODE_MASTER)
-		return;
-
-	if(_fb_slave_timed_out(self)) {
-		_fb_enter_state(self, _fb_state_wait_power);
-		fb_reinit_can_slave(self);
-	}
+static void _fb_update(struct fb *self) {
+	fb_can_clock(self);
+	fb_check_link_state(self);
+	_fb_update_measurements(self);
+	_fb_update_state(self, FB_DEFAULT_DT);
+	_fb_update_control(self, FB_DEFAULT_DT);
+	_fb_update_motors(self);
 }
 
 static void _fb_control_loop(void *ptr) {
@@ -244,17 +241,8 @@ static void _fb_control_loop(void *ptr) {
 
 	uint32_t ticks = thread_ticks_count();
 	while(1) {
-		timestamp_t now = timestamp();
-		timestamp_diff_t diff = timestamp_sub(now, self->state.prev_loop_time);
-		float dt = (float)(diff.usec) * 1e-6;
-		self->state.prev_loop_time = now;
-
 		_fb_read_inputs(self);
-		_fb_monitor_slaves(self);
-		_fb_update_measurements(self);
-		_fb_update_state(self, dt);
-		_fb_update_control(self, dt);
-		_fb_update_motors(self);
+		_fb_update(self);
 
 		thread_sleep_ms_until(&ticks, 1);
 	}
@@ -356,137 +344,31 @@ static int _fb_events_handler(struct events_subscriber *sub, uint32_t ev) {
 	return 0;
 }
 
-static int _fb_probe(void *fdt, int fdt_node) {
-	struct fb *self = (struct fb *)kzmalloc(sizeof(struct fb));
-
-	BUG_ON(!self);
-
-	gpio_device_t sw_gpio = gpio_find_by_ref(fdt, fdt_node, "sw_gpio");
-	gpio_device_t gpio_ex = gpio_find_by_ref(fdt, fdt_node, "gpio_ex");
-	adc_device_t adc = adc_find_by_ref(fdt, fdt_node, "adc");
-	analog_device_t mot_x = analog_find_by_ref(fdt, fdt_node, "mot_x");
-	analog_device_t mot_y = analog_find_by_ref(fdt, fdt_node, "mot_y");
-	analog_device_t sw_leds = analog_find_by_ref(fdt, fdt_node, "sw_leds");
-	console_device_t console = console_find_by_ref(fdt, fdt_node, "console");
-	gpio_device_t mux = gpio_find_by_ref(fdt, fdt_node, "mux");
-	led_controller_t leds = leds_find_by_ref(fdt, fdt_node, "leds");
-	encoder_device_t enc1 = encoder_find_by_ref(fdt, fdt_node, "enc1");
-	encoder_device_t enc2 = encoder_find_by_ref(fdt, fdt_node, "enc2");
-	memory_device_t eeprom = memory_find_by_ref(fdt, fdt_node, "eeprom");
-	analog_device_t oc_pot = analog_find_by_ref(fdt, fdt_node, "oc_pot");
-	can_device_t can1 = can_find_by_ref(fdt, fdt_node, "can1");
-	memory_device_t can1_mem = memory_find_by_ref(fdt, fdt_node, "can1");
-	can_device_t can2 = can_find_by_ref(fdt, fdt_node, "can2");
-	memory_device_t can2_mem = memory_find_by_ref(fdt, fdt_node, "can2");
-	regmap_device_t regmap = regmap_find_by_ref(fdt, fdt_node, "regmap");
-	memory_device_t canopen_mem = memory_find_by_ref(fdt, fdt_node, "canopen");
-	gpio_device_t enc1_gpio = gpio_find_by_ref(fdt, fdt_node, "enc1_gpio");
-	gpio_device_t enc2_gpio = gpio_find_by_ref(fdt, fdt_node, "enc2_gpio");
-	drv8302_t drv_pitch = memory_find_by_ref(fdt, fdt_node, "drv_pitch");
-	drv8302_t drv_yaw = memory_find_by_ref(fdt, fdt_node, "drv_yaw");
-	events_device_t events = events_find_by_ref(fdt, fdt_node, "events");
-
-	if(!leds || !sw_leds || !mux || !sw_gpio || !adc || !mot_x || !mot_y) {
-		printk("fb: need sw_gpio, adc and pwm\n");
-		return -1;
-	}
-
-	if(!eeprom) {
-		printk(PRINT_ERROR "fb: eeprom missing\n");
-		return -1;
-	}
-	if(!console) {
-		printk(PRINT_ERROR "fb: console missing\n");
-		return -1;
-	}
-	if(!oc_pot) {
-		printk(PRINT_ERROR "fb: oc_pot missing\n");
-		return -1;
-	}
-	if(!can1) {
-		printk(PRINT_ERROR "fb: can1 missing\n");
-		return -1;
-	}
-	if(!can2) {
-		printk(PRINT_ERROR "fb: can2 missing\n");
-		return -1;
-	}
-	if(!regmap) {
-		printk(PRINT_ERROR "fb: regmap missing\n");
-		return -1;
-	}
-	if(!canopen_mem) {
-		printk(PRINT_ERROR "fb: canopen missing\n");
-		return -1;
-	}
-	if(!enc1) {
-		printk(PRINT_ERROR "fb: enc1 missing\n");
-		return -1;
-	}
-	if(!enc2) {
-		printk(PRINT_ERROR "fb: enc2 missing\n");
-		return -1;
-	}
-	if(!enc1_gpio) {
-		printk(PRINT_ERROR "fb: enc1_gpio missing\n");
-		return -1;
-	}
-	if(!enc2_gpio) {
-		printk(PRINT_ERROR "fb: enc2_gpio missing\n");
-		return -1;
-	}
-	if(!gpio_ex) {
-		printk(PRINT_ERROR "fb: gpio_ex missing\n");
-		return -1;
-	}
-	if(!drv_pitch) {
-		printk(PRINT_ERROR "fb: drv_pitch missing\n");
-		return -1;
-	}
-	if(!drv_yaw) {
-		printk(PRINT_ERROR "fb: drv_yaw missing\n");
-		return -1;
-	}
-
-	fb_cmd_init(self);
-
-	thread_mutex_init(&self->slave.lock);
-	thread_mutex_init(&self->inputs.lock);
-	thread_mutex_init(&self->measured.lock);
-
-	self->leds = leds;
-	self->console = console;
-	self->sw_gpio = sw_gpio;
-	self->gpio_ex = gpio_ex;
-	self->sw_leds = sw_leds;
-	self->adc = adc;
-	self->mot_x = mot_x;
-	self->mot_y = mot_y;
-	self->mux = mux;
-	self->enc1 = enc1;
-	self->enc2 = enc2;
-	self->eeprom = eeprom;
-	self->oc_pot = oc_pot;
-	self->can1 = can1;
-	self->can1_mem = can1_mem;
-	self->can2 = can2;
-	self->can2_mem = can2_mem;
-	self->regmap = regmap;
-	self->canopen_mem = canopen_mem;
-	self->enc1_gpio = enc1_gpio;
-	self->enc2_gpio = enc2_gpio;
-	self->drv_pitch = drv_pitch;
-	self->drv_yaw = drv_yaw;
-	self->events = events;
-	self->debug_gpio = gpio_find_by_ref(fdt, fdt_node, "debug_gpio");
-	// self->canopen = canopen;
-
+void fb_init(struct fb *self) {
 	self->state.prev_loop_time = timestamp();
 	self->slave.timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);
 	self->remote.pitch_update_timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);
 	self->remote.yaw_update_timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);
 
+	thread_mutex_init(&self->slave.lock);
+	thread_mutex_init(&self->inputs.lock);
+	thread_mutex_init(&self->measured.lock);
+
+	self->local.joy_pitch = 2048;
+	self->local.joy_yaw = 2048;
+	self->local.pitch_acc = 2048;
+	self->local.yaw_acc = 2048;
+	self->local.pitch_speed = 2048;
+	self->local.yaw_speed = 2048;
+	self->local.enc1_aux1 = 0;
+	self->local.enc2_aux1 = 1;
+	self->local.enc1_aux2 = 0;
+	self->local.enc2_aux2 = 1;
+
 	fb_config_init(&self->config);
+
+	fb_cmd_init(self);
+
 	fb_control_init(&self->axis[FB_AXIS_UPDOWN], &self->config.axis[FB_AXIS_UPDOWN]);
 	fb_control_init(&self->axis[FB_AXIS_LEFTRIGHT],
 	                &self->config.axis[FB_AXIS_LEFTRIGHT]);
@@ -530,7 +412,7 @@ static int _fb_probe(void *fdt, int fdt_node) {
 
 	_fb_read_inputs(self);
 	_fb_update_measurements(self);
-	fb_init_can(self);
+	fb_can_init(self);
 
 	printk("HEAP: %lu of %lu free\n", thread_get_free_heap(), thread_get_total_heap());
 	thread_meminfo();
@@ -544,13 +426,4 @@ static int _fb_probe(void *fdt, int fdt_node) {
 	thread_create(_fb_control_loop, "fb_ctrl", 650, self, 2, NULL);
 
 	thread_create(_fb_indicator_loop, "fb_ind", 250, self, 1, NULL);
-
-	return 0;
 }
-
-static int _fb_remove(void *fdt, int fdt_node) {
-	// TODO
-	return -1;
-}
-
-DEVICE_DRIVER(flyingbergman, "app,flyingbergman", _fb_probe, _fb_remove)

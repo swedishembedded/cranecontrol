@@ -9,6 +9,8 @@ void fb_config_init(struct fb_config *self) {
 		ax->error_filter = (struct fb_config_filter){
 		    .a0 = -1.9112f, .a1 = 0.914976f, .b0 = 0.0019161f, .b1 = 0.00186018f};
 
+		ax->limits.acc = ax->limits.dec = 1;
+		ax->limits.vel = 1;
 		ax->limits.pos_max = 0.385;
 		ax->limits.pos_min = -0.560;
 		ax->limits.integral_max = 1.f;
@@ -24,14 +26,18 @@ void fb_config_init(struct fb_config *self) {
 		ax->error_filter =
 		    (struct fb_config_filter){.a0 = 0, .a1 = 0, .b0 = 1.0f, .b1 = 0};
 
+		ax->limits.acc = ax->limits.dec = 1;
+		ax->limits.vel = 1;
 		ax->limits.pos_max = 0;
 		ax->limits.pos_min = 0;
 		ax->limits.integral_max = 1.f;
 
 		ax->Kff = 0.39;
-		ax->Kp = 2.f;
-		ax->Ki = 0.0f;
+		ax->Kp = 8.f;
+		ax->Ki = 0.4f;
 		ax->Kd = 0.2f;
+
+		ax->pos_units = FB_CONTROL_POS_UNITS_RAD;
 	} while(0);
 
 	self->deadband.pitch = 0.1f;

@@ -8,4 +8,5 @@
  **/
 #pragma once
 
+struct fb;
 void fb_cmd_init(struct fb *self);

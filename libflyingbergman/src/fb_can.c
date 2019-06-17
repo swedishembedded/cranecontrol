@@ -9,7 +9,7 @@
 #include "fb_can.h"
 #include "fb.h"
 
-int fb_reinit_can_slave(struct fb *self) {
+static int _fb_can_reinit_slaves(struct fb *self) {
 	struct canopen_pdo_config conf = {
 	    .cob_id = 0x200 | FB_CANOPEN_SLAVE_ADDRESS,
 	    .index = 0,
@@ -129,7 +129,8 @@ static ssize_t _mfr_range_read(regmap_range_t range, uint32_t addr,
 			                         data, size);
 		} break;
 		case CANOPEN_FB_MICROS: {
-			ret = regmap_convert_u32(micros(), type, data, size);
+			timestamp_t ts = timestamp();
+			ret = regmap_convert_u32(ts.usec, type, data, size);
 		} break;
 		case CANOPEN_FB_VMOT: {
 			uint16_t vmot = (uint16_t)constrain_i32((int32_t)(self->measured.vmot * 1000),
@@ -217,7 +218,66 @@ static ssize_t _mfr_range_write(regmap_range_t range, uint32_t addr,
 static struct regmap_range_ops _mfr_range_ops = {.read = _mfr_range_read,
                                                  .write = _mfr_range_write};
 
-void fb_init_can(struct fb *self) {
+
+static bool _fb_slave_timed_out(struct fb *self) {
+	timestamp_t timeout = timestamp_from_now_ms(FB_SLAVE_TIMEOUT_MS);
+
+	uint32_t mask = FB_SLAVE_VALID_PITCH | FB_SLAVE_VALID_YAW |
+	                FB_SLAVE_VALID_I_PITCH | FB_SLAVE_VALID_I_YAW;
+
+	thread_mutex_lock(&self->slave.lock);
+	if((self->slave.valid_bits & mask) == mask) {
+		// if all items were received then reset the bits and update timestamp
+		self->slave.valid_bits = 0;
+		self->slave.timeout = timeout;
+		fb_leds_set_state(&self->button_leds, FB_LED_CONN_STATUS, FB_LED_STATE_OFF);
+	} else {
+		// otherwise wait until timeout and reconfigure slave
+		if(timestamp_expired(self->slave.timeout)) {
+			self->slave.valid_bits = 0;
+			self->slave.timeout = timeout;
+			fb_leds_set_state(&self->button_leds, FB_LED_CONN_STATUS, FB_LED_STATE_ON);
+			thread_mutex_unlock(&self->slave.lock);
+			return true;
+		}
+	}
+	thread_mutex_unlock(&self->slave.lock);
+	return false;
+}
+
+void _fb_can_monitor_link_state(struct fb *self) {
+	if(self->mode == FB_MODE_SLAVE) {
+		if(timestamp_expired(self->remote.pitch_update_timeout) ||
+		   timestamp_expired(self->remote.yaw_update_timeout)) {
+			self->can.timed_out = true;
+
+			self->remote.pitch_update_timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);
+			self->remote.yaw_update_timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);
+		} else {
+			self->can.timed_out = false;
+		}
+	} else if(self->mode == FB_MODE_MASTER){
+		if(_fb_slave_timed_out(self)) {
+			self->can.timed_out = true;
+			fb_can_reinit(self);
+		} else {
+			self->can.timed_out = false;
+		}
+	}
+}
+
+int fb_can_reinit(struct fb *self){
+	if(self->mode == FB_MODE_MASTER){
+		return _fb_can_reinit_slaves(self);
+	}
+	return -1;
+}
+
+void fb_can_clock(struct fb *self){
+	_fb_can_monitor_link_state(self);
+}
+
+void fb_can_init(struct fb *self) {
 	// add the device profile map
 	regmap_range_init(&self->comm_range, CANOPEN_COMM_RANGE_START,
 	                  CANOPEN_COMM_RANGE_END, &_comm_range_ops);

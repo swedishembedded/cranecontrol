@@ -106,8 +106,11 @@ am__EXEEXT_1 = motion_profile$(EXEEXT) fb$(EXEEXT) fb_control$(EXEEXT) \
 	fb_state_operational$(EXEEXT)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_fb_OBJECTS = ../src/fb_filter.$(OBJEXT) ../src/fb_control.$(OBJEXT) \
-	../src/fb_leds.$(OBJEXT) ../src/motion_profile.$(OBJEXT) \
-	fb.$(OBJEXT)
+	../src/fb_leds.$(OBJEXT) ../src/measured.$(OBJEXT) \
+	../src/fb_output.$(OBJEXT) ../src/fb_can.$(OBJEXT) \
+	../src/fb_config.$(OBJEXT) ../src/fb_preset.$(OBJEXT) \
+	../src/inputs.$(OBJEXT) ../src/motion_profile.$(OBJEXT) \
+	../src/fb_state_operational.$(OBJEXT) fb.$(OBJEXT)
 fb_OBJECTS = $(am_fb_OBJECTS)
 fb_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -124,7 +127,6 @@ am_fb_state_operational_OBJECTS =  \
 fb_state_operational_OBJECTS = $(am_fb_state_operational_OBJECTS)
 fb_state_operational_LDADD = $(LDADD)
 am_motion_profile_OBJECTS = ../src/motion_profile.$(OBJEXT) \
-	../../theboss/src/libfirmware/src/timestamp.$(OBJEXT) \
 	motion_profile.$(OBJEXT)
 motion_profile_OBJECTS = $(am_motion_profile_OBJECTS)
 motion_profile_LDADD = $(LDADD)
@@ -557,17 +559,26 @@ AM_CFLAGS = \
 AM_CXXFLAGS = \
 	$(COVERAGE_FLAGS)\
 	-include gtest/gtest.h -include gmock/gmock.h\
+	-ffunction-sections\
 	-I$(abs_top_builddir)/include\
-	-I$(srcdir)/../include
+	-I$(srcdir)/../include\
+	-L$(abs_top_builddir)/lib
 
 AM_LDFLAGS = \
-	-lm -lgtest -lgmock -lpthread
+	-Wl,--gc-sections -lm -lgtest -lgmock -lpthread
 
 fb_SOURCES = \
 	../src/fb_filter.c\
 	../src/fb_control.c\
 	../src/fb_leds.c\
+	../src/measured.c\
+	../src/fb_output.c\
+	../src/fb_can.c\
+	../src/fb_config.c\
+	../src/fb_preset.c\
+	../src/inputs.c\
 	../src/motion_profile.c\
+	../src/fb_state_operational.c\
 	fb.cpp
 
 fb_control_SOURCES = \
@@ -582,7 +593,6 @@ fb_state_operational_SOURCES = \
 
 motion_profile_SOURCES = \
 	../src/motion_profile.c\
-	../../theboss/src/libfirmware/src/timestamp.c\
 	motion_profile.cpp
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -640,7 +650,21 @@ clean-checkPROGRAMS:
 	../src/$(DEPDIR)/$(am__dirstamp)
 ../src/fb_leds.$(OBJEXT): ../src/$(am__dirstamp) \
 	../src/$(DEPDIR)/$(am__dirstamp)
+../src/measured.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_output.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_can.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_config.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_preset.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/inputs.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
 ../src/motion_profile.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_state_operational.$(OBJEXT): ../src/$(am__dirstamp) \
 	../src/$(DEPDIR)/$(am__dirstamp)
 
 fb$(EXEEXT): $(fb_OBJECTS) $(fb_DEPENDENCIES) $(EXTRA_fb_DEPENDENCIES) 
@@ -650,23 +674,10 @@ fb$(EXEEXT): $(fb_OBJECTS) $(fb_DEPENDENCIES) $(EXTRA_fb_DEPENDENCIES)
 fb_control$(EXEEXT): $(fb_control_OBJECTS) $(fb_control_DEPENDENCIES) $(EXTRA_fb_control_DEPENDENCIES) 
 	@rm -f fb_control$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fb_control_OBJECTS) $(fb_control_LDADD) $(LIBS)
-../src/fb_state_operational.$(OBJEXT): ../src/$(am__dirstamp) \
-	../src/$(DEPDIR)/$(am__dirstamp)
-../src/fb_preset.$(OBJEXT): ../src/$(am__dirstamp) \
-	../src/$(DEPDIR)/$(am__dirstamp)
 
 fb_state_operational$(EXEEXT): $(fb_state_operational_OBJECTS) $(fb_state_operational_DEPENDENCIES) $(EXTRA_fb_state_operational_DEPENDENCIES) 
 	@rm -f fb_state_operational$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fb_state_operational_OBJECTS) $(fb_state_operational_LDADD) $(LIBS)
-../../theboss/src/libfirmware/src/$(am__dirstamp):
-	@$(MKDIR_P) ../../theboss/src/libfirmware/src
-	@: > ../../theboss/src/libfirmware/src/$(am__dirstamp)
-../../theboss/src/libfirmware/src/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ../../theboss/src/libfirmware/src/$(DEPDIR)
-	@: > ../../theboss/src/libfirmware/src/$(DEPDIR)/$(am__dirstamp)
-../../theboss/src/libfirmware/src/timestamp.$(OBJEXT):  \
-	../../theboss/src/libfirmware/src/$(am__dirstamp) \
-	../../theboss/src/libfirmware/src/$(DEPDIR)/$(am__dirstamp)
 
 motion_profile$(EXEEXT): $(motion_profile_OBJECTS) $(motion_profile_DEPENDENCIES) $(EXTRA_motion_profile_DEPENDENCIES) 
 	@rm -f motion_profile$(EXEEXT)
@@ -674,18 +685,21 @@ motion_profile$(EXEEXT): $(motion_profile_OBJECTS) $(motion_profile_DEPENDENCIES
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f ../../theboss/src/libfirmware/src/*.$(OBJEXT)
 	-rm -f ../src/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@../../theboss/src/libfirmware/src/$(DEPDIR)/timestamp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_can.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_filter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_leds.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_output.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_preset.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_state_operational.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/inputs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/measured.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/motion_profile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fb_control.Po@am__quote@
@@ -1047,8 +1061,6 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f ../../theboss/src/libfirmware/src/$(DEPDIR)/$(am__dirstamp)
-	-rm -f ../../theboss/src/libfirmware/src/$(am__dirstamp)
 	-rm -f ../src/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ../src/$(am__dirstamp)
 
@@ -1061,7 +1073,7 @@ clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ../../theboss/src/libfirmware/src/$(DEPDIR) ../src/$(DEPDIR) ./$(DEPDIR)
+	-rm -rf ../src/$(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1107,7 +1119,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ../../theboss/src/libfirmware/src/$(DEPDIR) ../src/$(DEPDIR) ./$(DEPDIR)
+	-rm -rf ../src/$(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

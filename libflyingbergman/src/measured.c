@@ -25,13 +25,15 @@ void _fb_update_measurements(struct fb *self) {
 
 		// convert ticks to radians. How this is done is important.
 		self->state.yaw_ticks += (int16_t)(yaw_ticks - self->state.prev_yaw_ticks);
+		self->state.prev_yaw_ticks = yaw_ticks;
+
 		int32_t ticks_per_pi = (int32_t)(FB_MOTOR_YAW_TICKS_PER_ROT / 2.f);
 		if(self->state.yaw_ticks > ticks_per_pi)
-			self->state.yaw_ticks -= 2 * ticks_per_pi;
+			self->state.yaw_ticks -= ticks_per_pi;
 		if(self->state.yaw_ticks < -ticks_per_pi)
-			self->state.yaw_ticks += 2 * ticks_per_pi;
-		self->state.prev_yaw_ticks = yaw_ticks;
-		self->measured.yaw = M_PI * ((float)self->state.yaw_ticks / (float)ticks_per_pi);
+			self->state.yaw_ticks += ticks_per_pi;
+
+		self->measured.yaw = normalize_angle(M_PI * ((float)self->state.yaw_ticks / (float)ticks_per_pi));
 	}
 
 	float _joy_pitch_dir =
@@ -90,26 +92,6 @@ void _fb_update_measurements(struct fb *self) {
 	    1.f / (1.f / ambient_temp_k +
 	           1.f / ntc_b * logf((float)self->inputs.temp_pitch / 4096.f)) -
 	    ambient_temp_k;
-
-	if(self->can_addr != self->inputs.can_addr) {
-		fb_mode_t mode = 0;
-		if(self->inputs.can_addr == FB_CANOPEN_MASTER_ADDRESS) {
-			mode = FB_MODE_MASTER;
-		} else {
-			mode = FB_MODE_SLAVE;
-		}
-
-		canopen_set_address(self->canopen_mem, self->inputs.can_addr);
-		canopen_set_mode(self->canopen_mem,
-		                 (mode == FB_MODE_MASTER) ? CANOPEN_MASTER : CANOPEN_SLAVE);
-
-		if(mode == FB_MODE_MASTER) {
-			regmap_write_u32(self->regmap, CANOPEN_REG_DEVICE_CYCLE_PERIOD, 1000);
-		}
-
-		self->mode = mode;
-		self->can_addr = self->inputs.can_addr;
-	}
 
 	thread_mutex_unlock(&self->measured.lock);
 }

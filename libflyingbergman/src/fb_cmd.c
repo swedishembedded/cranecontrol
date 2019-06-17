@@ -6,10 +6,10 @@
  * |_|   |_|\__, |_|_| |_|\__, |____/ \___|_|  \__, |_| |_| |_|\__,_|_| |_|
  *          |___/         |___/                |___/
  **/
-#include <stdlib.h>
-#include <stdio.h>
-#include "fb.h"
 #include "fb_cmd.h"
+#include "fb.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #define print_status(name, ok)                                                      \
 	do {                                                                              \
@@ -40,6 +40,15 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv) {
 		               (int32_t)(self->output.pitch * 10000), // output pitch
 		               (int32_t)(self->output.yaw * 10000)    // output yaw
 		);
+		console_printf(
+		    con, "CONTROL PITCH: Err %d, I %d\n",
+		    (int32_t)(self->axis[FB_AXIS_UPDOWN].error * 1000),   // output pitch
+		    (int32_t)(self->axis[FB_AXIS_UPDOWN].integral * 1000) // output yaw
+		);
+		console_printf(con, "CONTROL YAW: Err %d, I %d, Target %d\n",
+		               (int32_t)(self->axis[FB_AXIS_LEFTRIGHT].error * 1000),
+		               (int32_t)(self->axis[FB_AXIS_LEFTRIGHT].integral * 1000),
+		               (int32_t)(self->axis[FB_AXIS_LEFTRIGHT].target.pos * 1000));
 	} else if(argc == 2 && strcmp(argv[1], "inputs") == 0) {
 #define TITLE_FMT "%-20s "
 		console_printf(con, TITLE_FMT "%u\n", "US:", micros());
@@ -221,11 +230,80 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv) {
 		float gy = (float)drv8302_get_gain(self->drv_yaw);
 		console_printf(con, "Gains: PITCH %d, YAW %d\n", (int32_t)(gp * 1000),
 		               (int32_t)(gy * 1000));
-	} else if(argc == 4 && strcmp(argv[1], "set") == 0) {
-		if(strcmp(argv[2], "pitch") == 0) {
-			self->local.pitch = (int16_t)atoi(argv[3]);
-		} else if(strcmp(argv[2], "yaw") == 0) {
-			self->local.yaw = (int16_t)atoi(argv[3]);
+	} else if(argc == 3 && strcmp(argv[1], "p") == 0) {
+		unsigned preset = strtoul(argv[2], NULL, 10);
+		if(fb_try_load_preset(self, preset) < 0) {
+			console_printf(con, "failed to load preset %d\n", preset);
+		} else {
+			console_printf(con, "loaded preset %d\n", preset);
+			#if 0
+			for(unsigned c = 0; c < 50; c++){
+				console_printf(con, "profile time %d, ",
+				               (int32_t)(self->axis[FB_AXIS_LEFTRIGHT].time * 1000));
+				console_printf(con, "moving %d, start %d, ",
+				               self->axis[FB_AXIS_LEFTRIGHT].moving,
+				               self->axis[FB_AXIS_LEFTRIGHT].start);
+				console_printf(con, "tp %d, ty %d, ",
+				               (int32_t)(self->axis[FB_AXIS_UPDOWN].new_target * 1000),
+				               (int32_t)(self->axis[FB_AXIS_LEFTRIGHT].new_target * 1000));
+				console_printf(con, "psp %d, ysp %d, ",
+				               (int32_t)(self->axis[FB_AXIS_UPDOWN].target.pos * 1000),
+				               (int32_t)(self->axis[FB_AXIS_LEFTRIGHT].target.pos * 1000));
+				console_printf(
+				    con, "Pitch: %d, Yaw: %d",
+				    (int32_t)(self->measured.pitch * 1000), // motor position pitch
+				    (int32_t)(self->measured.yaw * 1000)    // motor position yaw
+				);
+				console_printf(con, "\n");
+				thread_sleep_ms(100);
+			}
+			#endif
+		}
+	} else if(argc >= 4 && strcmp(argv[1], "set") == 0) {
+		if(strcmp(argv[2], "local") == 0) {
+			if(atoi(argv[3]) == 1) {
+				self->inputs.use_local = true;
+				self->config.presets[FB_PRESET_1].valid = true;
+				self->config.presets[FB_PRESET_1].pitch = 0;
+				self->config.presets[FB_PRESET_1].yaw = 0.5;
+			} else {
+				self->inputs.use_local = false;
+			}
+		} else if(strcmp(argv[2], "manual") == 0) {
+			if(atoi(argv[3]) == 1) {
+				self->control_mode = FB_CONTROL_MODE_MANUAL;
+			}
+		} else if(strcmp(argv[2], "state") == 0) {
+			if(strcmp(argv[3], "operational") == 0) {
+				_fb_enter_state(self, _fb_state_operational);
+			}
+		} else if(strcmp(argv[2], "p1") == 0) {
+			if(argc != 5) {
+				console_printf(con, "not enough arguments to preset\n");
+				return -1;
+			}
+			long pitch = strtol(argv[3], NULL, 10);
+			long yaw = strtol(argv[4], NULL, 10);
+			unsigned preset = FB_PRESET_1;
+			struct fb_config_preset *p = &self->config.presets[preset];
+			p->pitch = (float)pitch * M_PI / 180;
+			p->yaw = (float)yaw * M_PI / 180;
+			p->valid = true;
+			console_printf(con, "set preset %d to %d %d\n", preset, pitch, yaw);
+		} else if(strcmp(argv[2], "joy_pitch") == 0) {
+			self->local.joy_pitch = (uint16_t)strtoul(argv[3], NULL, 10);
+			console_printf(con, "set joystick pitch to %d\n", self->local.joy_pitch);
+		} else if(strcmp(argv[2], "joy_yaw") == 0) {
+			self->local.joy_yaw = (uint16_t)strtoul(argv[3], NULL, 10);
+			console_printf(con, "set joystick yaw to %d\n", self->local.joy_yaw);
+		} else if(strcmp(argv[2], "yaw_acc") == 0) {
+			self->local.yaw_acc = (uint16_t)strtoul(argv[3], NULL, 10);
+		} else if(strcmp(argv[2], "pitch_acc") == 0) {
+			self->local.pitch_acc = (uint16_t)strtoul(argv[3], NULL, 10);
+		} else if(strcmp(argv[2], "pitch_speed") == 0) {
+			self->local.pitch_speed = (uint16_t)strtoul(argv[3], NULL, 10);
+		} else if(strcmp(argv[2], "yaw_speed") == 0) {
+			self->local.yaw_speed = (uint16_t)strtoul(argv[3], NULL, 10);
 		}
 	} else {
 		console_printf(con, "Invalid option\n");
@@ -290,8 +368,9 @@ static int _motor_cmd(console_device_t con, void *userptr, int argc, char **argv
 	return 0;
 }
 
-void fb_cmd_init(struct fb *self){
-	console_add_command(self->console, self, "fb", "Flying Bergman Control", "", _fb_cmd);
+void fb_cmd_init(struct fb *self) {
+	console_add_command(self->console, self, "fb", "Flying Bergman Control", "",
+	                    _fb_cmd);
 	console_add_command(self->console, self, "reg", "Register ops", "", _reg_cmd);
 	console_add_command(self->console, self, "motor", "Motor slave board control", "",
 	                    _motor_cmd);

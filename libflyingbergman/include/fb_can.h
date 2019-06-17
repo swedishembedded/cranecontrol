@@ -8,6 +8,13 @@
  **/
 #pragma once
 
+#include <stdbool.h>
+
+struct fb_can{
+	bool timed_out;
+};
+
 struct fb;
-void fb_init_can(struct fb *self);
-int fb_reinit_can_slave(struct fb *self);
+void fb_can_init(struct fb *self);
+int fb_can_reinit(struct fb *self);
+void fb_can_clock(struct fb *self);

@@ -28,6 +28,9 @@
 #include "fb_filter.h"
 #include "fb_control.h"
 #include "fb_leds.h"
+#include "fb_can.h"
+#include "fb_cmd.h"
+#include "fb_state.h"
 
 #define FB_SWITCH_COUNT 8
 #define OC_POT_OC_ADJ_MOTOR1 2
@@ -79,7 +82,6 @@
 #define FB_MOTOR_YAW_TICKS_PER_ROT (FB_MOTOR_YAW_GEAR_RATIO * ((FB_MOTOR_YAW_GEARBOX_IN_RPM * 512 * 4) / FB_MOTOR_YAW_GEARBOX_OUT_RPM))
 
 #define FB_SLAVE_TIMEOUT_MS 1000
-#define FB_TICKS_ON_TARGET 2000
 
 enum {
 	FB_ADCMUX_YAW_CHAN = 0,
@@ -93,8 +95,9 @@ enum {
 };
 
 typedef enum {
-	FB_MODE_MASTER = 0,
-	FB_MODE_SLAVE = 1
+	FB_MODE_UNDEFINED = 0,
+	FB_MODE_MASTER,
+	FB_MODE_SLAVE
 } fb_mode_t;
 
 #define FB_BTN_LONG_PRESS_TIME_US 1000000UL
@@ -102,14 +105,6 @@ typedef enum {
 #define FB_PRESET_BIT_VALID (1 << 0)
 
 #define FB_REMOTE_TIMEOUT 50000
-
-typedef enum {
-	FB_CONTROL_MODE_NO_MOTION = 0,
-	FB_CONTROL_MODE_REMOTE,
-	FB_CONTROL_MODE_LOCAL,
-	FB_CONTROL_MODE_MANUAL,
-	FB_CONTROL_MODE_AUTO
-} fb_control_mode_t;
 
 enum {
 	FB_SLAVE_VALID_PITCH	= (1 << 0),
@@ -154,8 +149,20 @@ struct fb {
 
 	struct fb_config config;
 
+	struct fb_can can;
+
+	struct fb_inputs_local {
+		uint16_t joy_yaw, joy_pitch;
+		uint16_t yaw_acc, pitch_acc;
+		uint16_t yaw_speed, pitch_speed;
+		bool enc1_aux1, enc1_aux2;
+		bool enc2_aux1, enc2_aux2;
+	} local;
+
 	// raw sensor values
 	struct fb_inputs_data {
+		bool use_local;
+
 		uint16_t vsa_yaw;
 		uint16_t vsb_yaw;
 		uint16_t vsc_yaw;
@@ -262,10 +269,6 @@ struct fb {
 		timestamp_t pitch_update_timeout, yaw_update_timeout;
 	} remote;
 
-	struct {
-		int16_t pitch, yaw;
-	} local;
-
 	uint8_t can_addr;
 
 	fb_control_mode_t control_mode;
@@ -282,7 +285,7 @@ int _ui_cmd(console_device_t con, void *userptr, int argc, char **argv);
 
 void _fb_update_measurements(struct fb *self);
 void _fb_read_inputs(struct fb *self);
-float _fb_filter(struct fb_filter *self, const struct fb_config_filter *conf, float in);
 
+void fb_init(struct fb *self);
 int fb_try_load_preset(struct fb *self, unsigned preset);
 void fb_output_limited(struct fb *self, float pitch, float yaw, float pitch_acc, float yaw_acc);

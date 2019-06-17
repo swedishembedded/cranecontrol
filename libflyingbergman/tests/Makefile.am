@@ -14,16 +14,25 @@ AM_CFLAGS=\
 AM_CXXFLAGS=\
 	$(COVERAGE_FLAGS)\
 	-include gtest/gtest.h -include gmock/gmock.h\
+	-ffunction-sections\
 	-I$(abs_top_builddir)/include\
-	-I$(srcdir)/../include
+	-I$(srcdir)/../include\
+	-L$(abs_top_builddir)/lib
 AM_LDFLAGS=\
-	-lm -lgtest -lgmock -lpthread
+	-Wl,--gc-sections -lm -lgtest -lgmock -lpthread
 
 fb_SOURCES=\
 	../src/fb_filter.c\
 	../src/fb_control.c\
 	../src/fb_leds.c\
+	../src/measured.c\
+	../src/fb_output.c\
+	../src/fb_can.c\
+	../src/fb_config.c\
+	../src/fb_preset.c\
+	../src/inputs.c\
 	../src/motion_profile.c\
+	../src/fb_state_operational.c\
 	fb.cpp
 
 fb_control_SOURCES=\
@@ -38,7 +47,6 @@ fb_state_operational_SOURCES=\
 
 motion_profile_SOURCES=\
 	../src/motion_profile.c\
-	../../theboss/src/libfirmware/src/timestamp.c\
 	motion_profile.cpp
 
 AUTOMAKE_OPTIONS=subdir-objects
