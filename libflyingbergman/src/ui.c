@@ -1,4 +1,4 @@
-#include "flyingbergman.h"
+#include "fb.h"
 #include <ctype.h>
 
 #define UI_UPDATE_INTERVAL_MS 100
@@ -39,7 +39,7 @@ static void _hslider(console_device_t con, int px, int py, int val, int val_min,
 	DEFAULT_BG();
 }
 
-static void _ui_update(struct application *self){
+static void _ui_update(struct fb *self){
 	console_device_t con = self->console;
 	struct fb_meas_data meas;
 	struct fb_inputs_data in;
@@ -100,7 +100,7 @@ static int _ui_process_input(struct fb_ui *self, uint8_t ch){
 }
 
 int _ui_cmd(console_device_t con, void *userptr, int argc, char **argv){
-	struct application *self = (struct application*)userptr;
+	struct fb *self = (struct fb*)userptr;
 	CLEAR();
 	CURSOR_OFF();
 	while(1){

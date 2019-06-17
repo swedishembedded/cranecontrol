@@ -747,6 +747,7 @@ CLOCK: [2019-05-06 Mon 08:30]--[2019-05-06 Mon 10:00] =>  1:30
 CLOSED: [2019-06-09 Sun 20:02]
 ** TODO Add unit tests
 :LOGBOOK:
+CLOCK: [2019-06-15 Sat 06:30]--[2019-06-17 Mon 01:41] => 43:11
 CLOCK: [2019-06-14 Fri 10:00]--[2019-06-14 Fri 16:30] =>  6:30
 :END:
 ** DONE Account project time from start to end of april
@@ -762,6 +763,10 @@ CLOCK: [2019-06-14 Fri 10:00]--[2019-06-14 Fri 16:30] =>  6:30
 *** Add reconfiguration of encoder inputs to different modes
 *** Add support for checking encoder errors and update
 ** TODO Document gpio connections based on the device tree
+** Unit test and refactor the firmware
+:LOGBOOK:
+CLOCK: [2019-06-16 Sun 21:30]--[2019-06-17 Mon 01:30] =>  4:00
+:END:
 ** DONE Port to the new api
 :LOGBOOK:
 CLOCK: [2019-05-04 Sat 03:30]--[2019-05-04 Sat 04:00] =>  0:30
@@ -807,7 +812,11 @@ CLOCK: [2019-05-02 Thu 14:00]--[2019-05-02 Thu 15:30] =>  1:30
 ***** Aborting motion
 **** Configuring the settings
 ***** Motion limits
-** TODO Package up the system for delivery
+** DONE Package up the system for delivery
+CLOSED: [2019-06-15 Sat 06:24]
+:LOGBOOK:
+- CLOSING NOTE [2019-06-15 Sat 06:24]
+:END:
 - [ ] 2 working motor control boards
 - [ ] 2 working control panel boards
 - [ ] 1 Printed user manual

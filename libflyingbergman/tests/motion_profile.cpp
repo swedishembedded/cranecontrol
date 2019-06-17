@@ -29,8 +29,8 @@ protected:
 
 TEST_F(MotionProfileTest, inital_state){
 	float pos = 1, vel = 2, acc = 3;
-	EXPECT_TRUE(motion_profile_completed(&prof, 0));
-	EXPECT_EQ(motion_profile_get_state(&prof), MOTION_PROFILE_COMPLETED);
+	EXPECT_FALSE(motion_profile_completed(&prof, 0));
+	EXPECT_EQ(motion_profile_get_state(&prof), MOTION_PROFILE_UNINITIALIZED);
 	EXPECT_LT(motion_profile_get_pva(&prof, 0, &pos, &vel, &acc), 0);
 	// make sure values were not changed
 	EXPECT_FLOAT_EQ(pos, 1.0f);
@@ -61,9 +61,13 @@ TEST_F(MotionProfileTest, start_stop_from_zero_forward){
 	EXPECT_FLOAT_EQ(pos, 2.75f);
 	EXPECT_FLOAT_EQ(vel, 0.5f);
 
+	EXPECT_FALSE(motion_profile_completed(&prof, 4));
+
 	EXPECT_EQ(motion_profile_get_pva(&prof, 5, &pos, &vel, &acc), 0);
 	EXPECT_FLOAT_EQ(pos, 3.f);
 	EXPECT_FLOAT_EQ(vel, 0.f);
+
+	EXPECT_TRUE(motion_profile_completed(&prof, 5));
 }
 
 TEST_F(MotionProfileTest, start_stop_from_zero_backward){
@@ -92,6 +96,8 @@ TEST_F(MotionProfileTest, start_stop_from_zero_backward){
 	EXPECT_EQ(motion_profile_get_pva(&prof, 5, &pos, &vel, &acc), 0);
 	EXPECT_FLOAT_EQ(pos, -3.f);
 	EXPECT_FLOAT_EQ(vel, -0.f);
+
+	EXPECT_TRUE(motion_profile_completed(&prof, 5));
 }
 
 TEST_F(MotionProfileTest, cross_position_zero){
@@ -120,6 +126,8 @@ TEST_F(MotionProfileTest, cross_position_zero){
 	EXPECT_EQ(motion_profile_get_pva(&prof, 5, &pos, &vel, &acc), 0);
 	EXPECT_FLOAT_EQ(pos, -1.5 + 3.f);
 	EXPECT_FLOAT_EQ(vel, 0.f);
+
+	EXPECT_TRUE(motion_profile_completed(&prof, 5));
 }
 
 int main(int argc, char **argv){

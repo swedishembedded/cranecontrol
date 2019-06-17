@@ -27,35 +27,21 @@
 #include "fb_config.h"
 #include "fb_filter.h"
 #include "fb_control.h"
+#include "fb_leds.h"
 
 #define FB_SWITCH_COUNT 8
-#define FB_LED_COUNT 8
 #define OC_POT_OC_ADJ_MOTOR1 2
 #define OC_POT_OC_ADJ_MOTOR2 3
 
-#define FB_SW_PRESET1 7
-#define FB_SW_PRESET2 6
-#define FB_SW_PRESET3 5
-#define FB_SW_PRESET4 4
+#define FB_SW_PRESET_1 7
+#define FB_SW_PRESET_2 6
+#define FB_SW_PRESET_3 5
+#define FB_SW_PRESET_4 4
 #define FB_SW_HOME 3
 #define FB_SW_DIR_YAW_NORMAL 0
 #define FB_SW_DIR_YAW_REVERSED 0
 #define FB_SW_DIR_PITCH_NORMAL 0
 #define FB_SW_DIR_PITCH_REVERSED 0
-
-#define FB_LED_PRESET1 FB_SW_PRESET1
-#define FB_LED_PRESET2 FB_SW_PRESET2
-#define FB_LED_PRESET3 FB_SW_PRESET3
-#define FB_LED_PRESET4 FB_SW_PRESET4
-#define FB_LED_HOME FB_SW_HOME
-#define FB_LED_CONN_STATUS 2
-
-#define FB_LED_STATE_OFF 0
-#define FB_LED_STATE_SLOW_RAMP 1
-#define FB_LED_STATE_ON 2
-#define FB_LED_STATE_3BLINKS_OFF 3
-#define FB_LED_STATE_FAST_RAMP 4
-#define FB_LED_STATE_FAINT_ON 5
 
 #define FB_ADC_IB1_CHAN 0
 #define FB_ADC_IB2_CHAN 1
@@ -92,12 +78,6 @@
 
 #define FB_SLAVE_TIMEOUT_MS 1000
 #define FB_TICKS_ON_TARGET 2000
-
-#define FB_PITCH_MAX_ACC 0.4f
-#define FB_PITCH_MAX_VEL 0.15f
-
-#define FB_YAW_MAX_ACC (2.f / (90.f / 17.f))
-#define FB_YAW_MAX_VEL (4 * 1.3f / (90.f / 17.f))
 
 enum {
 	FB_ADCMUX_YAW_CHAN = 0,
@@ -137,7 +117,7 @@ enum {
 	FB_SLAVE_VALID_MICROS	= (1 << 4)
 };
 
-struct application {
+struct fb {
     led_controller_t leds;
 	console_device_t console;
 	gpio_device_t sw_gpio;
@@ -182,6 +162,7 @@ struct application {
 
 		struct fb_switch_state {
 			bool pressed;
+			bool long_pressed;
 			bool toggled;
 			timestamp_t pressed_time;
 		} sw[FB_SWITCH_COUNT];
@@ -222,15 +203,10 @@ struct application {
 		struct mutex lock;
 	} measured;
 
+	struct fb_leds button_leds;
+
 	struct {
 		timestamp_t prev_loop_time;
-
-		struct fb_led_state {
-			float intensity;
-			int dim;
-			int state;
-			int blinks;
-		} leds[FB_LED_COUNT];
 
 		struct {
 			struct fb_filter pfilt;
@@ -240,7 +216,7 @@ struct application {
 		int32_t yaw_ticks;
 		int16_t prev_yaw_ticks;
 
-		void (*fn)(struct application *self, float dt);
+		void (*fn)(struct fb *self, float dt);
 	} state;
 
 	struct fb_control axis[FB_AXIS_COUNT];
@@ -300,6 +276,8 @@ struct application {
 
 int _ui_cmd(console_device_t con, void *userptr, int argc, char **argv);
 
-void _fb_update_measurements(struct application *self);
-void _fb_read_inputs(struct application *self);
+void _fb_update_measurements(struct fb *self);
+void _fb_read_inputs(struct fb *self);
 float _fb_filter(struct fb_filter *self, const struct fb_config_filter *conf, float in);
+
+int fb_try_load_preset(struct fb *self, unsigned preset);

@@ -91,10 +91,10 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
-	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
-	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_coverage.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
@@ -160,7 +160,7 @@ ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
 DIST_SUBDIRS = $(SUBDIRS)
-am__DIST_COMMON = $(srcdir)/Makefile.am.coverage $(srcdir)/Makefile.in \
+am__DIST_COMMON = $(srcdir)/Makefile.coverage.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/aux-dist/compile \
 	$(top_srcdir)/aux-dist/config.guess \
 	$(top_srcdir)/aux-dist/config.sub \
@@ -223,6 +223,13 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+COVERAGE_CFLAGS = @COVERAGE_CFLAGS@
+COVERAGE_CXXFLAGS = @COVERAGE_CXXFLAGS@
+COVERAGE_FLAGS = @COVERAGE_FLAGS@
+COVERAGE_LDFLAGS = @COVERAGE_LDFLAGS@
+COVERAGE_LIBS = @COVERAGE_LIBS@
+COVERAGE_OPTFLAGS = @COVERAGE_OPTFLAGS@
+COVERAGE_SUPPORT = @COVERAGE_SUPPORT@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -241,12 +248,17 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GCOV = gcov
+GENHTML = genhtml
+GENHTML_OPTIONS = @GENHTML_OPTIONS@
 GREP = @GREP@
+HAVE_CPPFILT = @HAVE_CPPFILT@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LCOV = lcov
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
@@ -342,7 +354,7 @@ all: all-recursive
 .SUFFIXES:
 am--refresh: Makefile
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/Makefile.am.coverage $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/Makefile.coverage.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -364,7 +376,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
 	esac;
-$(srcdir)/Makefile.am.coverage $(am__empty):
+$(srcdir)/Makefile.coverage.am $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
@@ -810,15 +822,15 @@ uninstall-am:
         clean-coverage-report clean-coverage clean-coverage-hook-for-clean-local
 
 coverage-requirement-check:
-	@if test ! -e $(GCOV); then \
-		echo "Cannot find $(GCOV). Please install gcov."; \
+	@if test ! -e /usr/bin/gcov; then \
+		echo "Cannot find gcov. Please install gcov."; \
 		exit 1; \
 	fi
-	@if test ! -e $(LCOV); then \
-		echo "Cannot find $(LCOV). Please install lcov."; \
+	@if test ! -e /usr/bin/lcov; then \
+		echo "Cannot find lcov. Please install lcov."; \
 		exit 1; \
 	fi
-	@if test ! -e $(GENHTML); then \
+	@if test ! -e /usr/bin/$(GENHTML); then \
 		echo "Cannot find $(GENHTML). Please install lcov."; \
 		exit 1; \
 	fi
@@ -851,15 +863,15 @@ coverage-check: coverage-requirement-check
 
 coverage-report: coverage-requirement-check
 	@echo "Start to create coverage reports..."
-	lcov -c -i -d "./src/" -d "./src/p24/" -d "./src/linux/" -d "./tests" -o coverage_baseline.info
-	lcov --capture \
+	$(LCOV) -c -i -d "./src/" -d "./tests" -o coverage_baseline.info
+	$(LCOV) --capture \
 		--directory "./src" \
 		--directory "./tests" \
 		--output-file coverage_test.info \
 		--gcov-tool $(GCOV) \
 		--compat-libtool --checksum
-	lcov -a coverage_baseline.info -a coverage_test.info -o $(COVERAGE_INFO_FILE)
-	lcov --extract $(COVERAGE_INFO_FILE) "*/src/*" \
+	$(LCOV) -a coverage_baseline.info -a coverage_test.info -o $(COVERAGE_INFO_FILE)
+	$(LCOV) --extract $(COVERAGE_INFO_FILE) "*/src/*" \
 		--extract $(COVERAGE_INFO_FILE) "*/tests/*" \
 		--gcov-tool $(GCOV) \
 		--output-file $(COVERAGE_INFO_FILE)
@@ -876,7 +888,8 @@ clean-coverage-report:
 	-rm -rf $(COVERAGE_REPORT_DIR)
 
 clean-coverage: clean-coverage-report
-	-lcov --gcov-tool $(GCOV) --zerocounters --directory $(top_builddir)
+	find $(builddir) \( -name "*gcda" -o -name "*gcno" \) | xargs rm
+	-$(LCOV) --gcov-tool $(GCOV) --zerocounters --directory $(top_builddir)
 
 clean-local: clean-coverage
 

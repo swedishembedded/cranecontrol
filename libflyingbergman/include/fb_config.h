@@ -8,14 +8,27 @@
  **/
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-#define FB_PRESET_COUNT 5
+#define FB_PITCH_MAX_ACC 0.4f
+#define FB_PITCH_MAX_VEL 0.15f
+
+#define FB_YAW_MAX_ACC (2.f / (90.f / 17.f))
+#define FB_YAW_MAX_VEL (4 * 1.3f / (90.f / 17.f))
 
 #define FB_AXIS_UPDOWN 0
 #define FB_AXIS_LEFTRIGHT 1
 #define FB_AXIS_COUNT 2
+
+enum {
+	FB_PRESET_HOME = 0,
+	FB_PRESET_1,
+	FB_PRESET_2,
+	FB_PRESET_3,
+	FB_PRESET_4,
+	FB_PRESET_COUNT
+};
 
 struct fb_analog_limit {
 	float min, max;
@@ -34,16 +47,17 @@ struct fb_config_filter {
 
 struct fb_config_control {
 	fb_control_pos_units_t pos_units;
-	float ilimit_min, ilimit_max;
 	float Kff, Kp, Ki, Kd;
 	struct {
 		float acc, vel, dec;
+		float pos_max, pos_min;
+		float integral_max;
 	} limits;
 	struct fb_config_filter error_filter;
 };
 
 struct fb_config {
-	struct config_preset {
+	struct fb_config_preset {
 		uint8_t flags;
 		float pitch, yaw;
 		bool valid;
@@ -66,3 +80,7 @@ struct fb_config {
 		int32_t yaw_a, yaw_b;
 	} dc_cal;
 };
+
+void fb_config_init(struct fb_config *self);
+void fb_config_set_preset(struct fb_config *self, unsigned preset, float pitch,
+                          float yaw);

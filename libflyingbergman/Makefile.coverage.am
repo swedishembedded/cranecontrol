@@ -3,20 +3,24 @@
 COVERAGE_INFO_FILE = $(top_builddir)/coverage.info
 COVERAGE_REPORT_DIR = $(top_builddir)/coverage
 
+GCOV=gcov
+LCOV=lcov
+GENHTML=genhtml
+
 .PHONY: coverage-requirement-check \
         coverage coverage-build coverage-check coverage-report \
         clean-coverage-report clean-coverage clean-coverage-hook-for-clean-local
 
 coverage-requirement-check:
-	@if test ! -e $(GCOV); then \
-		echo "Cannot find $(GCOV). Please install gcov."; \
+	@if test ! -e /usr/bin/gcov; then \
+		echo "Cannot find gcov. Please install gcov."; \
 		exit 1; \
 	fi
-	@if test ! -e $(LCOV); then \
-		echo "Cannot find $(LCOV). Please install lcov."; \
+	@if test ! -e /usr/bin/lcov; then \
+		echo "Cannot find lcov. Please install lcov."; \
 		exit 1; \
 	fi
-	@if test ! -e $(GENHTML); then \
+	@if test ! -e /usr/bin/$(GENHTML); then \
 		echo "Cannot find $(GENHTML). Please install lcov."; \
 		exit 1; \
 	fi
@@ -49,15 +53,15 @@ coverage-check: coverage-requirement-check
 
 coverage-report: coverage-requirement-check
 	@echo "Start to create coverage reports..."
-	lcov -c -i -d "./src/" -d "./src/p24/" -d "./src/linux/" -d "./tests" -o coverage_baseline.info
-	lcov --capture \
+	$(LCOV) -c -i -d "./src/" -d "./tests" -o coverage_baseline.info
+	$(LCOV) --capture \
 		--directory "./src" \
 		--directory "./tests" \
 		--output-file coverage_test.info \
 		--gcov-tool $(GCOV) \
 		--compat-libtool --checksum
-	lcov -a coverage_baseline.info -a coverage_test.info -o $(COVERAGE_INFO_FILE)
-	lcov --extract $(COVERAGE_INFO_FILE) "*/src/*" \
+	$(LCOV) -a coverage_baseline.info -a coverage_test.info -o $(COVERAGE_INFO_FILE)
+	$(LCOV) --extract $(COVERAGE_INFO_FILE) "*/src/*" \
 		--extract $(COVERAGE_INFO_FILE) "*/tests/*" \
 		--gcov-tool $(GCOV) \
 		--output-file $(COVERAGE_INFO_FILE)
@@ -74,6 +78,7 @@ clean-coverage-report:
 	-rm -rf $(COVERAGE_REPORT_DIR)
 
 clean-coverage: clean-coverage-report
-	-lcov --gcov-tool $(GCOV) --zerocounters --directory $(top_builddir)
+	find $(builddir) \( -name "*gcda" -o -name "*gcno" \) | xargs rm
+	-$(LCOV) --gcov-tool $(GCOV) --zerocounters --directory $(top_builddir)
 
 clean-local: clean-coverage

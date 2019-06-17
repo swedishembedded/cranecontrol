@@ -4,8 +4,10 @@ AC_CONFIG_AUX_DIR(aux-dist)
 AM_INIT_AUTOMAKE
 
 AC_PROG_MAKE_SET
-AC_LANG(C,C++)
+AC_LANG(C)
 AC_PROG_CXX
+
+AC_ARG_ENABLE(coverage, ["Enable coverage"], [AX_COVERAGE], [])
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_TESTDIR([tests])

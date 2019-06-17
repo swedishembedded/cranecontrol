@@ -1,6 +1,6 @@
-#include "flyingbergman.h"
+#include "fb.h"
 
-void _fb_read_inputs(struct application *self){
+void _fb_read_inputs(struct fb *self){
 	// read next adc mux channel
 	thread_mutex_lock(&self->inputs.lock);
 	adc_read(self->adc, FB_ADC_MUX_CHAN, &self->mux_adc[self->mux_chan]);
@@ -28,6 +28,13 @@ void _fb_read_inputs(struct application *self){
 		self->inputs.sw[c].toggled = on != self->inputs.sw[c].pressed;
 		if(self->inputs.sw[c].toggled || !on){
 			self->inputs.sw[c].pressed_time = timestamp();
+		} else if(on){
+			timestamp_t ts = timestamp_add_us(self->inputs.sw[c].pressed_time, FB_BTN_LONG_PRESS_TIME_US);
+			if(timestamp_expired(ts)){
+				self->inputs.sw[c].long_pressed = true;
+			} else {
+				self->inputs.sw[c].long_pressed = false;
+			}
 		}
 		self->inputs.sw[c].pressed = on;
 	}

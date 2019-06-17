@@ -87,31 +87,45 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-TESTS = motion-profile$(EXEEXT)
+TESTS = motion_profile$(EXEEXT) fb$(EXEEXT) fb_control$(EXEEXT) \
+	fb_state_operational$(EXEEXT)
 check_PROGRAMS = $(am__EXEEXT_1)
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
-	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
-	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_coverage.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__EXEEXT_1 = motion-profile$(EXEEXT)
-am__dirstamp = $(am__leading_dot)dirstamp
-am_motion_profile_OBJECTS = ../src/motion_profile.$(OBJEXT) \
-	../../theboss/src/libfirmware/src/timestamp.$(OBJEXT) \
-	motion-profile.$(OBJEXT)
-motion_profile_OBJECTS = $(am_motion_profile_OBJECTS)
-motion_profile_LDADD = $(LDADD)
+am__EXEEXT_1 = motion_profile$(EXEEXT) fb$(EXEEXT) fb_control$(EXEEXT) \
+	fb_state_operational$(EXEEXT)
+am_fb_OBJECTS = fb.$(OBJEXT)
+fb_OBJECTS = $(am_fb_OBJECTS)
+fb_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am__dirstamp = $(am__leading_dot)dirstamp
+am_fb_control_OBJECTS = ../src/fb_control.$(OBJEXT) \
+	../src/fb_filter.$(OBJEXT) fb_control.$(OBJEXT)
+fb_control_OBJECTS = $(am_fb_control_OBJECTS)
+fb_control_LDADD = $(LDADD)
+am_fb_state_operational_OBJECTS =  \
+	../src/fb_state_operational.$(OBJEXT) \
+	../src/fb_preset.$(OBJEXT) fb_state_operational.$(OBJEXT)
+fb_state_operational_OBJECTS = $(am_fb_state_operational_OBJECTS)
+fb_state_operational_LDADD = $(LDADD)
+am_motion_profile_OBJECTS = ../src/motion_profile.$(OBJEXT) \
+	../../theboss/src/libfirmware/src/timestamp.$(OBJEXT) \
+	motion_profile.$(OBJEXT)
+motion_profile_OBJECTS = $(am_motion_profile_OBJECTS)
+motion_profile_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -164,8 +178,10 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(motion_profile_SOURCES)
-DIST_SOURCES = $(motion_profile_SOURCES)
+SOURCES = $(fb_SOURCES) $(fb_control_SOURCES) \
+	$(fb_state_operational_SOURCES) $(motion_profile_SOURCES)
+DIST_SOURCES = $(fb_SOURCES) $(fb_control_SOURCES) \
+	$(fb_state_operational_SOURCES) $(motion_profile_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -408,6 +424,13 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+COVERAGE_CFLAGS = @COVERAGE_CFLAGS@
+COVERAGE_CXXFLAGS = @COVERAGE_CXXFLAGS@
+COVERAGE_FLAGS = @COVERAGE_FLAGS@
+COVERAGE_LDFLAGS = @COVERAGE_LDFLAGS@
+COVERAGE_LIBS = @COVERAGE_LIBS@
+COVERAGE_OPTFLAGS = @COVERAGE_OPTFLAGS@
+COVERAGE_SUPPORT = @COVERAGE_SUPPORT@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -426,12 +449,17 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GCOV = @GCOV@
+GENHTML = @GENHTML@
+GENHTML_OPTIONS = @GENHTML_OPTIONS@
 GREP = @GREP@
+HAVE_CPPFILT = @HAVE_CPPFILT@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LCOV = @LCOV@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
@@ -520,23 +548,36 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOTEST = $(AUTOM4TE) --language=autotest
 AM_CFLAGS = \
+	$(COVERAGE_FLAGS)\
 	-I$(abs_top_builddir)/include\
-	-I$(srcdir)/../include\
-	-I$(abs_srcdir)/../../theboss/src/libfirmware/include
+	-I$(srcdir)/../include
 
 AM_CXXFLAGS = \
+	$(COVERAGE_FLAGS)\
 	-include gtest/gtest.h -include gmock/gmock.h\
 	-I$(abs_top_builddir)/include\
-	-I$(srcdir)/../include\
-	-I$(abs_srcdir)/../../theboss/src/libfirmware/include
+	-I$(srcdir)/../include
 
 AM_LDFLAGS = \
 	-lm -lgtest -lgmock -lpthread
 
+fb_SOURCES = \
+	fb.cpp
+
+fb_control_SOURCES = \
+	../src/fb_control.c\
+	../src/fb_filter.c\
+	fb_control.cpp
+
+fb_state_operational_SOURCES = \
+	../src/fb_state_operational.c\
+	../src/fb_preset.c\
+	fb_state_operational.cpp
+
 motion_profile_SOURCES = \
 	../src/motion_profile.c\
 	../../theboss/src/libfirmware/src/timestamp.c\
-	motion-profile.cpp
+	motion_profile.cpp
 
 AUTOMAKE_OPTIONS = subdir-objects
 all: all-am
@@ -581,12 +622,32 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+
+fb$(EXEEXT): $(fb_OBJECTS) $(fb_DEPENDENCIES) $(EXTRA_fb_DEPENDENCIES) 
+	@rm -f fb$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fb_OBJECTS) $(fb_LDADD) $(LIBS)
 ../src/$(am__dirstamp):
 	@$(MKDIR_P) ../src
 	@: > ../src/$(am__dirstamp)
 ../src/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) ../src/$(DEPDIR)
 	@: > ../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_control.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_filter.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+
+fb_control$(EXEEXT): $(fb_control_OBJECTS) $(fb_control_DEPENDENCIES) $(EXTRA_fb_control_DEPENDENCIES) 
+	@rm -f fb_control$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fb_control_OBJECTS) $(fb_control_LDADD) $(LIBS)
+../src/fb_state_operational.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+../src/fb_preset.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+
+fb_state_operational$(EXEEXT): $(fb_state_operational_OBJECTS) $(fb_state_operational_DEPENDENCIES) $(EXTRA_fb_state_operational_DEPENDENCIES) 
+	@rm -f fb_state_operational$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fb_state_operational_OBJECTS) $(fb_state_operational_LDADD) $(LIBS)
 ../src/motion_profile.$(OBJEXT): ../src/$(am__dirstamp) \
 	../src/$(DEPDIR)/$(am__dirstamp)
 ../../theboss/src/libfirmware/src/$(am__dirstamp):
@@ -599,8 +660,8 @@ clean-checkPROGRAMS:
 	../../theboss/src/libfirmware/src/$(am__dirstamp) \
 	../../theboss/src/libfirmware/src/$(DEPDIR)/$(am__dirstamp)
 
-motion-profile$(EXEEXT): $(motion_profile_OBJECTS) $(motion_profile_DEPENDENCIES) $(EXTRA_motion_profile_DEPENDENCIES) 
-	@rm -f motion-profile$(EXEEXT)
+motion_profile$(EXEEXT): $(motion_profile_OBJECTS) $(motion_profile_DEPENDENCIES) $(EXTRA_motion_profile_DEPENDENCIES) 
+	@rm -f motion_profile$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(motion_profile_OBJECTS) $(motion_profile_LDADD) $(LIBS)
 
 mostlyclean-compile:
@@ -612,8 +673,15 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@../../theboss/src/libfirmware/src/$(DEPDIR)/timestamp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_control.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_preset.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_state_operational.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/motion_profile.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/motion-profile.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fb_control.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fb_state_operational.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/motion_profile.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -862,9 +930,30 @@ recheck: all $(check_PROGRAMS)
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
-motion-profile.log: motion-profile$(EXEEXT)
-	@p='motion-profile$(EXEEXT)'; \
-	b='motion-profile'; \
+motion_profile.log: motion_profile$(EXEEXT)
+	@p='motion_profile$(EXEEXT)'; \
+	b='motion_profile'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+fb.log: fb$(EXEEXT)
+	@p='fb$(EXEEXT)'; \
+	b='fb'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+fb_control.log: fb_control$(EXEEXT)
+	@p='fb_control$(EXEEXT)'; \
+	b='fb_control'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+fb_state_operational.log: fb_state_operational$(EXEEXT)
+	@p='fb_state_operational$(EXEEXT)'; \
+	b='fb_state_operational'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

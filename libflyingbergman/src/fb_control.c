@@ -7,13 +7,14 @@
  *          |___/         |___/                |___/
  **/
 #include "fb_control.h"
-#include "flyingbergman.h"
+#include "fb.h"
 
 #define FB_CONTROL_CLOCK_HZ 1000
 
 void fb_control_init(struct fb_control *self, const struct fb_config_control *conf){
 	memset(self, 0, sizeof(*self));
 	self->conf = conf;
+	fb_filter_init(&self->err_filt, &self->conf->error_filter);
 }
 
 void fb_control_set_input(struct fb_control *self, float pos, float vel) {
@@ -40,11 +41,11 @@ static void _fb_control_run(struct fb_control *self) {
 		err = normalize_angle(err);
 	}
 
-	err = _fb_filter(&self->err_filt, &self->conf->error_filter, err);
+	err = fb_filter_update(&self->err_filt, err);
 
 	self->integral =
 	    constrain_float(self->integral + err * (1.f / FB_CONTROL_CLOCK_HZ),
-	                    self->conf->ilimit_min, self->conf->ilimit_max);
+	                    -self->conf->limits.integral_max, self->conf->limits.integral_max);
 
 	float derr = (err - self->error) / (1.f / FB_CONTROL_CLOCK_HZ);
 	float co = self->conf->Kff * self->target.vel + self->conf->Kp * err +
@@ -63,11 +64,15 @@ void fb_control_clock(struct fb_control *self) {
 	} else if(self->moving) {
 		self->time += (1.f / FB_CONTROL_CLOCK_HZ);
 		_fb_control_run(self);
-	} else if(self->start) {
+	}
+
+	// make sure we start next move in the same clock cycle as completion of previous move
+	if(!self->moving && self->start) {
 		motion_profile_init(&self->trajectory, self->conf->limits.acc, self->conf->limits.vel, self->conf->limits.dec);
 		motion_profile_plan_move(&self->trajectory, self->input.pos,
 		                         self->input.vel, self->new_target, 0.f);
 		self->start = false;
+		self->moving = true;
 	}
 }
 

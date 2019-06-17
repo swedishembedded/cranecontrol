@@ -761,6 +761,7 @@ ac_user_opts='
 enable_option_checking
 enable_silent_rules
 enable_dependency_tracking
+enable_coverage
 enable_shared
 enable_static
 with_pic
@@ -1420,6 +1421,7 @@ Optional Features:
                           do not reject slow dependency extractors
   --disable-dependency-tracking 
                           speeds up one-time build
+"Enable coverage"
   --enable-shared@<:@=PKGS@:>@  build shared libraries @<:@default=yes@:>@
   --enable-static@<:@=PKGS@:>@  build static libraries @<:@default=yes@:>@
   --enable-fast-install@<:@=PKGS@:>@ 
@@ -3609,6 +3611,12 @@ else
   am__fastdepCXX_FALSE=
 fi
 
+
+
+@%:@ Check whether --enable-coverage was given.
+if test "${enable_coverage+set}" = set; then :
+  enableval=$enable_coverage; AX_COVERAGE
+fi
 
 
 
