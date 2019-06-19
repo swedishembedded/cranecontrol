@@ -100,17 +100,20 @@ static int _fb_probe(void *fdt, int fdt_node) {
 		return -1;
 	}
 
+	self->inputs.sw_gpio = sw_gpio;
+	self->inputs.gpio_ex = gpio_ex;
+	self->inputs.enc1 = enc1;
+	self->inputs.enc2 = enc2;
+	self->inputs.enc1_gpio = enc1_gpio;
+	self->inputs.enc2_gpio = enc2_gpio;
+	self->inputs.mux = mux;
+	self->inputs.adc = adc;
+
 	self->leds = leds;
 	self->console = console;
-	self->sw_gpio = sw_gpio;
-	self->gpio_ex = gpio_ex;
 	self->sw_leds = sw_leds;
-	self->adc = adc;
 	self->mot_x = mot_x;
 	self->mot_y = mot_y;
-	self->mux = mux;
-	self->enc1 = enc1;
-	self->enc2 = enc2;
 	self->eeprom = eeprom;
 	self->oc_pot = oc_pot;
 	self->can1 = can1;
@@ -119,8 +122,6 @@ static int _fb_probe(void *fdt, int fdt_node) {
 	self->can2_mem = can2_mem;
 	self->regmap = regmap;
 	self->canopen_mem = canopen_mem;
-	self->enc1_gpio = enc1_gpio;
-	self->enc2_gpio = enc2_gpio;
 	self->drv_pitch = drv_pitch;
 	self->drv_yaw = drv_yaw;
 	self->events = events;

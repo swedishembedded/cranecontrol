@@ -17,6 +17,8 @@
 #include "fb.h"
 #include "fb_can.h"
 #include "fb_cmd.h"
+#include "fb_inputs.h"
+#include "fb_leds.h"
 #include "fb_state.h"
 #include <libfdt/libfdt.h>
 
@@ -78,7 +80,7 @@ void _fb_state_wait_home(struct fb *self, float dt) {
 	struct fb_switch_state *home = &self->inputs.sw[FB_SW_HOME];
 	if(home->pressed) {
 		// make sure home button is lit
-		fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_ON);
+		fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_OFF);
 		// if it has been held for a number of seconds then we save the home position
 		timestamp_t ts = timestamp_add_us(home->pressed_time, FB_BTN_LONG_PRESS_TIME_US);
 		if(timestamp_expired(ts)) {
@@ -102,30 +104,27 @@ void _fb_state_save_preset(struct fb *self, float dt) {
 	    &self->inputs.sw[FB_SW_PRESET_4]};
 
 	for(int c = 0; c < FB_PRESET_COUNT; c++) {
-		if(!sw[c]->pressed && sw[c]->toggled) {
-			_fb_enter_state(self, _fb_state_operational);
+		if(sw[c]->pressed) {
+			return;
 		}
 	}
+	// enter operational state once all buttons are released
+	// // enter operational state once all buttons are released
+	_fb_enter_state(self, _fb_state_operational);
 }
 
 static void _fb_check_mode(struct fb *self) {
 	if(self->can_addr != self->inputs.can_addr) {
-		fb_mode_t mode = FB_MODE_UNDEFINED;
-		if(self->inputs.can_addr == FB_CANOPEN_MASTER_ADDRESS) {
-			mode = FB_MODE_MASTER;
-		} else {
-			mode = FB_MODE_SLAVE;
-		}
-
 		canopen_set_address(self->canopen_mem, self->inputs.can_addr);
-		canopen_set_mode(self->canopen_mem,
-		                 (mode == FB_MODE_MASTER) ? CANOPEN_MASTER : CANOPEN_SLAVE);
-
-		if(mode == FB_MODE_MASTER) {
+		if(self->inputs.can_addr == FB_CANOPEN_MASTER_ADDRESS) {
+			self->mode = FB_MODE_MASTER;
+			canopen_set_mode(self->canopen_mem, CANOPEN_MASTER);
 			regmap_write_u32(self->regmap, CANOPEN_REG_DEVICE_CYCLE_PERIOD, 1000);
+		} else {
+			self->mode = FB_MODE_SLAVE;
+			self->control_mode = FB_CONTROL_MODE_REMOTE;
+			canopen_set_mode(self->canopen_mem, CANOPEN_SLAVE);
 		}
-
-		self->mode = mode;
 		self->can_addr = self->inputs.can_addr;
 	}
 }
@@ -140,7 +139,7 @@ static void _fb_update_control(struct fb *self, float dt) {
 	switch(self->control_mode) {
 		case FB_CONTROL_MODE_NO_MOTION: {
 			// important to apply the limit even when we want no output at all
-			fb_output_limited(self, 0, 0, FB_PITCH_MAX_ACC, FB_YAW_MAX_ACC);
+			fb_output_limited(self, 0, 0, 0, 0, FB_PITCH_MAX_ACC, FB_YAW_MAX_ACC);
 		} break;
 		case FB_CONTROL_MODE_REMOTE: {
 			/**
@@ -148,16 +147,17 @@ static void _fb_update_control(struct fb *self, float dt) {
 			 * It is still however important to limit change in output so that we do not
 			 * suddenly stop the motor if remote communication is lost
 			 */
-			float pitch = (float)self->remote.pitch * 0.0005f;
-			float yaw = (float)self->remote.yaw * 0.0005f;
-			fb_output_limited(self, pitch, yaw, self->measured.pitch_acc,
-			                  self->measured.yaw_acc);
+			float pitch = (float)self->remote.pitch * 0.001f;
+			float yaw = (float)self->remote.yaw * 0.001f;
+			fb_output_limited(self, pitch, yaw, 1.f, 1.f, 4.f * FB_PITCH_MAX_ACC,
+			                  4.f * FB_YAW_MAX_ACC);
 		} break;
 		case FB_CONTROL_MODE_MANUAL: {
 			/**
 			 * In manual mode we generate output directly based on joystick input
 			 */
 			fb_output_limited(self, self->measured.joy_pitch, self->measured.joy_yaw,
+			                  self->measured.pitch_speed, self->measured.yaw_speed,
 			                  self->measured.pitch_acc, self->measured.yaw_acc);
 		} break;
 		case FB_CONTROL_MODE_AUTO: {
@@ -178,8 +178,19 @@ static void _fb_update_control(struct fb *self, float dt) {
 			float co_pitch = fb_control_get_output(&self->axis[FB_AXIS_UPDOWN]);
 			float co_yaw = fb_control_get_output(&self->axis[FB_AXIS_LEFTRIGHT]);
 
-			fb_output_limited(self, -co_pitch, -co_yaw, FB_PITCH_MAX_ACC, FB_YAW_MAX_ACC);
-
+			if(self->mode == FB_MODE_MASTER) {
+				fb_output_limited(self, -co_pitch, -co_yaw,
+					self->axis[FB_AXIS_UPDOWN].limits.vel, self->axis[FB_AXIS_LEFTRIGHT].limits.vel,
+					self->axis[FB_AXIS_UPDOWN].limits.acc, self->axis[FB_AXIS_LEFTRIGHT].limits.acc);
+			} else {
+				fb_output_limited(self, -co_pitch, -co_yaw, 1.f, 1.f, 4.f * FB_PITCH_MAX_ACC,
+				                  4.f * FB_YAW_MAX_ACC);
+			}
+			/*
+fb_output_limited(self, -co_pitch, -co_yaw, self->measured.pitch_speed,
+			            self->measured.yaw_speed, self->measured.pitch_acc,
+			            self->measured.yaw_acc);
+			            */
 			// if joystick is moved during automatic move then we switch back to manual
 			if(fabsf(self->measured.joy_pitch) > self->config.deadband.pitch ||
 			   fabsf(self->measured.joy_yaw) > self->config.deadband.yaw) {
@@ -191,11 +202,11 @@ static void _fb_update_control(struct fb *self, float dt) {
 
 static void _fb_update_motors(struct fb *self) {
 	float pitch = self->output.pitch;
-	// FIXME: remove the 2.0f here
-	float yaw = self->output.yaw * 2.f;
+	float yaw = self->output.yaw;
 
-	pitch = constrain_float(pitch * 0.5, -0.5, 0.5);
-	yaw = constrain_float(yaw * 0.5, -0.5, 0.5);
+#define MAX_SWING 0.46f
+	pitch = constrain_float(pitch * 0.5, -MAX_SWING, MAX_SWING);
+	yaw = constrain_float(yaw * 0.5, -MAX_SWING, MAX_SWING);
 
 	// it is important that the following finishes in one block
 	// otherwise there is a real danger that something ether breaks
@@ -219,6 +230,8 @@ static void fb_check_link_state(struct fb *self) {
 			if(self->control_mode == FB_CONTROL_MODE_REMOTE) {
 				self->control_mode = FB_CONTROL_MODE_NO_MOTION;
 			}
+		} else {
+			self->control_mode = FB_CONTROL_MODE_REMOTE;
 		}
 	} else if(self->mode == FB_MODE_MASTER) {
 		if(self->can.timed_out) {
@@ -234,15 +247,25 @@ static void _fb_update(struct fb *self) {
 	_fb_update_state(self, FB_DEFAULT_DT);
 	_fb_update_control(self, FB_DEFAULT_DT);
 	_fb_update_motors(self);
+	fb_leds_clock(&self->button_leds);
 }
 
 static void _fb_control_loop(void *ptr) {
 	struct fb *self = (struct fb *)ptr;
-
 	uint32_t ticks = thread_ticks_count();
+	timestamp_t ts, te;
+	timestamp_diff_t loop_td;
 	while(1) {
-		_fb_read_inputs(self);
+		fb_inputs_update(&self->inputs);
+
+		ts = timestamp();
 		_fb_update(self);
+		te = timestamp();
+		loop_td = timestamp_sub(te, ts);
+
+		thread_mutex_lock(&self->stats.lock);
+		self->stats.loop_td = loop_td;
+		thread_mutex_unlock(&self->stats.lock);
 
 		thread_sleep_ms_until(&ticks, 1);
 	}
@@ -265,10 +288,10 @@ static void _fb_calibrate_current_sensors(struct fb *self) {
 	for(int c = 0; c < loops; c++) {
 		uint16_t pa = 0, pb = 0, ya = 0, yb = 0;
 
-		adc_read(self->adc, FB_ADC_IA1_CHAN, &ya);
-		adc_read(self->adc, FB_ADC_IB1_CHAN, &yb);
-		adc_read(self->adc, FB_ADC_IA2_CHAN, &pa);
-		adc_read(self->adc, FB_ADC_IB2_CHAN, &pb);
+		adc_read(self->inputs.adc, FB_ADC_IA1_CHAN, &ya);
+		adc_read(self->inputs.adc, FB_ADC_IB1_CHAN, &yb);
+		adc_read(self->inputs.adc, FB_ADC_IA2_CHAN, &pa);
+		adc_read(self->inputs.adc, FB_ADC_IB2_CHAN, &pb);
 
 		self->config.dc_cal.pitch_a += pa;
 		self->config.dc_cal.pitch_b += pb;
@@ -323,7 +346,7 @@ static void _fb_check_connected_devices(struct fb *self) {
 		for(unsigned c = 0; c < sizeof(leds) / sizeof(leds[0]); c++) {
 			float volts = 0;
 			int r = analog_read(self->sw_leds, leds[c].led_idx, &volts);
-			if(gpio_read(self->sw_gpio, 8 + c)) {
+			if(gpio_read(self->inputs.sw_gpio, 8 + c)) {
 				printk("SW %s: OK, ", leds[c].name);
 			} else {
 				printk("SW %s: FAIL, ", leds[c].name);
@@ -351,19 +374,10 @@ void fb_init(struct fb *self) {
 	self->remote.yaw_update_timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);
 
 	thread_mutex_init(&self->slave.lock);
-	thread_mutex_init(&self->inputs.lock);
 	thread_mutex_init(&self->measured.lock);
+	thread_mutex_init(&self->stats.lock);
 
-	self->local.joy_pitch = 2048;
-	self->local.joy_yaw = 2048;
-	self->local.pitch_acc = 2048;
-	self->local.yaw_acc = 2048;
-	self->local.pitch_speed = 2048;
-	self->local.yaw_speed = 2048;
-	self->local.enc1_aux1 = 0;
-	self->local.enc2_aux1 = 1;
-	self->local.enc1_aux2 = 0;
-	self->local.enc2_aux2 = 1;
+	fb_inputs_init(&self->inputs);
 
 	fb_config_init(&self->config);
 
@@ -375,8 +389,10 @@ void fb_init(struct fb *self) {
 
 	fb_leds_reset(&self->button_leds);
 
-	static const struct fb_config_filter _pfilt = {
-	    .a0 = -1.44739, .a1 = 0.567971, .b0 = 0.0659765, .b1 = 0.0546078};
+	// static const struct fb_config_filter _pfilt = {
+	//    .a0 = -1.44739, .a1 = 0.567971, .b0 = 0.0659765, .b1 = 0.0546078};
+
+	static const struct fb_config_filter _pfilt = {.a0 = 0, .a1 = 0, .b0 = 1, .b1 = 0};
 	fb_filter_init(&self->measured.pfilt, &_pfilt);
 
 	analog_write(self->oc_pot, OC_POT_OC_ADJ_MOTOR1, 1.f);
@@ -410,7 +426,7 @@ void fb_init(struct fb *self) {
 	self->config.presets[2].valid = true;
 	*/
 
-	_fb_read_inputs(self);
+	fb_inputs_update(&self->inputs);
 	_fb_update_measurements(self);
 	fb_can_init(self);
 
@@ -423,7 +439,7 @@ void fb_init(struct fb *self) {
 
 	_fb_enter_state(self, _fb_state_wait_power);
 
-	thread_create(_fb_control_loop, "fb_ctrl", 650, self, 2, NULL);
+	thread_create(_fb_control_loop, "fb_ctrl", 750, self, 2, NULL);
 
 	thread_create(_fb_indicator_loop, "fb_ind", 250, self, 1, NULL);
 }

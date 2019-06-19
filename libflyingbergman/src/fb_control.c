@@ -10,7 +10,6 @@
 #include "fb.h"
 
 #define FB_CONTROL_CLOCK_HZ 1000
-#define FB_TICKS_ON_TARGET 2000
 
 void fb_control_init(struct fb_control *self, const struct fb_config_control *conf) {
 	memset(self, 0, sizeof(*self));
@@ -31,28 +30,33 @@ void fb_control_set_limits(struct fb_control *self, float acc, float speed,
 }
 
 void fb_control_set_target(struct fb_control *self, float pos) {
-	printk("new target %d\n", (int32_t)(pos * 1000));
+	//printk("new target %d\n", (int32_t)(pos * 1000));
 	self->new_target = pos;
 	self->start = true;
+	self->integral = 0;
 }
 
 static void _fb_control_run(struct fb_control *self) {
 	motion_profile_get_pva(&self->trajectory, self->time, &self->target.pos,
 	                       &self->target.vel, &self->target.acc);
 
-	float err = self->target.pos - self->input.pos;
+	float err = 0;
 
 	if(self->conf->pos_units == FB_CONTROL_POS_UNITS_RAD) {
-		err = normalize_angle(err);
+		self->target.pos = normalize_angle(self->target.pos + self->start_pos);
+		err = normalize_angle(self->target.pos - self->input.pos);
+	} else {
+		self->target.pos += self->start_pos;
+		err = self->target.pos - self->input.pos;
 	}
 
 	err = fb_filter_update(&self->err_filt, err);
 
-	self->integral = constrain_float(self->integral + err * FB_DEFAULT_DT,
+	self->integral = constrain_float(self->integral + err,
 	                                 -self->conf->limits.integral_max,
 	                                 self->conf->limits.integral_max);
 
-	float derr = (err - self->error) / (1.f / FB_CONTROL_CLOCK_HZ);
+	float derr = (err - self->error) / FB_DEFAULT_DT;
 	float co = self->conf->Kff * self->target.vel + self->conf->Kp * err +
 	           self->conf->Ki * self->integral + self->conf->Kd * derr;
 
@@ -64,11 +68,11 @@ static void _fb_control_run(struct fb_control *self) {
 
 void fb_control_clock(struct fb_control *self) {
 	if(self->moving && motion_profile_completed(&self->trajectory, self->time)) {
-		printk("move completed %d %d %d\n", (int32_t)(self->time * 1000),
-		       (int32_t)(self->new_target * 1000), (int32_t)(self->input.pos * 1000));
+		//printk("move completed %d %d %d\n", (int32_t)(self->time * 1000),
+		//       (int32_t)(self->new_target * 1000), (int32_t)(self->input.pos * 1000));
 		self->moving = false;
 		self->settling = true;
-		self->settle_time = FB_TICKS_ON_TARGET;
+		self->settle_time = self->conf->settling_time;
 	}
 
 	if(self->moving) {
@@ -80,24 +84,39 @@ void fb_control_clock(struct fb_control *self) {
 			self->settle_time--;
 			_fb_control_run(self);
 		} else {
+			//printk("control done\n");
 			self->settling = false;
 			self->output = 0;
+			self->integral = 0;
 			self->time = 0;
 		}
 	} else {
 		self->output = 0;
+		self->integral = 0;
+		self->error = 0;
+		self->time = 0;
 	}
 
 	// make sure we start next move in the same clock cycle as completion of previous
 	// move
 	if(!self->moving && !self->settling && self->start) {
-		printk("starting new move\n");
+		//printk("starting new move\n");
 		motion_profile_init(&self->trajectory, self->limits.acc, self->limits.vel,
 		                    self->limits.dec);
-		motion_profile_plan_move(&self->trajectory, self->input.pos, self->input.vel,
-		                         self->new_target, 0.f);
+
+		float diff = self->new_target - self->input.pos;
+		if(self->conf->pos_units == FB_CONTROL_POS_UNITS_RAD) {
+			diff = normalize_angle(diff);
+		}
+		motion_profile_plan_move(&self->trajectory, 0, self->input.vel,
+		                         diff, 0.f);
+		self->start_pos = self->input.pos;
+
 		self->start = false;
 		self->moving = true;
+		self->integral = 0;
+		self->error = 0;
+		self->time = 0;
 	}
 }
 

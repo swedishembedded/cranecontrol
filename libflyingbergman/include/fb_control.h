@@ -33,6 +33,7 @@ struct fb_control {
 	float integral;
 	float error;
 	float new_target;
+	float start_pos;
 	bool start;
 	bool moving;
 	bool settling;

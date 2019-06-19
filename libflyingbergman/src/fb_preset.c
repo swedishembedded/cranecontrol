@@ -13,12 +13,12 @@ int fb_try_load_preset(struct fb *self, unsigned preset) {
 	if(!p->valid)
 		return -1;
 	// for home we want to rotate to closest halv circle
-	float target_yaw = normalize_angle(p->yaw);
+	float target_yaw = p->yaw;
 	float target_pitch = p->pitch;
-	float target_yaw_norm = normalize_angle(target_yaw);
+	float yaw_diff = normalize_angle(target_yaw - self->measured.yaw);
 	if(preset == FB_PRESET_HOME) {
-		if(fabsf(target_yaw_norm) > (M_PI / 2)) {
-			target_yaw_norm = normalize_angle(target_yaw + M_PI);
+		if(fabsf(yaw_diff) > (M_PI / 2)) {
+			target_yaw = normalize_angle(target_yaw + M_PI);
 		}
 	}
 
@@ -27,8 +27,13 @@ int fb_try_load_preset(struct fb *self, unsigned preset) {
 	fb_control_set_limits(&self->axis[FB_AXIS_LEFTRIGHT], self->measured.yaw_acc,
 	                      self->measured.yaw_speed, self->measured.yaw_acc);
 
+	fb_control_set_input(&self->axis[FB_AXIS_UPDOWN], self->measured.pitch, 0.f);
+	fb_control_set_input(&self->axis[FB_AXIS_LEFTRIGHT], self->measured.yaw, 0.f);
+
 	fb_control_set_target(&self->axis[FB_AXIS_UPDOWN], target_pitch);
-	fb_control_set_target(&self->axis[FB_AXIS_LEFTRIGHT], target_yaw_norm);
+	fb_control_set_target(&self->axis[FB_AXIS_LEFTRIGHT], target_yaw);
+
+	//console_printf(self->console, "Loading preset %d %d\n", (int32_t)(target_pitch * 1000), (int32_t)(target_yaw * 1000));
 
 	self->control_mode = FB_CONTROL_MODE_AUTO;
 	return 0;

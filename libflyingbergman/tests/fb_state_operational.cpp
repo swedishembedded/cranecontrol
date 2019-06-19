@@ -25,6 +25,14 @@ void _fb_enter_state(struct fb *self, void (*fp)(struct fb *self, float dt)) {
 	_state = fp;
 }
 
+void fb_control_set_limits(struct fb_control *self, float acc, float vel, float dec) {
+
+}
+
+void fb_control_set_input(struct fb_control *self, float pos, float vel){
+
+}
+
 void fb_control_set_target(struct fb_control *self, float pos) {
 	if(self == _pitch_control)
 	_pitch_target = pos;

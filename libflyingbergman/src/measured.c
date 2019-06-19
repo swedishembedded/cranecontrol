@@ -21,17 +21,18 @@ void _fb_update_measurements(struct fb *self) {
 	} else {
 		self->measured.pitch =
 		    _scale_input((float)self->inputs.pitch, &self->config.limit.pitch);
-		int16_t yaw_ticks = self->inputs.yaw;
+
+		uint16_t yaw_ticks = (uint16_t)self->inputs.yaw;
 
 		// convert ticks to radians. How this is done is important.
-		self->state.yaw_ticks += (int16_t)(yaw_ticks - self->state.prev_yaw_ticks);
+		self->state.yaw_ticks += (int16_t)((uint16_t)(yaw_ticks - self->state.prev_yaw_ticks));
 		self->state.prev_yaw_ticks = yaw_ticks;
 
 		int32_t ticks_per_pi = (int32_t)(FB_MOTOR_YAW_TICKS_PER_ROT / 2.f);
 		if(self->state.yaw_ticks > ticks_per_pi)
-			self->state.yaw_ticks -= ticks_per_pi;
+			self->state.yaw_ticks -= 2 * ticks_per_pi;
 		if(self->state.yaw_ticks < -ticks_per_pi)
-			self->state.yaw_ticks += ticks_per_pi;
+			self->state.yaw_ticks += 2 * ticks_per_pi;
 
 		self->measured.yaw = normalize_angle(M_PI * ((float)self->state.yaw_ticks / (float)ticks_per_pi));
 	}

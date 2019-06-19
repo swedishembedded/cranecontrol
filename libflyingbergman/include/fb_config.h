@@ -47,9 +47,10 @@ struct fb_config_filter {
 
 struct fb_config_control {
 	fb_control_pos_units_t pos_units;
+	unsigned settling_time;
 	float Kff, Kp, Ki, Kd;
 	struct {
-		float acc, vel, dec;
+		//float acc, vel, dec;
 		float pos_max, pos_min;
 		float integral_max;
 	} limits;

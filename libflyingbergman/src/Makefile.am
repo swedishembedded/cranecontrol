@@ -10,7 +10,7 @@ libflyingbergman_a_SOURCES = \
 	fb_output.c\
 	fb_preset.c\
 	fb_state_operational.c\
-	inputs.c\
+	fb_inputs.c\
 	main.c\
 	measured.c\
 	motion_profile.c\

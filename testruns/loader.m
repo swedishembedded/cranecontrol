@@ -21,6 +21,8 @@ function [dat] = load_data(fname)
 
 	dyaw = [0; diff(dat.yaw)];
 	dat.yaw = cumsum(atan2(sin(dyaw), cos(dyaw)));
+	dyaw = [0; diff(dat.yaw_sp)];
+	dat.yaw_sp = cumsum(atan2(sin(dyaw), cos(dyaw)));
 
     t = dat.t = interp1(time, time, linspace(time(1), time(end), (time(end) - time(1)) * 1000));
     dat.ipitch = interp1(time, dat.ipitch, t);

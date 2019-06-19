@@ -42,7 +42,7 @@ static void _hslider(console_device_t con, int px, int py, int val, int val_min,
 static void _ui_update(struct fb *self){
 	console_device_t con = self->console;
 	struct fb_meas_data meas;
-	struct fb_inputs_data in;
+	struct fb_inputs in;
 
 	thread_mutex_lock(&meas.lock);
 	memcpy(&meas, &self->measured, sizeof(meas));

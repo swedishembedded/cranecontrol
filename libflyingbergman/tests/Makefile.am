@@ -30,7 +30,7 @@ fb_SOURCES=\
 	../src/fb_can.c\
 	../src/fb_config.c\
 	../src/fb_preset.c\
-	../src/inputs.c\
+	../src/fb_inputs.c\
 	../src/motion_profile.c\
 	../src/fb_state_operational.c\
 	fb.cpp

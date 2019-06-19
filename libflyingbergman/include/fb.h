@@ -1,38 +1,37 @@
 #pragma once
 
-#include <libfirmware/serial.h>
-#include <libfirmware/math.h>
-#include <libfirmware/chip.h>
-#include <libfirmware/driver.h>
-#include <libfirmware/thread.h>
-#include <libfirmware/console.h>
-#include <libfirmware/leds.h>
-#include <libfirmware/usb.h>
-#include <libfirmware/timestamp.h>
-#include <libfirmware/gpio.h>
 #include <libfirmware/adc.h>
 #include <libfirmware/analog.h>
-#include <libfirmware/encoder.h>
-#include <libfirmware/memory.h>
-#include <libfirmware/timestamp.h>
 #include <libfirmware/can.h>
-#include <libfirmware/regmap.h>
 #include <libfirmware/canopen.h>
+#include <libfirmware/chip.h>
+#include <libfirmware/console.h>
+#include <libfirmware/driver.h>
+#include <libfirmware/encoder.h>
 #include <libfirmware/events.h>
+#include <libfirmware/gpio.h>
+#include <libfirmware/leds.h>
+#include <libfirmware/math.h>
+#include <libfirmware/memory.h>
+#include <libfirmware/regmap.h>
+#include <libfirmware/serial.h>
+#include <libfirmware/thread.h>
+#include <libfirmware/timestamp.h>
+#include <libfirmware/usb.h>
 
 #include <libdriver/hbridge/drv8302.h>
 
 #include "canopen.h"
-#include "motion_profile.h"
-#include "fb_config.h"
-#include "fb_filter.h"
-#include "fb_control.h"
-#include "fb_leds.h"
 #include "fb_can.h"
 #include "fb_cmd.h"
+#include "fb_config.h"
+#include "fb_control.h"
+#include "fb_filter.h"
+#include "fb_leds.h"
 #include "fb_state.h"
+#include "fb_inputs.h"
+#include "motion_profile.h"
 
-#define FB_SWITCH_COUNT 8
 #define OC_POT_OC_ADJ_MOTOR1 2
 #define OC_POT_OC_ADJ_MOTOR2 3
 
@@ -76,10 +75,12 @@
 #define FB_GPIO_CAN_ADDR2 6
 #define FB_GPIO_CAN_ADDR3 7
 
-#define FB_MOTOR_YAW_GEARBOX_IN_RPM 2000
+#define FB_MOTOR_YAW_GEARBOX_IN_RPM 2800
 #define FB_MOTOR_YAW_GEARBOX_OUT_RPM 28
 #define FB_MOTOR_YAW_GEAR_RATIO (90.f / 17.f)
-#define FB_MOTOR_YAW_TICKS_PER_ROT (FB_MOTOR_YAW_GEAR_RATIO * ((FB_MOTOR_YAW_GEARBOX_IN_RPM * 512 * 4) / FB_MOTOR_YAW_GEARBOX_OUT_RPM))
+#define FB_MOTOR_YAW_TICKS_PER_ROT                                                  \
+	(FB_MOTOR_YAW_GEAR_RATIO *                                                        \
+	 ((FB_MOTOR_YAW_GEARBOX_IN_RPM * 512 * 4) / FB_MOTOR_YAW_GEARBOX_OUT_RPM))
 
 #define FB_SLAVE_TIMEOUT_MS 1000
 
@@ -94,11 +95,7 @@ enum {
 	FB_ADCMUX_MOTOR_PITCH_CHAN = 7
 };
 
-typedef enum {
-	FB_MODE_UNDEFINED = 0,
-	FB_MODE_MASTER,
-	FB_MODE_SLAVE
-} fb_mode_t;
+typedef enum { FB_MODE_UNDEFINED = 0, FB_MODE_MASTER, FB_MODE_SLAVE } fb_mode_t;
 
 #define FB_BTN_LONG_PRESS_TIME_US 1000000UL
 
@@ -107,31 +104,19 @@ typedef enum {
 #define FB_REMOTE_TIMEOUT 50000
 
 enum {
-	FB_SLAVE_VALID_PITCH	= (1 << 0),
-	FB_SLAVE_VALID_YAW		= (1 << 1),
-	FB_SLAVE_VALID_I_PITCH	= (1 << 2),
-	FB_SLAVE_VALID_I_YAW	= (1 << 3),
-	FB_SLAVE_VALID_MICROS	= (1 << 4)
+	FB_SLAVE_VALID_PITCH = (1 << 0),
+	FB_SLAVE_VALID_YAW = (1 << 1),
+	FB_SLAVE_VALID_I_PITCH = (1 << 2),
+	FB_SLAVE_VALID_I_YAW = (1 << 3),
+	FB_SLAVE_VALID_MICROS = (1 << 4)
 };
 
-		struct fb_switch_state {
-			bool pressed;
-			bool long_pressed;
-			bool toggled;
-			timestamp_t pressed_time;
-		};
-
 struct fb {
-    led_controller_t leds;
+	led_controller_t leds;
 	console_device_t console;
-	gpio_device_t sw_gpio;
-	gpio_device_t gpio_ex;
 	analog_device_t sw_leds;
-	adc_device_t adc;
 	analog_device_t mot_x;
 	analog_device_t mot_y;
-	gpio_device_t mux;
-	encoder_device_t enc1, enc2;
 	memory_device_t eeprom;
 	analog_device_t oc_pot;
 	can_device_t can1, can2;
@@ -139,8 +124,7 @@ struct fb {
 	memory_device_t canopen_mem;
 	memory_device_t can1_mem;
 	memory_device_t can2_mem;
-	gpio_device_t enc1_gpio;
-	gpio_device_t enc2_gpio;
+
 	drv8302_t drv_pitch, drv_yaw;
 	events_device_t events;
 	gpio_device_t debug_gpio;
@@ -151,46 +135,10 @@ struct fb {
 
 	struct fb_can can;
 
-	struct fb_inputs_local {
-		uint16_t joy_yaw, joy_pitch;
-		uint16_t yaw_acc, pitch_acc;
-		uint16_t yaw_speed, pitch_speed;
-		bool enc1_aux1, enc1_aux2;
-		bool enc2_aux1, enc2_aux2;
-	} local;
-
-	// raw sensor values
-	struct fb_inputs_data {
-		bool use_local;
-
-		uint16_t vsa_yaw;
-		uint16_t vsb_yaw;
-		uint16_t vsc_yaw;
-		uint16_t vsa_pitch;
-		uint16_t vsb_pitch;
-		uint16_t vsc_pitch;
-		uint16_t ia_yaw;
-		uint16_t ib_yaw;
-		uint16_t ia_pitch;
-		uint16_t ib_pitch;
-		uint16_t pitch;
-		int16_t yaw;
-
-		struct fb_switch_state sw[FB_SWITCH_COUNT];
-
-		uint16_t joy_yaw, joy_pitch;
-		uint16_t yaw_acc, pitch_acc;
-		uint16_t yaw_speed, pitch_speed;
-		uint16_t vmot;
-		uint16_t temp_yaw, temp_pitch;
-		uint8_t can_addr;
-
-		bool enc1_aux1, enc1_aux2, enc2_aux1, enc2_aux2;
-		struct mutex lock;
-	} inputs;
+	struct fb_inputs inputs;
 
 	// processed measurements based on sensor values
-	struct fb_meas_data{
+	struct fb_meas_data {
 		float vsa_yaw;
 		float vsb_yaw;
 		float vsc_yaw;
@@ -225,25 +173,13 @@ struct fb {
 		} pitch, yaw;
 
 		int32_t yaw_ticks;
-		int16_t prev_yaw_ticks;
+		uint16_t prev_yaw_ticks;
 
 		void (*fn)(struct fb *self, float dt);
 	} state;
 
 	struct fb_control axis[FB_AXIS_COUNT];
-/*
-	struct {
-		struct {
-			float error;
-			float integral;
-			float output;
-			float target;
-			float start;
-			struct motion_profile trajectory;
-			struct fb_filter efilt;
-		} pitch, yaw;
-	} controller;
-*/
+
 	struct fb_ui {
 		bool valid;
 		float joy_yaw, joy_pitch;
@@ -269,14 +205,17 @@ struct fb {
 		timestamp_t pitch_update_timeout, yaw_update_timeout;
 	} remote;
 
+	struct {
+		struct mutex lock;
+		timestamp_diff_t loop_td;
+	} stats;
+
 	uint8_t can_addr;
 
 	fb_control_mode_t control_mode;
 	fb_mode_t mode;
 
 	int ticks_on_target;
-	int mux_chan;
-	uint16_t mux_adc[8];
 
 	struct regmap_range comm_range, mfr_range, mfr_range_slave;
 };
@@ -284,8 +223,8 @@ struct fb {
 int _ui_cmd(console_device_t con, void *userptr, int argc, char **argv);
 
 void _fb_update_measurements(struct fb *self);
-void _fb_read_inputs(struct fb *self);
 
 void fb_init(struct fb *self);
 int fb_try_load_preset(struct fb *self, unsigned preset);
-void fb_output_limited(struct fb *self, float pitch, float yaw, float pitch_acc, float yaw_acc);
+void fb_output_limited(struct fb *self, float pitch, float yaw, float pitch_speed,
+                       float yaw_speed, float pitch_acc, float yaw_acc);

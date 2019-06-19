@@ -48,7 +48,7 @@ class ControllerTest : public ::testing::Test {
 		conf.limits.pos_max = 0.385;
 		conf.limits.pos_min = -0.560;
 		conf.limits.integral_max = 1.f;
-
+		conf.settling_time = 100;
 		conf.Kff = 1.f;
 		conf.Kp = 18.f;
 		conf.Ki = 0.0f;
@@ -112,7 +112,14 @@ TEST_F(ControllerTest, plan_start_while_in_progress) {
 	EXPECT_TRUE(ctrl.moving);
 	_plan_state = MOTION_PROFILE_COMPLETED;
 	clock(1);
+	// settling
+	EXPECT_FALSE(ctrl.moving);
+	EXPECT_TRUE(ctrl.settling);
+	EXPECT_TRUE(ctrl.start);
+	clock(conf.settling_time);
+	// new move has started after the previous one has settled
 	EXPECT_TRUE(ctrl.moving);
+	EXPECT_FALSE(ctrl.settling);
 	EXPECT_FALSE(ctrl.start);
 	EXPECT_FLOAT_EQ(_plan_target_pos, 4);
 	EXPECT_FLOAT_EQ(_plan_target_vel, 0);

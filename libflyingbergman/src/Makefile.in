@@ -146,7 +146,7 @@ am_libflyingbergman_a_OBJECTS = libflyingbergman_a-fb.$(OBJEXT) \
 	libflyingbergman_a-fb_output.$(OBJEXT) \
 	libflyingbergman_a-fb_preset.$(OBJEXT) \
 	libflyingbergman_a-fb_state_operational.$(OBJEXT) \
-	libflyingbergman_a-inputs.$(OBJEXT) \
+	libflyingbergman_a-fb_inputs.$(OBJEXT) \
 	libflyingbergman_a-main.$(OBJEXT) \
 	libflyingbergman_a-measured.$(OBJEXT) \
 	libflyingbergman_a-motion_profile.$(OBJEXT) \
@@ -363,7 +363,7 @@ libflyingbergman_a_SOURCES = \
 	fb_output.c\
 	fb_preset.c\
 	fb_state_operational.c\
-	inputs.c\
+	fb_inputs.c\
 	main.c\
 	measured.c\
 	motion_profile.c\
@@ -457,11 +457,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_inputs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_leds.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_output.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_preset.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-fb_state_operational.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-inputs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-measured.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libflyingbergman_a-motion_profile.Po@am__quote@
@@ -628,19 +628,19 @@ libflyingbergman_a-fb_state_operational.obj: fb_state_operational.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_state_operational.obj `if test -f 'fb_state_operational.c'; then $(CYGPATH_W) 'fb_state_operational.c'; else $(CYGPATH_W) '$(srcdir)/fb_state_operational.c'; fi`
 
-libflyingbergman_a-inputs.o: inputs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-inputs.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-inputs.Tpo -c -o libflyingbergman_a-inputs.o `test -f 'inputs.c' || echo '$(srcdir)/'`inputs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-inputs.Tpo $(DEPDIR)/libflyingbergman_a-inputs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inputs.c' object='libflyingbergman_a-inputs.o' libtool=no @AMDEPBACKSLASH@
+libflyingbergman_a-fb_inputs.o: fb_inputs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_inputs.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_inputs.Tpo -c -o libflyingbergman_a-fb_inputs.o `test -f 'fb_inputs.c' || echo '$(srcdir)/'`fb_inputs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-fb_inputs.Tpo $(DEPDIR)/libflyingbergman_a-fb_inputs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_inputs.c' object='libflyingbergman_a-fb_inputs.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-inputs.o `test -f 'inputs.c' || echo '$(srcdir)/'`inputs.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_inputs.o `test -f 'fb_inputs.c' || echo '$(srcdir)/'`fb_inputs.c
 
-libflyingbergman_a-inputs.obj: inputs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-inputs.obj -MD -MP -MF $(DEPDIR)/libflyingbergman_a-inputs.Tpo -c -o libflyingbergman_a-inputs.obj `if test -f 'inputs.c'; then $(CYGPATH_W) 'inputs.c'; else $(CYGPATH_W) '$(srcdir)/inputs.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-inputs.Tpo $(DEPDIR)/libflyingbergman_a-inputs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inputs.c' object='libflyingbergman_a-inputs.obj' libtool=no @AMDEPBACKSLASH@
+libflyingbergman_a-fb_inputs.obj: fb_inputs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-fb_inputs.obj -MD -MP -MF $(DEPDIR)/libflyingbergman_a-fb_inputs.Tpo -c -o libflyingbergman_a-fb_inputs.obj `if test -f 'fb_inputs.c'; then $(CYGPATH_W) 'fb_inputs.c'; else $(CYGPATH_W) '$(srcdir)/fb_inputs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libflyingbergman_a-fb_inputs.Tpo $(DEPDIR)/libflyingbergman_a-fb_inputs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb_inputs.c' object='libflyingbergman_a-fb_inputs.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-inputs.obj `if test -f 'inputs.c'; then $(CYGPATH_W) 'inputs.c'; else $(CYGPATH_W) '$(srcdir)/inputs.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -c -o libflyingbergman_a-fb_inputs.obj `if test -f 'fb_inputs.c'; then $(CYGPATH_W) 'fb_inputs.c'; else $(CYGPATH_W) '$(srcdir)/fb_inputs.c'; fi`
 
 libflyingbergman_a-main.o: main.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libflyingbergman_a_CFLAGS) $(CFLAGS) -MT libflyingbergman_a-main.o -MD -MP -MF $(DEPDIR)/libflyingbergman_a-main.Tpo -c -o libflyingbergman_a-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c

@@ -767,6 +767,11 @@ CLOCK: [2019-06-14 Fri 10:00]--[2019-06-14 Fri 16:30] =>  6:30
 :LOGBOOK:
 CLOCK: [2019-06-16 Sun 21:30]--[2019-06-17 Mon 01:30] =>  4:00
 :END:
+** Figure out what is wrong with the firmware
+:LOGBOOK:
+CLOCK: [2019-06-18 Tue 13:00]--[2019-06-18 Tue 16:00] =>  3:00
+:END:
+
 ** DONE Port to the new api
 :LOGBOOK:
 CLOCK: [2019-05-04 Sat 03:30]--[2019-05-04 Sat 04:00] =>  0:30
@@ -823,6 +828,7 @@ CLOSED: [2019-06-15 Sat 06:24]
 - [ ] Connectors
 ** Live testing
 :LOGBOOK:
+CLOCK: [2019-06-17 Mon 14:00]--[2019-06-17 Mon 21:00] =>  7:00
 CLOCK: [2019-06-10 Mon 11:30]--[2019-06-10 Mon 20:30] =>  9:00
 :END:
 

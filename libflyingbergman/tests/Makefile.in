@@ -109,7 +109,7 @@ am_fb_OBJECTS = ../src/fb_filter.$(OBJEXT) ../src/fb_control.$(OBJEXT) \
 	../src/fb_leds.$(OBJEXT) ../src/measured.$(OBJEXT) \
 	../src/fb_output.$(OBJEXT) ../src/fb_can.$(OBJEXT) \
 	../src/fb_config.$(OBJEXT) ../src/fb_preset.$(OBJEXT) \
-	../src/inputs.$(OBJEXT) ../src/motion_profile.$(OBJEXT) \
+	../src/fb_inputs.$(OBJEXT) ../src/motion_profile.$(OBJEXT) \
 	../src/fb_state_operational.$(OBJEXT) fb.$(OBJEXT)
 fb_OBJECTS = $(am_fb_OBJECTS)
 fb_LDADD = $(LDADD)
@@ -576,7 +576,7 @@ fb_SOURCES = \
 	../src/fb_can.c\
 	../src/fb_config.c\
 	../src/fb_preset.c\
-	../src/inputs.c\
+	../src/fb_inputs.c\
 	../src/motion_profile.c\
 	../src/fb_state_operational.c\
 	fb.cpp
@@ -660,7 +660,7 @@ clean-checkPROGRAMS:
 	../src/$(DEPDIR)/$(am__dirstamp)
 ../src/fb_preset.$(OBJEXT): ../src/$(am__dirstamp) \
 	../src/$(DEPDIR)/$(am__dirstamp)
-../src/inputs.$(OBJEXT): ../src/$(am__dirstamp) \
+../src/fb_inputs.$(OBJEXT): ../src/$(am__dirstamp) \
 	../src/$(DEPDIR)/$(am__dirstamp)
 ../src/motion_profile.$(OBJEXT): ../src/$(am__dirstamp) \
 	../src/$(DEPDIR)/$(am__dirstamp)
@@ -694,11 +694,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_filter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_inputs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_leds.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_output.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_preset.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/fb_state_operational.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/inputs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/measured.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/motion_profile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fb.Po@am__quote@

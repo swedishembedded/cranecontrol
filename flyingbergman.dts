@@ -452,14 +452,14 @@
 		defaults = <1 1>;
 	};
 
-	encoder1 {
+	encoder2 {
 		compatible = "fw,max14890";
 		spi = <&spi3>;
 		gpio = <&encoder1_gpio>;
 		cs_pin = <0>;
 	};
 
-	encoder2 {
+	encoder1 {
 		compatible = "fw,max14890";
 		spi = <&spi3>;
 		gpio = <&encoder2_gpio>;
@@ -475,7 +475,7 @@
 		>;
 	};
 
-	enc1: tim2 {
+	enc2: tim2 {
 		compatible = "st,stm32_tim";
 		reg = <TIM2>;
 		mode = <TIM_EncoderMode_TI12>;
@@ -503,7 +503,7 @@
 		};
 	};
 
-	enc2: tim4 {
+	enc1: tim4 {
 		compatible = "st,stm32_tim";
 		reg = <TIM4>;
 		mode = <TIM_EncoderMode_TI12>;

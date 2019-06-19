@@ -16,22 +16,6 @@ static const unsigned preset_to_swled[FB_PRESET_COUNT] = {
     [FB_PRESET_3] = FB_LED_PRESET_3,
     [FB_PRESET_4] = FB_LED_PRESET_4};
 
-void _fb_state_operational_clock_leds(struct fb *self) {
-	for(unsigned c = 0; c < FB_PRESET_COUNT; c++) {
-		if(self->inputs.sw[preset_to_swled[c]].pressed) {
-			// always turn off the led if button is pressed
-			fb_leds_set_state(&self->button_leds, preset_to_swled[c], FB_LED_STATE_OFF);
-		} else {
-			if(self->config.presets[c].valid) {
-				fb_leds_set_state(&self->button_leds, preset_to_swled[c], FB_LED_STATE_ON);
-			} else {
-				fb_leds_set_state(&self->button_leds, preset_to_swled[c],
-				                  FB_LED_STATE_FAINT_ON);
-			}
-		}
-	}
-}
-
 void _fb_state_operational_enter(struct fb *self) {
 	fb_leds_reset(&self->button_leds);
 	self->control_mode = FB_CONTROL_MODE_MANUAL;
@@ -45,21 +29,32 @@ void _fb_state_operational(struct fb *self, float dt) {
 	                                [FB_PRESET_4] = &self->inputs.sw[FB_SW_PRESET_4]};
 
 	for(unsigned preset = 0; preset < FB_PRESET_COUNT; preset++) {
-		if(!sw[preset]->pressed && sw[preset]->toggled) {
-			fb_try_load_preset(self, preset);
-		} else if(sw[preset]->long_pressed) {
+		if(sw[preset]->long_pressed) {
+			fb_leds_set_state(&self->button_leds, preset_to_swled[preset],
+			                  FB_LED_STATE_ON);
 			if(preset == FB_PRESET_HOME) {
 				fb_config_set_preset(&self->config, preset, 0, self->measured.yaw);
 			} else {
 				fb_config_set_preset(&self->config, preset, self->measured.pitch,
 				                     self->measured.yaw);
 			}
-
+		} else if(sw[preset]->pressed) {
+			// always turn off the led if button is pressed
 			fb_leds_set_state(&self->button_leds, preset_to_swled[preset],
-			                  FB_LED_STATE_ON);
-
-			_fb_enter_state(self, _fb_state_save_preset);
+			                  FB_LED_STATE_OFF);
+		} else if(!sw[preset]->pressed && sw[preset]->toggled) {
+			// if button is released
+			fb_try_load_preset(self, preset);
+		} else {
+			// if button is not touched then set it to either faint glow or bright glow
+			// depending on whether a preset is present
+			if(self->config.presets[preset].valid) {
+				fb_leds_set_state(&self->button_leds, preset_to_swled[preset],
+				                  FB_LED_STATE_ON);
+			} else {
+				fb_leds_set_state(&self->button_leds, preset_to_swled[preset],
+				                  FB_LED_STATE_FAINT_ON);
+			}
 		}
 	}
-	_fb_state_operational_clock_leds(self);
 }
