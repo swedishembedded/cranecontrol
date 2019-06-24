@@ -15,6 +15,7 @@ void fb_control_init(struct fb_control *self, const struct fb_config_control *co
 	memset(self, 0, sizeof(*self));
 	self->conf = conf;
 	fb_filter_init(&self->err_filt, &self->conf->error_filter);
+	self->timebase = 1.f;
 }
 
 void fb_control_set_input(struct fb_control *self, float pos, float vel) {
@@ -66,6 +67,14 @@ static void _fb_control_run(struct fb_control *self) {
 	self->error = err;
 }
 
+float fb_control_get_remaining_time(struct fb_control *self){
+	return motion_profile_get_traversal_time(&self->trajectory) - self->time;
+}
+
+void fb_control_set_timebase(struct fb_control *self, float timebase){
+	self->timebase = timebase;
+}
+
 void fb_control_clock(struct fb_control *self) {
 	if(self->moving && motion_profile_completed(&self->trajectory, self->time)) {
 		//printk("move completed %d %d %d\n", (int32_t)(self->time * 1000),
@@ -76,7 +85,7 @@ void fb_control_clock(struct fb_control *self) {
 	}
 
 	if(self->moving) {
-		self->time += FB_DEFAULT_DT;
+		self->time += FB_DEFAULT_DT * self->timebase;
 		_fb_control_run(self);
 	} else if(self->settling) {
 		self->time += FB_DEFAULT_DT;
@@ -122,4 +131,9 @@ void fb_control_clock(struct fb_control *self) {
 
 float fb_control_get_output(struct fb_control *self) {
 	return self->output;
+}
+
+void fb_control_reset(struct fb_control *self){
+	// for now just reinit
+	fb_control_init(self, self->conf);
 }

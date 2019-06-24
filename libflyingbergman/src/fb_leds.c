@@ -9,6 +9,8 @@
 #include "fb_leds.h"
 #include <string.h>
 
+#define FB_LED_FAST_BLINK_DELAY 100
+
 void fb_leds_init(struct fb_leds *self) {
 	memset(self, 0, sizeof(*self));
 }
@@ -25,6 +27,17 @@ void _fb_led_clock(struct fb_led *self) {
 		case FB_LED_STATE_OFF: {
 			self->intensity = 0.0f;
 		} break;
+		case FB_LED_STATE_FAST_BLINK:
+			self->blink_delay++;
+			if(self->blink_delay > FB_LED_FAST_BLINK_DELAY){
+				if(self->intensity > 0.9){
+					self->intensity = 0;
+				} else {
+					self->intensity = 1.f;
+				}
+				self->blink_delay = 0;
+			}
+			break;
 		case FB_LED_STATE_SLOW_RAMP:
 		case FB_LED_STATE_FAST_RAMP:
 		case FB_LED_STATE_3BLINKS_OFF: {

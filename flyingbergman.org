@@ -747,7 +747,7 @@ CLOCK: [2019-05-06 Mon 08:30]--[2019-05-06 Mon 10:00] =>  1:30
 CLOSED: [2019-06-09 Sun 20:02]
 ** TODO Add unit tests
 :LOGBOOK:
-CLOCK: [2019-06-15 Sat 06:30]--[2019-06-17 Mon 01:41] => 43:11
+CLOCK: [2019-06-15 Sat 06:30]--[2019-06-15 Sat 07:00] =>  0:30
 CLOCK: [2019-06-14 Fri 10:00]--[2019-06-14 Fri 16:30] =>  6:30
 :END:
 ** DONE Account project time from start to end of april

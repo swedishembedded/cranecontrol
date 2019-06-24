@@ -16,6 +16,7 @@ typedef enum {
 	FB_LED_STATE_ON,
 	FB_LED_STATE_3BLINKS_OFF,
 	FB_LED_STATE_FAST_RAMP,
+	FB_LED_STATE_FAST_BLINK,
 	FB_LED_STATE_FAINT_ON
 } fb_led_state_t;
 
@@ -23,6 +24,7 @@ struct fb_led {
 	float intensity;
 	int dim;
 	int state;
+	unsigned blink_delay;
 	int blinks;
 };
 

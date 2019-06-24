@@ -18,10 +18,10 @@ void fb_config_init(struct fb_config *self) {
 		ax->limits.integral_max = 1.f;
 		ax->settling_time = 2000;
 
-		ax->Kff = 2.0f;
-		ax->Kp = 8.0f;
-		ax->Ki = 0.1f;
-		ax->Kd = 0.1f;
+		ax->Kff = 1.0f;
+		ax->Kp = 4.0f;
+		ax->Ki = 0.05f;
+		ax->Kd = 0.4f;
 	} while(0);
 
 	do {
@@ -32,12 +32,12 @@ void fb_config_init(struct fb_config *self) {
 		ax->limits.pos_max = 0;
 		ax->limits.pos_min = 0;
 		ax->limits.integral_max = 1.f;
-		ax->settling_time = 2000;
+		ax->settling_time = 1000;
 
-		ax->Kff = 0.5;
+		ax->Kff = 0.53;
 		ax->Kp = 3.0f;
-		ax->Ki = 0.0f;
-		ax->Kd = 0.5f;
+		ax->Ki = 0.05f;
+		ax->Kd = 0.8f;
 
 		ax->pos_units = FB_CONTROL_POS_UNITS_RAD;
 	} while(0);
@@ -70,6 +70,24 @@ void fb_config_init(struct fb_config *self) {
 	    (struct fb_analog_limit){.min = 860, .max = 2000, .omin = 100, .omax = 100.f};
 	self->limit.temp_pitch = (struct fb_analog_limit){
 	    .min = 1070, .max = 3150, .omin = -100, .omax = 100.f};
+/*
+	// set default presets
+	self->presets[FB_PRESET_1].pitch = 0;
+	self->presets[FB_PRESET_1].yaw = 90.f * M_PI / 180;
+	self->presets[FB_PRESET_1].valid = true;
+
+	self->presets[FB_PRESET_2].pitch = 0;
+	self->presets[FB_PRESET_2].yaw = -90.f * M_PI / 180;
+	self->presets[FB_PRESET_2].valid = true;
+
+	self->presets[FB_PRESET_3].pitch = 0.2;
+	self->presets[FB_PRESET_3].yaw = 90.f * M_PI / 180;
+	self->presets[FB_PRESET_3].valid = true;
+
+	self->presets[FB_PRESET_4].pitch = 0.2;
+	self->presets[FB_PRESET_4].yaw = -90.f * M_PI / 180;
+	self->presets[FB_PRESET_4].valid = true;
+	*/
 }
 
 void fb_config_set_preset(struct fb_config *self, unsigned preset, float pitch, float yaw) {

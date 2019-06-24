@@ -125,42 +125,39 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv) {
 		do {
 			vt_cursor_home(con);
 			console_printf(con, "TIME:" TAB "%6d\n", micros());
-			if(self->mode == FB_MODE_SLAVE) {
-				console_printf(con, "------- SLAVE --------\n");
-				console_printf(con, "VOLT YAW (mV):" TAB "%6d %6d %6d\n",
-				               (int32_t)(self->measured.vsa_yaw * 1000),
-				               (int32_t)(self->measured.vsb_yaw * 1000),
-				               (int32_t)(self->measured.vsc_yaw * 1000));
-				console_printf(con, "VOLT PITCH (mV):" TAB "%6d %6d %6d\n",
-				               (int32_t)(self->measured.vsa_pitch * 1000),
-				               (int32_t)(self->measured.vsb_pitch * 1000),
-				               (int32_t)(self->measured.vsc_pitch * 1000));
-				console_printf(con, "I YAW (mA):" TAB "%6d %6d\n",
-				               (int32_t)(self->measured.ia_yaw * 1000),
-				               (int32_t)(self->measured.ib_yaw * 1000));
-				console_printf(con, "I PITCH (mA):" TAB "%6d %6d\n",
-				               (int32_t)(self->measured.ia_pitch * 1000),
-				               (int32_t)(self->measured.ib_pitch * 1000));
-				console_printf(con, "VMOT:" TAB "%dmV\n",
-				               (int32_t)(self->measured.vmot * 1000));
-				console_printf(con, "TEMP_YAW:" TAB "%d mC\n",
-				               (int32_t)(self->measured.temp_yaw * 1000));
-				console_printf(con, "TEMP_PITCH:" TAB "%d mC\n",
-				               (int32_t)(self->measured.temp_pitch * 1000));
-			} else {
-				console_printf(con, "------- MASTER --------\n");
-				console_printf(con, "JOYSTICK:" TAB "YAW %5d, PITCH %5d\n",
-				               (int32_t)(self->measured.joy_yaw * 1000),
-				               (int32_t)(self->measured.joy_pitch * 1000));
-				console_printf(con, "INTENSITY:" TAB "YAW %5d, PITCH %5d\n",
-				               (int32_t)(self->measured.yaw_acc * 1000),
-				               (int32_t)(self->measured.pitch_acc * 1000));
-				console_printf(con, "SPEED:" TAB "YAW %5d, PITCH %5d\n",
-				               (int32_t)(self->measured.yaw_speed * 1000),
-				               (int32_t)(self->measured.pitch_speed * 1000));
-				console_printf(con, TITLE_FMT "YAW [%5d], PITCH [%5d]\n",
-				               "SLAVE MOTOR POS:", self->slave.yaw, self->slave.pitch);
-			}
+			console_printf(con, "------- SLAVE --------\n");
+			console_printf(con, "VOLT YAW (mV):" TAB "%6d %6d %6d\n",
+			               (int32_t)(self->measured.vsa_yaw * 1000),
+			               (int32_t)(self->measured.vsb_yaw * 1000),
+			               (int32_t)(self->measured.vsc_yaw * 1000));
+			console_printf(con, "VOLT PITCH (mV):" TAB "%6d %6d %6d\n",
+			               (int32_t)(self->measured.vsa_pitch * 1000),
+			               (int32_t)(self->measured.vsb_pitch * 1000),
+			               (int32_t)(self->measured.vsc_pitch * 1000));
+			console_printf(con, "I YAW (mA):" TAB "%6d %6d\n",
+			               (int32_t)(self->measured.ia_yaw * 1000),
+			               (int32_t)(self->measured.ib_yaw * 1000));
+			console_printf(con, "I PITCH (mA):" TAB "%6d %6d\n",
+			               (int32_t)(self->measured.ia_pitch * 1000),
+			               (int32_t)(self->measured.ib_pitch * 1000));
+			console_printf(con, "VMOT:" TAB "%dmV\n",
+			               (int32_t)(self->measured.vmot * 1000));
+			console_printf(con, "TEMP_YAW:" TAB "%d mC\n",
+			               (int32_t)(self->measured.temp_yaw * 1000));
+			console_printf(con, "TEMP_PITCH:" TAB "%d mC\n",
+			               (int32_t)(self->measured.temp_pitch * 1000));
+			console_printf(con, "------- MASTER --------\n");
+			console_printf(con, "JOYSTICK:" TAB "YAW %5d, PITCH %5d\n",
+			               (int32_t)(self->measured.joy_yaw * 1000),
+			               (int32_t)(self->measured.joy_pitch * 1000));
+			console_printf(con, "INTENSITY:" TAB "YAW %5d, PITCH %5d\n",
+			               (int32_t)(self->measured.yaw_acc * 1000),
+			               (int32_t)(self->measured.pitch_acc * 1000));
+			console_printf(con, "SPEED:" TAB "YAW %5d, PITCH %5d\n",
+			               (int32_t)(self->measured.yaw_speed * 1000),
+			               (int32_t)(self->measured.pitch_speed * 1000));
+			console_printf(con, TITLE_FMT "YAW [%5d], PITCH [%5d]\n",
+			               "SLAVE MOTOR POS:", self->slave.yaw, self->slave.pitch);
 			console_printf(con, "------- COMMON --------\n");
 			console_printf(con, "CONTROL OUTPUT:" TAB "YAW %5d, PITCH %5d\n",
 			               (int32_t)(self->output.yaw * 1000),
@@ -277,7 +274,8 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv) {
 		} else {
 			console_printf(con, "loaded preset %d\n", preset);
 			for(unsigned c = 0; c < 50; c++) {
-				console_printf(con, "TIME %d, ",
+				console_printf(con, "TIME %d %d, ",
+				               (int32_t)(self->axis[FB_AXIS_UPDOWN].time * 1000),
 				               (int32_t)(self->axis[FB_AXIS_LEFTRIGHT].time * 1000));
 				console_printf(con, "TRG_PIT %d, TRG_YAW %d, ",
 				               (int32_t)(self->axis[FB_AXIS_UPDOWN].new_target * 1000),
@@ -321,14 +319,14 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv) {
 			if(strcmp(argv[3], "operational") == 0) {
 				_fb_enter_state(self, _fb_state_operational);
 			}
-		} else if(strcmp(argv[2], "p1") == 0) {
+		} else if(strcmp(argv[2], "p0") == 0) {
 			if(argc != 5) {
 				console_printf(con, "not enough arguments to preset\n");
 				return -1;
 			}
 			long pitch = strtol(argv[3], NULL, 10);
 			long yaw = strtol(argv[4], NULL, 10);
-			unsigned preset = FB_PRESET_1;
+			unsigned preset = FB_PRESET_HOME;
 			struct fb_config_preset *p = &self->config.presets[preset];
 			p->pitch = (float)pitch / 1000.f;
 			p->yaw = (float)yaw * M_PI / 180;
@@ -336,11 +334,8 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv) {
 			console_printf(con, "set preset %d to %d %d\n", preset, pitch, yaw);
 		} else if(strcmp(argv[2], "joy_pitch") == 0) {
 			self->inputs.local.joy_pitch = (uint16_t)strtoul(argv[3], NULL, 10);
-			console_printf(con, "set joystick pitch to %d\n",
-			               self->inputs.local.joy_pitch);
 		} else if(strcmp(argv[2], "joy_yaw") == 0) {
 			self->inputs.local.joy_yaw = (uint16_t)strtoul(argv[3], NULL, 10);
-			console_printf(con, "set joystick yaw to %d\n", self->inputs.local.joy_yaw);
 		} else if(strcmp(argv[2], "yaw_acc") == 0) {
 			self->inputs.local.yaw_acc = (uint16_t)strtoul(argv[3], NULL, 10);
 		} else if(strcmp(argv[2], "pitch_acc") == 0) {
@@ -349,6 +344,14 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv) {
 			self->inputs.local.pitch_speed = (uint16_t)strtoul(argv[3], NULL, 10);
 		} else if(strcmp(argv[2], "yaw_speed") == 0) {
 			self->inputs.local.yaw_speed = (uint16_t)strtoul(argv[3], NULL, 10);
+		} else if(strcmp(argv[2], "enc1_aux1") == 0) {
+			self->inputs.local.enc1_aux1 = !!strtoul(argv[3], NULL, 10);
+		} else if(strcmp(argv[2], "enc1_aux2") == 0) {
+			self->inputs.local.enc1_aux2 = !!strtoul(argv[3], NULL, 10);
+		} else if(strcmp(argv[2], "enc2_aux1") == 0) {
+			self->inputs.local.enc2_aux1 = !!strtoul(argv[3], NULL, 10);
+		} else if(strcmp(argv[2], "enc2_aux2") == 0) {
+			self->inputs.local.enc2_aux2 = !!strtoul(argv[3], NULL, 10);
 		}
 	} else {
 		console_printf(con, "Invalid option\n");

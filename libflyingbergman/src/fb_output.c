@@ -8,6 +8,32 @@
  **/
 #include "fb.h"
 
+float _limit_pitch_output(struct fb *self, float pitch, float pitch_speed){
+	// limit pitch if measured pitch is outside of allowed limit
+	float slow_zone_pcnt = 0.15;
+	float limit_abs_max = self->config.axis[FB_AXIS_UPDOWN].limits.pos_max;
+	float limit_abs_min = self->config.axis[FB_AXIS_UPDOWN].limits.pos_min;
+	float travel = limit_abs_max - limit_abs_min;
+	float limit_deadband = travel * slow_zone_pcnt;
+	float limit_max = (limit_abs_max - limit_deadband * 2.f);
+	float limit_min = (limit_abs_min + limit_deadband);
+
+	if(self->measured.pitch > limit_max && self->measured.pitch < limit_abs_max) {
+		// if in the slowdown range then limit to percentage before the max point
+		float pcnt = 1.f - (self->measured.pitch - limit_max) / (limit_deadband * 2.f);
+		pitch = constrain_float(pitch,
+		                        -pitch_speed * pcnt,
+		                        pitch_speed);
+	} else if(self->measured.pitch > limit_abs_max) {
+		pitch = constrain_float(pitch, 0, pitch_speed);
+	} else if(self->measured.pitch < limit_min && self->measured.pitch > limit_abs_min) {
+		float pcnt = 1.f - (limit_min - self->measured.pitch) / limit_deadband;
+		pitch = constrain_float(pitch, -pitch_speed, pitch_speed * pcnt);
+	} else if(self->measured.pitch < limit_abs_min) {
+		pitch = constrain_float(pitch, -pitch_speed, 0);
+	}
+	return pitch;
+}
 //! this function constrains the demanded pitch and yaw output to be compliant with
 //! controls for speed and intensity
 void fb_output_limited(struct fb *self, float demand_pitch, float demand_yaw,
@@ -29,28 +55,10 @@ void fb_output_limited(struct fb *self, float demand_pitch, float demand_yaw,
 	else if(yaw > demand_yaw)
 		yaw = constrain_float(yaw - yaw_acc * dt, demand_yaw, yaw);
 
+	pitch = _limit_pitch_output(self, pitch, pitch_speed);
+
 	pitch = constrain_float(pitch, -pitch_speed, pitch_speed);
 	yaw = constrain_float(yaw, -yaw_speed, yaw_speed);
-
-	// limit pitch if measured pitch is outside of allowed limit
-	float pitch_slow_range = 0.15;
-	float pitch_max = self->config.axis[FB_AXIS_UPDOWN].limits.pos_max;
-	float pitch_min = self->config.axis[FB_AXIS_UPDOWN].limits.pos_min;
-	float travel = pitch_max - pitch_min;
-	float pitch_max_limit = (pitch_max - travel * pitch_slow_range);
-	float pitch_min_limit = (pitch_min + travel * pitch_slow_range);
-	if(self->measured.pitch > pitch_max) {
-		// if we are beyond the max point then only allow motion in reverse
-		pitch = constrain_float(pitch, 0, pitch_speed);
-	} else if(self->measured.pitch > pitch_max_limit) {
-		// if beyond slowdown limit then cut the speed in half
-		pitch = constrain_float(pitch, -(1.f - (self->measured.pitch - pitch_max_limit) / (travel * pitch_slow_range)), pitch_speed);
-	}
-	if(self->measured.pitch < pitch_min) {
-		pitch = constrain_float(pitch, -pitch_speed, 0);
-	} else if(self->measured.pitch < pitch_min_limit) {
-		pitch = constrain_float(pitch, -pitch_speed, (self->measured.pitch - pitch_min) / (travel * pitch_slow_range));
-	}
 
 	// write final output value
 	self->output.pitch = pitch;

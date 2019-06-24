@@ -39,11 +39,15 @@ struct fb_control {
 	bool settling;
 	float output;
 	unsigned settle_time;
+	float timebase;
 };
 
 void fb_control_init(struct fb_control *self, const struct fb_config_control *conf);
+void fb_control_reset(struct fb_control *self);
 void fb_control_set_input(struct fb_control *self, float pos, float vel);
 void fb_control_set_limits(struct fb_control *self, float acc, float speed, float dec);
 void fb_control_set_target(struct fb_control *self, float pos);
+void fb_control_set_timebase(struct fb_control *self, float time);
+float fb_control_get_remaining_time(struct fb_control *self);
 void fb_control_clock(struct fb_control *self);
 float fb_control_get_output(struct fb_control *self);

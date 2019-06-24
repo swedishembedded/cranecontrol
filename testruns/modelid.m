@@ -34,20 +34,26 @@ pitch_in = pitch_in(idx);
 
 %step(sys_yaw);
 
-G = (-0.39 / (1 + 0.01 * s));
+G = (yaw_kff / (1 + 0.01 * s));
 G = c2d(G, 0.001);
 [Y, t] = lsim(G, dat.yaw_duty, dat.t);
-figure();
+figure(1);
 plot(t, Y, 'r', t, dat.yaw_vel, 'k');
 title("Simulated system (red) vs actual yaw velocity (black)");
 print -dpng "output/sysid_sim_yaw_vel_vs_real.png";
 
+G = (pitch_kff / (1 + 0.01 * s));
+G = c2d(G, 0.001);
+[Y, t] = lsim(G, dat.pitch_duty, dat.t);
+figure(2);
+plot(t, Y, 'r', t, dat.pitch_vel, 'k');
+title("Simulated system (red) vs actual pitch velocity (black)");
+print -dpng "output/sysid_sim_pitch_vel_vs_real.png";
 
 Gc = feedback(c2d(pid(18, 0, 0.2, 1), 0.001) * G, -1);
 %[p, z] = pzmap(d2c(Gc))
 %step(Gc, 1)
 [Y, t] = lsim(Gc, dat.pitch_duty, dat.t);
 %plot(t, Y, t, dat.yaw_vel);
-
 
 input("..");

@@ -45,17 +45,69 @@ static void _fb_indicator_loop(void *ptr) {
 	}
 }
 
+void _fb_update_leds(struct fb *self) {
+	if(self->can.timed_out){
+		fb_leds_set_state(&self->button_leds, FB_LED_CONN_STATUS, FB_LED_STATE_ON);
+	} else {
+		fb_leds_set_state(&self->button_leds, FB_LED_CONN_STATUS, FB_LED_STATE_OFF);
+	}
+
+	if(self->can.timed_out){
+		fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_FAST_BLINK);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_1, FB_LED_STATE_FAST_BLINK);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_2, FB_LED_STATE_FAST_BLINK);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_3, FB_LED_STATE_FAST_BLINK);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_4, FB_LED_STATE_FAST_BLINK);
+	} else if(self->state.fn == _fb_state_wait_power) {
+		fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_SLOW_RAMP);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_1, FB_LED_STATE_OFF);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_2, FB_LED_STATE_OFF);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_3, FB_LED_STATE_OFF);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_4, FB_LED_STATE_OFF);
+	} else if(self->state.fn == _fb_state_wait_home) {
+		struct fb_switch_state *home = &self->inputs.sw[FB_SW_HOME];
+		if(home->long_pressed) {
+			fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_FAST_BLINK);
+		} else if(home->pressed) {
+			fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_OFF);
+		} else {
+			fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_FAST_RAMP);
+		}
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_1, FB_LED_STATE_OFF);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_2, FB_LED_STATE_OFF);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_3, FB_LED_STATE_OFF);
+		fb_leds_set_state(&self->button_leds, FB_LED_PRESET_4, FB_LED_STATE_OFF);
+	} else if(self->state.fn == _fb_state_operational) {
+		unsigned idx[] = {FB_SW_HOME, FB_SW_PRESET_1, FB_SW_PRESET_2, FB_SW_PRESET_3,
+		                  FB_SW_PRESET_4};
+		unsigned pidx[] = {FB_PRESET_HOME, FB_PRESET_1, FB_PRESET_2, FB_PRESET_3 };
+		for(unsigned c = 0; c < (sizeof(idx) / sizeof(idx[0])); c++) {
+			struct fb_switch_state *sw = &self->inputs.sw[idx[c]];
+			if(sw->long_pressed) {
+				fb_leds_set_state(&self->button_leds, idx[c], FB_LED_STATE_FAST_BLINK);
+			} else if(sw->pressed) {
+				fb_leds_set_state(&self->button_leds, idx[c],
+				                  FB_LED_STATE_OFF);
+			} else {
+				if(self->config.presets[pidx[c]].valid) {
+					fb_leds_set_state(&self->button_leds, idx[c],
+														FB_LED_STATE_ON);
+				} else {
+					fb_leds_set_state(&self->button_leds, idx[c],
+														FB_LED_STATE_FAINT_ON);
+				}
+			}
+		}
+	}
+}
+
 void _fb_enter_state(struct fb *self, void (*fp)(struct fb *self, float dt)) {
 	// enter new state
 	if(fp == _fb_state_wait_power) {
-		fb_leds_reset(&self->button_leds);
 		// blink the led quickly
-		fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_SLOW_RAMP);
 		self->control_mode = FB_CONTROL_MODE_NO_MOTION;
 	}
 	if(fp == _fb_state_wait_home) {
-		fb_leds_reset(&self->button_leds);
-		fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_FAST_RAMP);
 		self->control_mode = FB_CONTROL_MODE_MANUAL;
 	} else if(fp == _fb_state_operational) {
 		_fb_state_operational_enter(self);
@@ -78,39 +130,15 @@ void _fb_state_wait_power(struct fb *self, float dt) {
 
 void _fb_state_wait_home(struct fb *self, float dt) {
 	struct fb_switch_state *home = &self->inputs.sw[FB_SW_HOME];
-	if(home->pressed) {
+	if(home->long_pressed) {
 		// make sure home button is lit
-		fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_OFF);
 		// if it has been held for a number of seconds then we save the home position
-		timestamp_t ts = timestamp_add_us(home->pressed_time, FB_BTN_LONG_PRESS_TIME_US);
-		if(timestamp_expired(ts)) {
-			printk("fb: saving home position %d %d\n",
-			       (int32_t)(self->measured.pitch * 1000),
-			       (int32_t)(self->measured.yaw * 1000));
-			self->config.presets[0].pitch = 0; // self->measured.pitch;
-			self->config.presets[0].yaw = self->measured.yaw;
-			self->config.presets[0].valid = true;
-			_fb_enter_state(self, _fb_state_operational);
-		}
-	} else {
-		fb_leds_set_state(&self->button_leds, FB_LED_HOME, FB_LED_STATE_FAST_RAMP);
+		self->config.presets[0].pitch = 0; // self->measured.pitch;
+		self->config.presets[0].yaw = self->measured.yaw;
+		self->config.presets[0].valid = true;
+	} else if(self->config.presets[0].valid && !home->pressed && home->toggled){
+		_fb_enter_state(self, _fb_state_operational);
 	}
-}
-
-void _fb_state_save_preset(struct fb *self, float dt) {
-	struct fb_switch_state *sw[] = {
-	    &self->inputs.sw[FB_SW_HOME], &self->inputs.sw[FB_SW_PRESET_1],
-	    &self->inputs.sw[FB_SW_PRESET_2], &self->inputs.sw[FB_SW_PRESET_3],
-	    &self->inputs.sw[FB_SW_PRESET_4]};
-
-	for(int c = 0; c < FB_PRESET_COUNT; c++) {
-		if(sw[c]->pressed) {
-			return;
-		}
-	}
-	// enter operational state once all buttons are released
-	// // enter operational state once all buttons are released
-	_fb_enter_state(self, _fb_state_operational);
 }
 
 static void _fb_check_mode(struct fb *self) {
@@ -172,20 +200,35 @@ static void _fb_update_control(struct fb *self, float dt) {
 			fb_control_set_input(&self->axis[FB_AXIS_UPDOWN], self->measured.pitch, 0.f);
 			fb_control_set_input(&self->axis[FB_AXIS_LEFTRIGHT], self->measured.yaw, 0.f);
 
+			// FIXME: this is a hack for now. Controller needs to be refactored.
+			// Rescale the controller time so that both controllers finish at the same time
+			float t_updown = fb_control_get_remaining_time(&self->axis[FB_AXIS_UPDOWN]);
+			float t_leftright = fb_control_get_remaining_time(&self->axis[FB_AXIS_LEFTRIGHT]);
+			float t_min = fminf(t_updown, t_leftright);
+			float t_max = fmaxf(t_updown, t_leftright);
+			if(t_max > 0.05f){
+				float scale = t_min / t_max;
+				if(t_updown >= t_leftright){
+					// if updown takes longer then leftright needs to go slower
+					fb_control_set_timebase(&self->axis[FB_AXIS_LEFTRIGHT], scale);
+				} else if(t_leftright >= t_updown){
+					// if leftright takes longer then updown needs to go slower
+					fb_control_set_timebase(&self->axis[FB_AXIS_UPDOWN], scale);
+				}
+			} else {
+				// otherwise set scales to default 1.f
+				fb_control_set_timebase(&self->axis[FB_AXIS_LEFTRIGHT], 1.f);
+				fb_control_set_timebase(&self->axis[FB_AXIS_UPDOWN], 1.f);
+			}
+
 			fb_control_clock(&self->axis[FB_AXIS_UPDOWN]);
 			fb_control_clock(&self->axis[FB_AXIS_LEFTRIGHT]);
 
 			float co_pitch = fb_control_get_output(&self->axis[FB_AXIS_UPDOWN]);
 			float co_yaw = fb_control_get_output(&self->axis[FB_AXIS_LEFTRIGHT]);
 
-			if(self->mode == FB_MODE_MASTER) {
-				fb_output_limited(self, -co_pitch, -co_yaw,
-					self->axis[FB_AXIS_UPDOWN].limits.vel, self->axis[FB_AXIS_LEFTRIGHT].limits.vel,
-					self->axis[FB_AXIS_UPDOWN].limits.acc, self->axis[FB_AXIS_LEFTRIGHT].limits.acc);
-			} else {
-				fb_output_limited(self, -co_pitch, -co_yaw, 1.f, 1.f, 4.f * FB_PITCH_MAX_ACC,
-				                  4.f * FB_YAW_MAX_ACC);
-			}
+			fb_output_limited(self, -co_pitch, -co_yaw, 1.f, 1.f, 4.f * FB_PITCH_MAX_ACC,
+			                  4.f * FB_YAW_MAX_ACC);
 			/*
 fb_output_limited(self, -co_pitch, -co_yaw, self->measured.pitch_speed,
 			            self->measured.yaw_speed, self->measured.pitch_acc,
@@ -194,6 +237,8 @@ fb_output_limited(self, -co_pitch, -co_yaw, self->measured.pitch_speed,
 			// if joystick is moved during automatic move then we switch back to manual
 			if(fabsf(self->measured.joy_pitch) > self->config.deadband.pitch ||
 			   fabsf(self->measured.joy_yaw) > self->config.deadband.yaw) {
+				fb_control_reset(&self->axis[FB_AXIS_UPDOWN]);
+				fb_control_reset(&self->axis[FB_AXIS_LEFTRIGHT]);
 				self->control_mode = FB_CONTROL_MODE_MANUAL;
 			}
 		} break;
@@ -234,9 +279,9 @@ static void fb_check_link_state(struct fb *self) {
 			self->control_mode = FB_CONTROL_MODE_REMOTE;
 		}
 	} else if(self->mode == FB_MODE_MASTER) {
-		if(self->can.timed_out) {
-			_fb_enter_state(self, _fb_state_wait_power);
-		}
+		//if(self->can.timed_out && self->state.fn != _fb_state_wait_power) {
+		//	_fb_enter_state(self, _fb_state_wait_power);
+		//}
 	}
 }
 
@@ -247,6 +292,7 @@ static void _fb_update(struct fb *self) {
 	_fb_update_state(self, FB_DEFAULT_DT);
 	_fb_update_control(self, FB_DEFAULT_DT);
 	_fb_update_motors(self);
+	_fb_update_leds(self);
 	fb_leds_clock(&self->button_leds);
 }
 
@@ -389,10 +435,11 @@ void fb_init(struct fb *self) {
 
 	fb_leds_reset(&self->button_leds);
 
-	// static const struct fb_config_filter _pfilt = {
-	//    .a0 = -1.44739, .a1 = 0.567971, .b0 = 0.0659765, .b1 = 0.0546078};
+	static const struct fb_config_filter _pfilt = {
+	    .a0 = -1.44739, .a1 = 0.567971, .b0 = 0.0659765, .b1 = 0.0546078};
 
-	static const struct fb_config_filter _pfilt = {.a0 = 0, .a1 = 0, .b0 = 1, .b1 = 0};
+	// static const struct fb_config_filter _pfilt = {.a0 = 0, .a1 = 0, .b0 = 1, .b1 =
+	// 0};
 	fb_filter_init(&self->measured.pfilt, &_pfilt);
 
 	analog_write(self->oc_pot, OC_POT_OC_ADJ_MOTOR1, 1.f);

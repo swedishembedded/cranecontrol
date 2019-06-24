@@ -230,13 +230,10 @@ static bool _fb_slave_timed_out(struct fb *self) {
 		// if all items were received then reset the bits and update timestamp
 		self->slave.valid_bits = 0;
 		self->slave.timeout = timeout;
-		fb_leds_set_state(&self->button_leds, FB_LED_CONN_STATUS, FB_LED_STATE_OFF);
 	} else {
 		// otherwise wait until timeout and reconfigure slave
 		if(timestamp_expired(self->slave.timeout)) {
 			self->slave.valid_bits = 0;
-			self->slave.timeout = timeout;
-			fb_leds_set_state(&self->button_leds, FB_LED_CONN_STATUS, FB_LED_STATE_ON);
 			thread_mutex_unlock(&self->slave.lock);
 			return true;
 		}
