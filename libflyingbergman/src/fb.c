@@ -200,34 +200,13 @@ static void _fb_update_control(struct fb *self, float dt) {
 			fb_control_set_input(&self->axis[FB_AXIS_UPDOWN], self->measured.pitch, 0.f);
 			fb_control_set_input(&self->axis[FB_AXIS_LEFTRIGHT], self->measured.yaw, 0.f);
 
-			// FIXME: this is a hack for now. Controller needs to be refactored.
-			// Rescale the controller time so that both controllers finish at the same time
-			float t_updown = fb_control_get_remaining_time(&self->axis[FB_AXIS_UPDOWN]);
-			float t_leftright = fb_control_get_remaining_time(&self->axis[FB_AXIS_LEFTRIGHT]);
-			float t_min = fminf(t_updown, t_leftright);
-			float t_max = fmaxf(t_updown, t_leftright);
-			if(t_max > 0.05f){
-				float scale = t_min / t_max;
-				if(t_updown >= t_leftright){
-					// if updown takes longer then leftright needs to go slower
-					fb_control_set_timebase(&self->axis[FB_AXIS_LEFTRIGHT], scale);
-				} else if(t_leftright >= t_updown){
-					// if leftright takes longer then updown needs to go slower
-					fb_control_set_timebase(&self->axis[FB_AXIS_UPDOWN], scale);
-				}
-			} else {
-				// otherwise set scales to default 1.f
-				fb_control_set_timebase(&self->axis[FB_AXIS_LEFTRIGHT], 1.f);
-				fb_control_set_timebase(&self->axis[FB_AXIS_UPDOWN], 1.f);
-			}
-
 			fb_control_clock(&self->axis[FB_AXIS_UPDOWN]);
 			fb_control_clock(&self->axis[FB_AXIS_LEFTRIGHT]);
 
 			float co_pitch = fb_control_get_output(&self->axis[FB_AXIS_UPDOWN]);
 			float co_yaw = fb_control_get_output(&self->axis[FB_AXIS_LEFTRIGHT]);
 
-			fb_output_limited(self, -co_pitch, -co_yaw, 1.f, 1.f, 4.f * FB_PITCH_MAX_ACC,
+			fb_output_limited(self, -co_pitch, -co_yaw, 1.f, 1.f, 8.f * FB_PITCH_MAX_ACC,
 			                  4.f * FB_YAW_MAX_ACC);
 			/*
 fb_output_limited(self, -co_pitch, -co_yaw, self->measured.pitch_speed,
@@ -484,7 +463,7 @@ void fb_init(struct fb *self) {
 
 	_fb_check_connected_devices(self);
 
-	_fb_enter_state(self, _fb_state_wait_power);
+	_fb_enter_state(self, _fb_state_operational);
 
 	thread_create(_fb_control_loop, "fb_ctrl", 750, self, 2, NULL);
 

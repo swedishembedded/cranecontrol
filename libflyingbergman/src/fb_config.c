@@ -6,22 +6,21 @@ void fb_config_init(struct fb_config *self) {
 
 	do {
 		struct fb_config_control *ax = &self->axis[FB_AXIS_UPDOWN];
-/*
 		ax->error_filter =
 		    (struct fb_config_filter){.a0 = 0, .a1 = 0, .b0 = 1.0f, .b1 = 0};
-		    */
+		/*
 		ax->error_filter = (struct fb_config_filter){
 		    .a0 = -1.9112f, .a1 = 0.914976f, .b0 = 0.0019161f, .b1 = 0.00186018f};
-
-		ax->limits.pos_max = 0.385;
-		ax->limits.pos_min = -0.560;
+*/
+		ax->limits.pos_max = 0.560;
+		ax->limits.pos_min = -0.350;
 		ax->limits.integral_max = 1.f;
 		ax->settling_time = 2000;
 
-		ax->Kff = 1.0f;
-		ax->Kp = 4.0f;
+		ax->Kff = 1.5f;
+		ax->Kp = 3.0f;
 		ax->Ki = 0.05f;
-		ax->Kd = 0.4f;
+		ax->Kd = 0.1f;
 	} while(0);
 
 	do {
@@ -54,10 +53,10 @@ void fb_config_init(struct fb_config *self) {
 	    (struct fb_analog_limit){.min = 0, .max = 4096, .omin = -1.f, .omax = 1.f};
 	self->limit.pitch_acc = (struct fb_analog_limit){.min = 0,
 	                                                 .max = 4096,
-	                                                 .omin = FB_PITCH_MAX_ACC * 0.2,
+	                                                 .omin = FB_PITCH_MAX_ACC * 0.05,
 	                                                 .omax = FB_PITCH_MAX_ACC};
 	self->limit.yaw_acc = (struct fb_analog_limit){
-	    .min = 0, .max = 4096, .omin = FB_YAW_MAX_ACC * 0.2, .omax = FB_YAW_MAX_ACC};
+	    .min = 0, .max = 4096, .omin = FB_YAW_MAX_ACC * 0.05, .omax = FB_YAW_MAX_ACC};
 	self->limit.pitch_speed = (struct fb_analog_limit){.min = 0,
 	                                                   .max = 4096,
 	                                                   .omin = FB_PITCH_MAX_VEL * 0.2,

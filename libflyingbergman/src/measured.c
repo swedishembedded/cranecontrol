@@ -42,16 +42,21 @@ void _fb_update_measurements(struct fb *self) {
 	float _joy_yaw_dir =
 	    (self->inputs.enc2_aux2 == 0) ? -1 : ((self->inputs.enc1_aux2 == 0) ? 1 : 0);
 
-	self->measured.joy_pitch =
+	float joy_pitch =
 	    _joy_pitch_dir *
 	    _scale_input((float)self->inputs.joy_pitch, &self->config.limit.joy_pitch);
-	self->measured.joy_yaw = _joy_yaw_dir * _scale_input((float)self->inputs.joy_yaw,
+	float joy_yaw = _joy_yaw_dir * _scale_input((float)self->inputs.joy_yaw,
 	                                                     &self->config.limit.joy_yaw);
+
 	// add deadband
-	if(fabsf(self->measured.joy_pitch) < self->config.deadband.pitch)
-		self->measured.joy_pitch = 0;
-	if(fabsf(self->measured.joy_yaw) < self->config.deadband.yaw)
-		self->measured.joy_yaw = 0;
+	if(fabsf(joy_pitch) < self->config.deadband.pitch)
+		joy_pitch = 0;
+	if(fabsf(joy_yaw) < self->config.deadband.yaw)
+		joy_yaw = 0;
+
+	// apply a simple exponential to make it less sensetive around zero
+	self->measured.joy_pitch = joy_pitch;
+	self->measured.joy_yaw = joy_yaw;
 
 	self->measured.pitch_acc =
 	    _scale_input((float)self->inputs.pitch_acc, &self->config.limit.pitch_acc);

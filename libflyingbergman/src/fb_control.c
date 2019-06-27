@@ -15,6 +15,7 @@ void fb_control_init(struct fb_control *self, const struct fb_config_control *co
 	memset(self, 0, sizeof(*self));
 	self->conf = conf;
 	fb_filter_init(&self->err_filt, &self->conf->error_filter);
+	self->time = 0;
 	self->timebase = 1.f;
 }
 
@@ -34,7 +35,8 @@ void fb_control_set_target(struct fb_control *self, float pos) {
 	//printk("new target %d\n", (int32_t)(pos * 1000));
 	self->new_target = pos;
 	self->start = true;
-	self->integral = 0;
+	self->moving = false;
+	self->settling = false;
 }
 
 static void _fb_control_run(struct fb_control *self) {
@@ -72,7 +74,7 @@ float fb_control_get_remaining_time(struct fb_control *self){
 }
 
 void fb_control_set_timebase(struct fb_control *self, float timebase){
-	self->timebase = timebase;
+	self->timebase = fabsf(timebase);
 }
 
 void fb_control_clock(struct fb_control *self) {
@@ -98,12 +100,14 @@ void fb_control_clock(struct fb_control *self) {
 			self->output = 0;
 			self->integral = 0;
 			self->time = 0;
+			self->timebase = 1;
 		}
 	} else {
 		self->output = 0;
 		self->integral = 0;
 		self->error = 0;
 		self->time = 0;
+		self->timebase = 1;
 	}
 
 	// make sure we start next move in the same clock cycle as completion of previous
@@ -126,6 +130,7 @@ void fb_control_clock(struct fb_control *self) {
 		self->integral = 0;
 		self->error = 0;
 		self->time = 0;
+		self->timebase = 1;
 	}
 }
 
