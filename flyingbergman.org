@@ -49,6 +49,10 @@
 | \_  User manual                              |            |      1:30 |          |
 #+END:
 
+* Hardware
+** Add test points for mosfet signals
+** Add ground reference points for tests
+** Find source of switching noise
 * FlyingBergman
 ** DONE Electronics
 :LOGBOOK:

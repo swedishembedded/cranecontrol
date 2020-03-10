@@ -16,8 +16,6 @@
 #include <libdriver/dts/mcp2317.h>
 #include <libflyingbergman/dts/flyingbergman.h>
 
-//#define SWAP_CAN_PORTS
-
 / {
 	cpu {
 		/* SystemCoreClock = ((HSE_VALUE / PLL_M) * PLL_N) / PLL_P; */
@@ -268,6 +266,7 @@
 		output_trigger = <TIM_TRGOSource_Update>;
 		slave_mode = <TIM_SlaveMode_Reset>;
 		input_trigger = <TIM_TS_ITR0>;
+		dead_time = <1500>;
 
 /*
 		events {
@@ -311,12 +310,12 @@
 		gpio {
 			compatible = "st,stm32_gpio";
 			pinctrl = <
-				GPIOA GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLA */
-				GPIOC GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHA */
-				GPIOB GPIO_Pin_14 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLB */
-				GPIOC GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHB */
-				GPIOB GPIO_Pin_15 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLC */
-				GPIOC GPIO_Pin_8 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHC */
+				GPIOA GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLA */
+				GPIOC GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHA */
+				GPIOB GPIO_Pin_14 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLB */
+				GPIOC GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHB */
+				GPIOB GPIO_Pin_15 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLC */
+				GPIOC GPIO_Pin_8 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHC */
 				GPIOA GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_Mode_IN | GPIO_PuPd_UP) /* BRKIN */
 			>;
 		};
@@ -331,6 +330,7 @@
 		rep_count = <1>;
 		master_mode = <TIM_MasterSlaveMode_Enable>;
 		output_trigger = <TIM_TRGOSource_Enable>;
+		dead_time = <200>;
 /*
 		events {
 			publisher = <&events>;
@@ -373,12 +373,12 @@
 		gpio {
 			compatible = "st,stm32_gpio";
 			pinctrl = <
-				GPIOE GPIO_Pin_8 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLA */
-				GPIOE GPIO_Pin_9 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHA */
-				GPIOE GPIO_Pin_10 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLB */
-				GPIOE GPIO_Pin_11 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHB */
-				GPIOE GPIO_Pin_12 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INLC */
-				GPIOE GPIO_Pin_13 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_50MHz) /* INHC */
+				GPIOE GPIO_Pin_8 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLA */
+				GPIOE GPIO_Pin_9 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHA */
+				GPIOE GPIO_Pin_10 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLB */
+				GPIOE GPIO_Pin_11 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHB */
+				GPIOE GPIO_Pin_12 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLC */
+				GPIOE GPIO_Pin_13 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHC */
 				GPIOE GPIO_Pin_15 (GPIO_AF_TIM1 | GPIO_Mode_IN | GPIO_PuPd_UP) /* BRKIN */
 			>;
 		};
