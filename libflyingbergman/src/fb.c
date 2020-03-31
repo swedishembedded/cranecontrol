@@ -384,14 +384,14 @@ static void _fb_check_connected_devices(struct fb *self) {
 		}
 	}
 }
-
+#if 0
 static int _fb_events_handler(struct events_subscriber *sub, uint32_t ev) {
 	struct fb *self = container_of(sub, struct fb, sub);
 	gpio_set(self->debug_gpio, 4);
 	gpio_reset(self->debug_gpio, 4);
 	return 0;
 }
-
+#endif
 void fb_init(struct fb *self) {
 	self->state.prev_loop_time = timestamp();
 	self->slave.timeout = timestamp_from_now_us(FB_REMOTE_TIMEOUT);

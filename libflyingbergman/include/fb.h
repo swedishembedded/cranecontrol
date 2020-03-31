@@ -127,7 +127,7 @@ struct fb {
 
 	drv8302_t drv_pitch, drv_yaw;
 	events_device_t events;
-	gpio_device_t debug_gpio;
+	//gpio_device_t debug_gpio;
 
 	struct events_subscriber sub;
 

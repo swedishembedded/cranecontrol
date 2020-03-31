@@ -63,7 +63,7 @@
 	};
 
 	gpio {
-	    compatible = "st,stm32_gpio";
+		compatible = "st,stm32_gpio";
 		debug_serial_pins {
 			pinctrl = <
 				GPIOA GPIO_Pin_9 (GPIO_AF_USART1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_50MHz) /* TX */
@@ -76,6 +76,17 @@
 				GPIOA GPIO_Pin_8 GPIO_Mode_OUT
 			>;
 		};
+	};
+
+	ice40_gpio: ice40_gpio {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOF GPIO_Pin_0 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* CRESET */
+			GPIOF GPIO_Pin_1 (GPIO_Mode_IN | GPIO_Speed_100MHz) /* CDONE */
+			GPIOE GPIO_Pin_4 (GPIO_Mode_OUT| GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /* CS */
+			GPIOE GPIO_Pin_3 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz) /* PWR */
+		>;
+		defaults = <0 1 1 1>;
 	};
 
 	spi {
@@ -123,6 +134,35 @@
 				defaults = <1 1 1>;
 			};
 
+		};
+
+		spi4: spi4 {
+			compatible = "st,stm32_spi";
+			reg = <SPI4>;
+			pins {
+				compatible = "st,stm32_gpio";
+				pinctrl = <
+					GPIOE GPIO_Pin_2 (GPIO_AF_SPI4 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* SCK */
+					GPIOE GPIO_Pin_5 (GPIO_AF_SPI4 | GPIO_OType_OD | GPIO_PuPd_DOWN | GPIO_Speed_100MHz) /* MISO */
+					GPIOE GPIO_Pin_6 (GPIO_AF_SPI4 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* MOSI */
+				>;
+			};
+		};
+
+		ice40_flash: ice40_flash {
+			compatible = "fw,m25";
+			spi = <&spi4>;
+			gpio = <&ice40_gpio>;
+			cs_pin = <2>;
+		};
+		
+		ice40: ice40 {
+			compatible = "fw,ice40";
+			flash = <&ice40_flash>;
+			gpio = <&ice40_gpio>;
+			creset_pin = <0>;
+			cdone_pin = <1>;
+			cs_pin = <2>;
 		};
 
 		mcp2317_1: gpio1 {
@@ -239,19 +279,6 @@
 			i2c = <&i2c1>;
 			reg = <0x50>;
 		};
-	};
-
-	uext_gpio: uext_gpio {
-		compatible = "st,stm32_gpio";
-		pinctrl = <
-			GPIOE GPIO_Pin_0 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
-			GPIOE GPIO_Pin_1 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
-			GPIOE GPIO_Pin_2 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
-			GPIOE GPIO_Pin_3 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
-			GPIOE GPIO_Pin_4 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
-			GPIOE GPIO_Pin_5 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
-			GPIOE GPIO_Pin_6 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_Speed_100MHz)
-		>;
 	};
 
 	tim8: tim8 {
@@ -706,8 +733,8 @@
 	};
 */
 
-    application {
-        compatible = "app,flyingbergman";
+	application {
+		compatible = "app,flyingbergman";
 		leds = <&leds>;
 		console = <&console>;
 		sw_gpio = <&mcp2317_1>;
@@ -728,12 +755,13 @@
 		can2 = <&can2>;
 		regmap = <&regmap>;
 		canopen = <&canopen>;
+		flash = <&ice40_flash>;
 		//canopen_slave = <&canopen_slave>;
 		drv_pitch = <&drv8302_pitch>;
 		drv_yaw = <&drv8302_yaw>;
 		events = <&events>;
-		debug_gpio = <&uext_gpio>;
+		//debug_gpio = <&uext_gpio>;
 		//canopen_slave = <&canopen_slave>;
 		//regmap_slave = <&regmap_slave>;
-    };
+	};
 };

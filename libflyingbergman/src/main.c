@@ -125,7 +125,7 @@ static int _fb_probe(void *fdt, int fdt_node) {
 	self->drv_pitch = drv_pitch;
 	self->drv_yaw = drv_yaw;
 	self->events = events;
-	self->debug_gpio = gpio_find_by_ref(fdt, fdt_node, "debug_gpio");
+	//self->debug_gpio = gpio_find_by_ref(fdt, fdt_node, "debug_gpio");
 	// self->canopen = canopen;
 
 	fb_init(self);
