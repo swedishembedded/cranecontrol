@@ -1,4 +1,6 @@
 build/
+build*/
+docs/_build/
 configure
 autom4te.cache/
 aclocal.m4

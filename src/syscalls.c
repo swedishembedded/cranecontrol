@@ -24,7 +24,6 @@ void vApplicationTaskSWIHook(int task){
 	//dac_write(&dac1, 2, task * 100);
 }
 
-
 int _close (int fd){
 	printk(PRINT_ERROR "close not implemented\n");
 	return -1;
