@@ -1,4 +1,14 @@
-./build/
+build/
 configure
 autom4te.cache/
 aclocal.m4
+lib/libfirmware
+lib/libdriver
+lib/libfdt
+include/libfirmware
+include/libdriver
+include/libfdt
+src/libfirmware
+src/libdriver
+src/libfdt
+Makefile.in
