@@ -1,7 +1,7 @@
 #pragma once
 
 #include <libfirmware/types/timestamp.h>
-#include "motion_profile.h"
+#include <libplc/motion_profile.h>
 #include "fb_filter.h"
 
 #define FB_CONTROL_OUTPUT_LIMIT (1.f)

@@ -30,7 +30,7 @@
 #include "fb_leds.h"
 #include "fb_state.h"
 #include "fb_inputs.h"
-#include "motion_profile.h"
+#include <libplc/motion_profile.h>
 
 #define OC_POT_OC_ADJ_MOTOR1 2
 #define OC_POT_OC_ADJ_MOTOR2 3

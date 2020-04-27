@@ -38,6 +38,12 @@ static int _fb_cmd_trace(console_device_t con, void *userptr, int argc,
 	return 0;
 }
 
+/*
+static int _modbus_cmd(console_device_t con, void *userptr, int argc,
+                         char **argv) {
+	return 0;
+}
+*/
 static int _fb_cmd_an_out(console_device_t con, void *userptr, int argc,
                          char **argv) {
 	struct fb *self = (struct fb *)userptr;
@@ -355,7 +361,7 @@ static int _fb_cmd(console_device_t con, void *userptr, int argc, char **argv) {
 		console_printf(con, "Gains: PITCH %d, YAW %d\n", (int32_t)(gp * 1000),
 		               (int32_t)(gy * 1000));
 	} else if(argc == 3 && strcmp(argv[1], "p") == 0) {
-		unsigned preset = strtoul(argv[2], NULL, 10);
+		uint32_t preset = (uint32_t)strtoul(argv[2], NULL, 10);
 		if(fb_try_load_preset(self, preset) < 0) {
 			console_printf(con, "failed to load preset %d\n", preset);
 		} else {

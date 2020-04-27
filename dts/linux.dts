@@ -30,9 +30,13 @@
 		debug_uart: debug {
 			compatible = "gnu,linux_uart";
 			baud = <921600>;
-			//interrupt = <USART1_IRQn>;
             printk_port = <1>;
             insert-cr-before-lf = <1>;
+		};
+
+		modbus_uart: modbus_uart {
+			compatible = "gnu,linux_uart";
+			baud = <921600>;
 		};
 	};
 
@@ -43,6 +47,13 @@
 	console: console {
 		compatible = "fw,console";
 		serial = <&debug_uart>;
+		regmap = <&regmap>;
+		echo = <0>;
+	};
+	
+	modbus: modbus {
+		compatible = "fw,modbus";
+		serial = <&modbus_uart>;
 		regmap = <&regmap>;
 	};
 

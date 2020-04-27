@@ -57,7 +57,7 @@ get_param(){
     echo $(grep "\!+$2: " "$1" | sed 's/\/\/!+'${2}': \(.*\)/\1/g')
 }
 
-ROCKET_OUTPUT_FILE=src/flyingbergman.hex
+ROCKET_OUTPUT_FILE=src/rocket.hex
 ROCKET_TARGET_DEPENDS=$(get_param ${WITH_DEVICETREE} "DEPENDS")
 ROCKET_TARGET_CFLAGS=$(get_param ${WITH_DEVICETREE} "CFLAGS")
 ROCKET_TARGET_LDFLAGS=$(get_param ${WITH_DEVICETREE} "LDLAGS")
@@ -112,6 +112,7 @@ AC_CONFIG_FILES([Makefile include/Makefile src/Makefile])
 AC_CONFIG_FILES([src/libfdt/Makefile])
 AC_CONFIG_FILES([src/libdriver/Makefile])
 AC_CONFIG_FILES([src/libfirmware/Makefile])
+AC_CONFIG_FILES([src/libplc/Makefile])
 
 AC_OUTPUT
 
