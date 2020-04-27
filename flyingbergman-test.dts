@@ -712,6 +712,7 @@
 		enc2_gpio = <&encoder2_gpio>;
 		eeprom = <&eeprom>;
 		oc_pot = <&oc_pot>;
+		an_out = <&an_out>;
 		can1 = <&can1>;
 		can2 = <&can2>;
 		regmap = <&regmap>;
