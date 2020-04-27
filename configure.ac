@@ -1,6 +1,8 @@
 AC_PREREQ([2.61])
 AC_INIT([rocket], [0.1], [mkschreder.uk@gmail.com])
 AC_CONFIG_AUX_DIR(aux-dist)
+AM_INIT_AUTOMAKE
+
 AC_ARG_WITH([devicetree],
     [AC_HELP_STRING([--with-devicetree],
         [Specify device tree source])],
@@ -30,8 +32,6 @@ AC_ARG_WITH([target],
         [Specify which chip we are compiling for])],
     [],
     [with_target=linux])
-
-AM_INIT_AUTOMAKE
 
 CFLAGS="$CFLAGS -Wall -Wextra -Werror\
 	-g \
