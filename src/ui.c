@@ -1,6 +1,8 @@
 #include "fb.h"
 #include <ctype.h>
 
+#include <math.h>
+
 #define UI_UPDATE_INTERVAL_MS 100
 
 #define TAB "\033[16G"

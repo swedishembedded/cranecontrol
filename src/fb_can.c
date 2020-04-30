@@ -1,10 +1,17 @@
 /** :ms-top-comment
- *  _____ _       _             ____
- * |  ___| |_   _(_)_ __   __ _| __ )  ___ _ __ __ _ _ __ ___   __ _ _ __
- * | |_  | | | | | | '_ \ / _` |  _ \ / _ \ '__/ _` | '_ ` _ \ / _` | '_ \
- * |  _| | | |_| | | | | | (_| | |_) |  __/ | | (_| | | | | | | (_| | | | |
- * |_|   |_|\__, |_|_| |_|\__, |____/ \___|_|  \__, |_| |_| |_|\__,_|_| |_|
- *          |___/         |___/                |___/
+ *  ____            _        _   ____  _     ____
+ * |  _ \ ___   ___| | _____| |_|  _ \| |   / ___|
+ * | |_) / _ \ / __| |/ / _ \ __| |_) | |  | |
+ * |  _ < (_) | (__|   <  __/ |_|  __/| |__| |___
+ * |_| \_\___/ \___|_|\_\___|\__|_|   |_____\____|
+ *
+ * Copyright (c) 2020, Martin K. Schröder, All Rights Reserved
+ *
+ * RocketPLC is distributed under GPLv2
+ *
+ * Commercial licensing: http://swedishembedded.com/rocketplc
+ * Contact: info@swedishembedded.com
+ * Secondary email: mkschreder.uk@gmail.com
  **/
 #include "fb_can.h"
 #include "fb.h"
@@ -278,9 +285,9 @@ void fb_can_init(struct fb *self) {
 	// add the device profile map
 	regmap_range_init(&self->comm_range, CANOPEN_COMM_RANGE_START,
 	                  CANOPEN_COMM_RANGE_END, &_comm_range_ops);
-	regmap_add(self->regmap, &self->comm_range);
+	regmap_add_range(self->regmap, &self->comm_range);
 
 	regmap_range_init(&self->mfr_range, CANOPEN_MFR_RANGE_START, CANOPEN_MFR_RANGE_END,
 	                  &_mfr_range_ops);
-	regmap_add(self->regmap, &self->mfr_range);
+	regmap_add_range(self->regmap, &self->mfr_range);
 }

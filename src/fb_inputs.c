@@ -1,10 +1,17 @@
 /** :ms-top-comment
- *  _____ _       _             ____
- * |  ___| |_   _(_)_ __   __ _| __ )  ___ _ __ __ _ _ __ ___   __ _ _ __
- * | |_  | | | | | | '_ \ / _` |  _ \ / _ \ '__/ _` | '_ ` _ \ / _` | '_ \
- * |  _| | | |_| | | | | | (_| | |_) |  __/ | | (_| | | | | | | (_| | | | |
- * |_|   |_|\__, |_|_| |_|\__, |____/ \___|_|  \__, |_| |_| |_|\__,_|_| |_|
- *          |___/         |___/                |___/
+ *  ____            _        _   ____  _     ____
+ * |  _ \ ___   ___| | _____| |_|  _ \| |   / ___|
+ * | |_) / _ \ / __| |/ / _ \ __| |_) | |  | |
+ * |  _ < (_) | (__|   <  __/ |_|  __/| |__| |___
+ * |_| \_\___/ \___|_|\_\___|\__|_|   |_____\____|
+ *
+ * Copyright (c) 2020, Martin K. Schröder, All Rights Reserved
+ *
+ * RocketPLC is distributed under GPLv2
+ *
+ * Commercial licensing: http://swedishembedded.com/rocketplc
+ * Contact: info@swedishembedded.com
+ * Secondary email: mkschreder.uk@gmail.com
  **/
 #include "fb.h"
 

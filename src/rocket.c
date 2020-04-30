@@ -127,7 +127,7 @@ static int _fb_probe(void *fdt, int fdt_node) {
 	self->can1_mem = can1_mem;
 	self->can2 = can2;
 	self->can2_mem = can2_mem;
-	self->regmap = regmap;
+	self->regmap = regmap_device_to_regmap(regmap);
 	self->canopen_mem = canopen_mem;
 	self->drv_pitch = drv_pitch;
 	self->drv_yaw = drv_yaw;

@@ -1,4 +1,7 @@
+/** :ms-top-comment
+ *  **/
 #include "fb.h"
+#include <libfirmware/angle.h>
 
 static float _scale_input(float in, const struct fb_analog_limit *lim) {
 	in = constrain_float(in, lim->min, lim->max);

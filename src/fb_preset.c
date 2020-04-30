@@ -7,6 +7,7 @@
  *          |___/         |___/                |___/
  **/
 #include "fb.h"
+#include <libfirmware/angle.h>
 
 int fb_try_load_preset(struct fb *self, unsigned preset) {
 	struct fb_config_preset *p = &self->config.presets[preset];

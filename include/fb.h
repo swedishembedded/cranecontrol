@@ -11,7 +11,7 @@
 #include <libfirmware/events.h>
 #include <libfirmware/gpio.h>
 #include <libfirmware/leds.h>
-#include <libfirmware/math.h>
+#include <libfirmware/constrain.h>
 #include <libfirmware/memory.h>
 #include <libfirmware/regmap.h>
 #include <libfirmware/serial.h>
@@ -121,7 +121,7 @@ struct fb {
 	analog_device_t oc_pot;
 	analog_device_t an_out;
 	can_device_t can1, can2;
-	regmap_device_t regmap;
+	struct regmap *regmap;
 	memory_device_t canopen_mem;
 	memory_device_t can1_mem;
 	memory_device_t can2_mem;

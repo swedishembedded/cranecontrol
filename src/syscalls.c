@@ -6,7 +6,7 @@
 #include <errno.h>
 
 #include <libfirmware/serial.h>
-#include <libfirmware/math.h>
+#include <libfirmware/constrain.h>
 #include <libfirmware/chip.h>
 #include <libfirmware/driver.h>
 #include <libfirmware/debug.h>

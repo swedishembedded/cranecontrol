@@ -35,13 +35,19 @@
 		};
 
 		modbus_uart: modbus_uart {
-			compatible = "gnu,linux_uart";
+			compatible = "gnu,linux_serial";
+			tty = "/dev/tnt0";
 			baud = <921600>;
 		};
 	};
 
 	regmap: regmap {
 		compatible = "fw,regmap";
+	};
+
+	modbus {
+		serial = <&modbus_uart>;
+		regmap = <&regmap>;
 	};
 
 	console: console {
