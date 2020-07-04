@@ -1,6 +1,7 @@
-SUBDIRS = include src
+SUBDIRS = include src tests
 AM_LDFLAGS = -shared -O3
 AUTOMAKE_OPTIONS = subdir-objects
+include Makefile.am.coverage
 
 flash:
 	arm-none-eabi-size $(top_builddir)/src/rtpython

@@ -60,8 +60,11 @@ AC_SUBST(LDADD)
 
 AC_PROG_MAKE_SET
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_AS
 AC_LANG(C,ASM)
+
+AX_COVERAGE
 
 CXXFLAGS="-std=c++11 -fPIC"
 
@@ -93,6 +96,7 @@ AC_CONFIG_FILES([Makefile include/Makefile src/Makefile])
 AC_CONFIG_FILES([src/driver/Makefile])
 AC_CONFIG_FILES([src/py/Makefile])
 AC_CONFIG_FILES([src/system/Makefile])
+AC_CONFIG_FILES([tests/Makefile])
 
 AC_OUTPUT
 

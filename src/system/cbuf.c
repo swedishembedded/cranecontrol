@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "types/cbuf.h"
+#include "libfirmware/types/cbuf.h"
 #include <string.h>
 
 void cbuf_init(struct cbuf *self, void *data, size_t item_size, size_t nitems) {
