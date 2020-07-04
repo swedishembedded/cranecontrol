@@ -44,7 +44,7 @@
 
 size_t mp_binary_get_size(char struct_type, char val_type, size_t *palign) {
     size_t size = 0;
-    int align = 1;
+    size_t align = 1;
     switch (struct_type) {
         case '<':
         case '>':

@@ -347,6 +347,7 @@ STATIC void parse_string_literal(mp_lexer_t *lex, bool is_raw) {
                                 break;
                             }
                         // Otherwise fall through.
+							__fallthrough;
                         case 'x': {
                             mp_uint_t num = 0;
                             if (!get_hex(lex, (c == 'x' ? 2 : c == 'u' ? 4 : 8), &num)) {

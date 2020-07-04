@@ -38,10 +38,8 @@
 
 #if MICROPY_DEBUG_VERBOSE // print debugging info
 #define DEBUG_PRINT (1)
-#define DEBUG_printf DEBUG_printf
 #else // don't print debugging info
 #define DEBUG_PRINT (0)
-#define DEBUG_printf(...) (void)0
 #endif
 
 #if MICROPY_ENABLE_EXTERNAL_IMPORT
@@ -129,7 +127,7 @@ STATIC mp_import_stat_t find_file(const char *file_str, uint file_len, vstr_t *d
     return stat_dir_or_file(dest);
 }
 
-#if MICROPY_MODULE_FROZEN_STR || MICROPY_ENABLE_COMPILER
+#if MICROPY_MODULE_FROZEN_STR || (MICROPY_ENABLE_COMPILER && (MICROPY_READER_POSIX || MICROPY_READER_VFS))
 STATIC void do_load_from_lexer(mp_obj_t module_obj, mp_lexer_t *lex) {
     #if MICROPY_PY___FILE__
     qstr source_name = lex->source_name;
@@ -220,7 +218,7 @@ STATIC void do_load(mp_obj_t module_obj, vstr_t *file) {
     #endif
 
     // If we can compile scripts then load the file and compile and execute it.
-    #if MICROPY_ENABLE_COMPILER
+    #if MICROPY_ENABLE_COMPILER && (MICROPY_READER_POSIX || MICROPY_READER_VFS)
     {
         mp_lexer_t *lex = mp_lexer_new_from_file(file_str);
         do_load_from_lexer(module_obj, lex);
@@ -367,7 +365,7 @@ mp_obj_t mp_builtin___import__(size_t n_args, const mp_obj_t *args) {
             // create a qstr for the module name up to this depth
             qstr mod_name = qstr_from_strn(mod_str, i);
             DEBUG_printf("Processing module: %s\n", qstr_str(mod_name));
-            DEBUG_printf("Previous path: =%.*s=\n", vstr_len(&path), vstr_str(&path));
+            DEBUG_printf("Previous path: =%.*s=\n", (int)vstr_len(&path), vstr_str(&path));
 
             // find the file corresponding to the module name
             mp_import_stat_t stat;
@@ -380,7 +378,7 @@ mp_obj_t mp_builtin___import__(size_t n_args, const mp_obj_t *args) {
                 vstr_add_strn(&path, mod_str + last, i - last);
                 stat = stat_dir_or_file(&path);
             }
-            DEBUG_printf("Current path: %.*s\n", vstr_len(&path), vstr_str(&path));
+            DEBUG_printf("Current path: %.*s\n", (int)vstr_len(&path), vstr_str(&path));
 
             if (stat == MP_IMPORT_STAT_NO_EXIST) {
                 module_obj = MP_OBJ_NULL;
@@ -432,7 +430,7 @@ mp_obj_t mp_builtin___import__(size_t n_args, const mp_obj_t *args) {
                 }
 
                 if (stat == MP_IMPORT_STAT_DIR) {
-                    DEBUG_printf("%.*s is dir\n", vstr_len(&path), vstr_str(&path));
+                    DEBUG_printf("%.*s is dir\n", (int)vstr_len(&path), vstr_str(&path));
                     // https://docs.python.org/3/reference/import.html
                     // "Specifically, any module that contains a __path__ attribute is considered a package."
                     mp_store_attr(module_obj, MP_QSTR___path__, mp_obj_new_str(vstr_str(&path), vstr_len(&path)));

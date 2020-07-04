@@ -34,6 +34,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#if defined __has_attribute
+#if __has_attribute(fallthrough)
+#define __fallthrough __attribute__((fallthrough))
+#endif
+#else
+#define __fallthrough do {} while(0)
+#endif
+
 typedef unsigned char byte;
 typedef unsigned int uint;
 
@@ -217,7 +225,7 @@ void vstr_vprintf(vstr_t *vstr, const char *fmt, va_list ap);
 #endif
 
 // Debugging helpers
-int DEBUG_printf(const char *fmt, ...);
+//int DEBUG_printf(const char *fmt, ...);
 
 extern mp_uint_t mp_verbose_flag;
 

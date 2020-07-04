@@ -59,7 +59,7 @@
 #ifdef MP_CONFIGFILE
 #include MP_CONFIGFILE
 #else
-#include <mpconfigport.h>
+#include "mpconfigport.h"
 #endif
 
 // Any options not explicitly set in mpconfigport.h will get default

@@ -12,8 +12,8 @@ void fb_config_init(struct fb_config *self) {
 		ax->error_filter = (struct fb_config_filter){
 		    .a0 = -1.9112f, .a1 = 0.914976f, .b0 = 0.0019161f, .b1 = 0.00186018f};
 */
-		ax->limits.pos_max = 0.560;
-		ax->limits.pos_min = -0.350;
+		ax->limits.pos_max = 1.0;
+		ax->limits.pos_min = 0.35;
 		ax->limits.integral_max = 1.f;
 		ax->settling_time = 2000;
 
@@ -46,7 +46,7 @@ void fb_config_init(struct fb_config *self) {
 
 	// set default limits
 	self->limit.pitch =
-	    (struct fb_analog_limit){.min = 0, .max = 3790, .omin = -1.f, .omax = 1.f};
+	    (struct fb_analog_limit){.min = 0, .max = 4096, .omin = -1.f, .omax = 1.f};
 	self->limit.joy_pitch =
 	    (struct fb_analog_limit){.min = 0, .max = 4096, .omin = -1.f, .omax = 1.f};
 	self->limit.joy_yaw =

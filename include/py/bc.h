@@ -116,12 +116,12 @@
         for (unsigned n = 0; z & 0x80; ++n) {                       \
             z = *(ip)++;                                            \
             /* xFSSKAED */                                          \
-            S |= (z & 0x30) << (2 * n);                             \
-            E |= (z & 0x02) << n;                                   \
-            F |= ((z & 0x40) >> 6) << n;                            \
-            A |= (z & 0x4) << n;                                    \
-            K |= ((z & 0x08) >> 3) << n;                            \
-            D |= (z & 0x1) << n;                                    \
+            S |= (size_t)((z & 0x30) << (2 * n));                             \
+            E |= (size_t)((z & 0x02) << n);                                   \
+            F |= (size_t)(((z & 0x40) >> 6) << n);                            \
+            A |= (size_t)((z & 0x4) << n);                                    \
+            K |= (size_t)(((z & 0x08) >> 3) << n);                            \
+            D |= (size_t)((z & 0x1) << n);                                    \
         }                                                           \
         S += 1;                                                     \
     } while (0)
@@ -153,8 +153,8 @@
         for (unsigned n = 0;; ++n) {                                \
             z = *(ip)++;                                            \
             /* xIIIIIIC */                                          \
-            C |= (z & 1) << n;                                      \
-            I |= ((z & 0x7e) >> 1) << (6 * n);                      \
+            C |= (size_t)((z & 1) << n);                                      \
+            I |= (size_t)(((z & 0x7e) >> 1) << (6 * n));                      \
             if (!(z & 0x80)) {                                      \
                 break;                                              \
             }                                                       \
@@ -214,7 +214,7 @@ typedef struct _mp_code_state_t {
     struct _mp_obj_frame_t *frame;
     #endif
     // Variable-length
-    mp_obj_t state[0];
+    mp_obj_t state[1];
     // Variable-length, never accessed by name, only as (void*)(state + n_state)
     // mp_exc_stack_t exc_state[0];
 } mp_code_state_t;

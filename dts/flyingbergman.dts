@@ -3,10 +3,12 @@
 //!+HOST: arm-none-eabi
 //!+TARGET: stm32f429zet6
 //:ROM 512k :RAM 192k :LOAD_ADDR 0x08000000
-//!+DEPENDS: libfdt libfirmware libdriver libflyingbergman
+//!+DEPENDS: libfirmware libdriver
 //!+CFLAGS: --specs=nosys.specs -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork -DSTM32F429_439xx -DHSE_VALUE=8000000
 //!+LDFLAGS:
-//!+CMD_FLASH: st-flash --reset write ##FILE## 0x8000000
+//+CMD_FLASH: st-flash --reset write ##FILE## 0x8000000
+//!+CMD_FLASH: openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg -c "program ##FILE## verify reset exit"
+
 #include <libfirmware/dts/stm32f4xx.dtsi>
 #include <libfirmware/dts/stm32f4xx.h>
 #include <libfirmware/dts/stm32f4xx_gpio.h>
@@ -67,8 +69,14 @@
 
 	console: console {
 		compatible = "fw,console";
+		serial = <&debug_uart>;
+		regmap = <&regmap>;
+	};
+
+	modbus {
 		serial = <&uext_uart>;
 		regmap = <&regmap>;
+		addr = <0x01>;
 	};
 
 	leds: leds {

@@ -35,10 +35,8 @@
 
 #if MICROPY_DEBUG_VERBOSE // print debugging info
 #define DEBUG_PRINT (1)
-#define DEBUG_printf DEBUG_printf
 #else // don't print debugging info
 #define DEBUG_PRINT (0)
-#define DEBUG_printf(...) (void)0
 #endif
 
 #define ENABLE_SPECIAL_ACCESSORS \
@@ -145,7 +143,7 @@ STATIC void mp_obj_class_lookup(struct class_lookup_data *lookup, const mp_obj_t
         if (lookup->meth_offset != 0 && mp_obj_is_native_type(type)) {
             if (*(void **)((char *)type + lookup->meth_offset) != NULL) {
                 DEBUG_printf("mp_obj_class_lookup: Matched special meth slot (off=%d) for %s\n",
-                    lookup->meth_offset, qstr_str(lookup->attr));
+                    (int)lookup->meth_offset, qstr_str(lookup->attr));
                 lookup->dest[0] = MP_OBJ_SENTINEL;
                 return;
             }

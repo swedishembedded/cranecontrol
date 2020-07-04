@@ -36,10 +36,8 @@
 
 #if MICROPY_DEBUG_VERBOSE // print debugging info
 #define DEBUG_PRINT (1)
-#define DEBUG_printf DEBUG_printf
 #else // don't print debugging info
 #define DEBUG_PRINT (0)
-#define DEBUG_printf(...) (void)0
 #endif
 
 // make this 1 to dump the heap each time it changes
@@ -294,12 +292,12 @@ STATIC void gc_sweep(void) {
                 }
                 #endif
                 free_tail = 1;
-                DEBUG_printf("gc_sweep(%p)\n", PTR_FROM_BLOCK(block));
+                DEBUG_printf("gc_sweep(%p)\n", (void*)PTR_FROM_BLOCK(block));
                 #if MICROPY_PY_GC_COLLECT_RETVAL
                 MP_STATE_MEM(gc_collected)++;
                 #endif
-            // fall through to free the head
-
+				// fall through to free the head
+				__fallthrough;
             case AT_TAIL:
                 if (free_tail) {
                     ATB_ANY_TO_FREE(block);
@@ -531,6 +529,7 @@ found:
     // be conservative and zero out all the newly allocated blocks
     memset((byte *)ret_ptr, 0, (end_block - start_block + 1) * BYTES_PER_BLOCK);
     #else
+
     // zero out the additional bytes of the newly allocated blocks
     // This is needed because the blocks may have previously held pointers
     // to the heap and will not be set to something else if the caller

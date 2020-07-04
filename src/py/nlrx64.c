@@ -33,7 +33,7 @@
 // x86-64 callee-save registers are:
 //  rbx, rbp, rsp, r12, r13, r14, r15
 
-__attribute__((used)) unsigned int nlr_push_tail(nlr_buf_t *nlr);
+//__attribute__((used)) unsigned int nlr_push_tail(nlr_buf_t *nlr);
 
 unsigned int nlr_push(nlr_buf_t *nlr) {
     (void)nlr;

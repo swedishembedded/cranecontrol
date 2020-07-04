@@ -37,11 +37,6 @@
 // ultimately we will replace this with a static hash table of some kind
 // also probably need to include the length in the string data, to allow null bytes in the string
 
-#if MICROPY_DEBUG_VERBOSE // print debugging info
-#define DEBUG_printf DEBUG_printf
-#else // don't print debugging info
-#define DEBUG_printf(...) (void)0
-#endif
 
 // A qstr is an index into the qstr pool.
 // The data for a qstr contains (hash, length, data):
@@ -108,7 +103,7 @@ const qstr_pool_t mp_qstr_const_pool = {
     {
         #ifndef NO_QSTR
 #define QDEF(id, str) str,
-        #include "genhdr/qstrdefs.generated.h"
+        #include "py/genhdr/qstrdefs.generated.h"
 #undef QDEF
         #endif
     },
@@ -142,7 +137,7 @@ STATIC const byte *find_qstr(qstr q) {
 
 // qstr_mutex must be taken while in this function
 STATIC qstr qstr_add(const byte *q_ptr) {
-    DEBUG_printf("QSTR: add hash=%d len=%d data=%.*s\n", Q_GET_HASH(q_ptr), Q_GET_LENGTH(q_ptr), Q_GET_LENGTH(q_ptr), Q_GET_DATA(q_ptr));
+    DEBUG_printf("QSTR: add hash=%d len=%d data=%.*s\n", (int)Q_GET_HASH(q_ptr), (int)Q_GET_LENGTH(q_ptr), (int)Q_GET_LENGTH(q_ptr), Q_GET_DATA(q_ptr));
 
     // make sure we have room in the pool for a new qstr
     if (MP_STATE_VM(last_pool)->len >= MP_STATE_VM(last_pool)->alloc) {
@@ -161,7 +156,7 @@ STATIC qstr qstr_add(const byte *q_ptr) {
         pool->alloc = new_alloc;
         pool->len = 0;
         MP_STATE_VM(last_pool) = pool;
-        DEBUG_printf("QSTR: allocate new pool of size %d\n", MP_STATE_VM(last_pool)->alloc);
+        DEBUG_printf("QSTR: allocate new pool of size %d\n", (int)MP_STATE_VM(last_pool)->alloc);
     }
 
     // add the new qstr

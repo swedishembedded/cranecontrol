@@ -53,6 +53,21 @@ ssize_t _read (int fd, void * buf, size_t count){
 }
 
 ssize_t _write (int fd, const void * buf, size_t count){
+	ssize_t ret = count;
+	if(fd == 1){
+		while(count--){
+			const char *str = buf;
+			printk("%c", *str++);
+		}
+		return ret;
+	} else if(fd == 2){
+		while(count--){
+			const char *str = buf;
+			printk(PRINT_ERROR "%c", *str++);
+		}
+		return ret;
+	}
+
 	printk(PRINT_ERROR "write %d not implemented\n", fd);
 	return -1;
 }

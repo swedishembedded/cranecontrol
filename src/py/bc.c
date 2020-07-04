@@ -37,7 +37,6 @@
 #define DEBUG_PRINT (1)
 #else // don't print debugging info
 #define DEBUG_PRINT (0)
-#define DEBUG_printf(...) (void)0
 #endif
 
 #if !MICROPY_PERSISTENT_CODE
@@ -295,7 +294,7 @@ void mp_setup_code_state(mp_code_state_t *code_state, size_t n_args, size_t n_kw
     // now that we skipped over the prelude, set the ip for the VM
     code_state->ip = ip;
 
-    DEBUG_printf("Calling: n_pos_args=%d, n_kwonly_args=%d\n", n_pos_args, n_kwonly_args);
+    DEBUG_printf("Calling: n_pos_args=%lu, n_kwonly_args=%lu\n", (long unsigned int)n_pos_args, (long unsigned int)n_kwonly_args);
     dump_args(code_state->state + n_state - n_pos_args - n_kwonly_args, n_pos_args + n_kwonly_args);
     dump_args(code_state->state, n_state);
 }

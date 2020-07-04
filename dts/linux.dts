@@ -48,6 +48,7 @@
 	modbus {
 		serial = <&modbus_uart>;
 		regmap = <&regmap>;
+		addr = <0x01>;
 	};
 
 	console: console {

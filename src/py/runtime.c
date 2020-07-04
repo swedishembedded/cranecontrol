@@ -46,10 +46,9 @@
 
 #if MICROPY_DEBUG_VERBOSE // print debugging info
 #define DEBUG_PRINT (1)
-#define DEBUG_printf DEBUG_printf
 #define DEBUG_OP_printf(...) DEBUG_printf(__VA_ARGS__)
 #else // don't print debugging info
-#define DEBUG_printf(...) (void)0
+#define DEBUG_PRINT (0)
 #define DEBUG_OP_printf(...) (void)0
 #endif
 
@@ -232,7 +231,7 @@ void mp_delete_global(qstr qst) {
 }
 
 mp_obj_t mp_unary_op(mp_unary_op_t op, mp_obj_t arg) {
-    DEBUG_OP_printf("unary " UINT_FMT " %q %p\n", op, mp_unary_op_method_name[op], arg);
+    DEBUG_OP_printf("unary " UINT_FMT " %d %p\n", (long unsigned int)op, (int)mp_unary_op_method_name[op], (void*)arg);
 
     if (op == MP_UNARY_OP_NOT) {
         // "not x" is the negative of whether "x" is true per Python semantics
@@ -305,7 +304,7 @@ mp_obj_t mp_unary_op(mp_unary_op_t op, mp_obj_t arg) {
 }
 
 mp_obj_t mp_binary_op(mp_binary_op_t op, mp_obj_t lhs, mp_obj_t rhs) {
-    DEBUG_OP_printf("binary " UINT_FMT " %q %p %p\n", op, mp_binary_op_method_name[op], lhs, rhs);
+    DEBUG_OP_printf("binary " UINT_FMT " %d %p %p\n", (long unsigned int)op, mp_binary_op_method_name[op], lhs, rhs);
 
     // TODO correctly distinguish inplace operators for mutable objects
     // lookup logic that CPython uses for +=:
@@ -1364,7 +1363,7 @@ mp_obj_t mp_make_raise_obj(mp_obj_t o) {
 }
 
 mp_obj_t mp_import_name(qstr name, mp_obj_t fromlist, mp_obj_t level) {
-    DEBUG_printf("import name '%s' level=%d\n", qstr_str(name), MP_OBJ_SMALL_INT_VALUE(level));
+    DEBUG_printf("import name '%s' level=%d\n", qstr_str(name), (int)MP_OBJ_SMALL_INT_VALUE(level));
 
     // build args array
     mp_obj_t args[5];

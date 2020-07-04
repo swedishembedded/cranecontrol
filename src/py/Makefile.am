@@ -1,5 +1,6 @@
 lib_LIBRARIES = libpy.a
 libpy_a_SOURCES = \
+	_frozen_mpy.c\
 	argcheck.c\
 	asmarm.c\
 	asmarm.h\
@@ -158,6 +159,7 @@ libpy_a_SOURCES = \
 	profile.c\
 	profile.h\
 	py.mk\
+	pyexec.c\
 	pystack.c\
 	pystack.h\
 	qstr.c\
@@ -165,6 +167,7 @@ libpy_a_SOURCES = \
 	qstrdefs.h\
 	reader.c\
 	reader.h\
+	readline.c\
 	repl.c\
 	repl.h\
 	ringbuf.c\

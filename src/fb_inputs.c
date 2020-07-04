@@ -44,6 +44,7 @@ static void _fb_read_pots(struct fb_inputs *self) {
 			self->yaw_speed = value;
 		} break;
 		case FB_ADCMUX_MOTOR_PITCH_CHAN: {
+			//self->pitch = (uint16_t)constrain_i32(4096 - value, 0, 4096);
 			self->pitch = value;
 		} break;
 		case FB_ADCMUX_PITCH_SPEED_CHAN: {

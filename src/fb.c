@@ -143,7 +143,7 @@ void _fb_state_wait_home(struct fb *self, float dt) {
 	if(home->long_pressed) {
 		// make sure home button is lit
 		// if it has been held for a number of seconds then we save the home position
-		self->config.presets[0].pitch = 0; // self->measured.pitch;
+		self->config.presets[0].pitch = self->measured.pitch;
 		self->config.presets[0].yaw = self->measured.yaw;
 		self->config.presets[0].valid = true;
 	} else if(self->config.presets[0].valid && !home->pressed && home->toggled){

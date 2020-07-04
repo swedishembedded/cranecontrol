@@ -24,7 +24,7 @@ void _fb_state_operational(struct fb *self, float dt) {
 	for(unsigned preset = 0; preset < FB_PRESET_COUNT; preset++) {
 		if(sw[preset]->long_pressed) {
 			if(preset == FB_PRESET_HOME) {
-				fb_config_set_preset(&self->config, preset, 0, self->measured.yaw);
+				fb_config_set_preset(&self->config, preset, self->measured.pitch, self->measured.yaw);
 			} else {
 				struct fb_config_preset *home = &self->config.presets[FB_PRESET_HOME];
 				fb_config_set_preset(&self->config, preset, self->measured.pitch - home->pitch,
