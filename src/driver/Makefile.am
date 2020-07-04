@@ -1,0 +1,60 @@
+lib_LIBRARIES=libdriver.a
+libdriver_a_SOURCES=\
+	accgyro/mpu6500.c\
+	analog/lp55231.c\
+	analog/mcp4461.c\
+	baro/bmp280.c\
+	can/canopen.c\
+	disp/ili9340.c\
+	disp/ledpanel.c\
+	fpga/ice40.c\
+	gpio/mcp2317.c\
+	gpio/max14890.c\
+	hbridge/drv8302.c\
+	mem/at24.c\
+	mem/m25.c\
+	pointer/pmw3360.c\
+	pointer/adns3080.c\
+	range/vl6180.c\
+	usb/usbd_cdc.c\
+	tty/console.c\
+	vardir.c
+libdriver_a_LIBADD=
+libdriver_a_CFLAGS = -I$(top_srcdir)/include
+
+other_sources =\
+    accgyro/adxl345.c\
+		accgyro/mpu6000.c\
+    accgyro/l3g4200d.c\
+    accgyro/mma7455.c\
+    accgyro/mpu6050.c\
+    accgyro/mpu6050dmp6.c\
+    baro/bmp085.c\
+    block/at24.c\
+    block/serial_flash.c\
+    compass/hmc5883l.c\
+    current/acs712.c\
+    disp/ascii_display.c\
+    disp/ili9340.c\
+    disp/ks0713.c\
+    disp/lcd.c\
+    disp/lcd7seg.c\
+    disp/ledmatrix88.c\
+    disp/ssd1306.c\
+    io/l74hc165.c\
+    io/l74hc4051.c\
+    io/l74hc595.c\
+    io/pcf8574.c\
+    net/enc28j60.c\
+    radio/nrf24l01.c\
+    range/hcsr04.c\
+    rfid/mfrc522.c\
+    sensors/amt1001.c\
+    sensors/bh1750.c\
+    sensors/dht.c\
+    temperature/ds18b20.c\
+    tty/vt100.c\
+    waterflow/fs300a.c 
+
+libdriver_a_CFLAGS+=-I$(top_srcdir)/include/libdriver
+AUTOMAKE_OPTIONS = subdir-objects

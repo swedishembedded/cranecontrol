@@ -1,0 +1,17 @@
+menu "Display support"
+	config ILI9340
+		bool "ILI9340 serial display driver"
+	
+	config LCDPAR
+		bool "Generic parallel LCD driver"
+		
+	config LEDMATRIX88
+		bool "Led matrix driver"
+		
+	config SSD1306
+		bool "SSD1306 OLED display driver"
+
+	config SEVSEG
+		bool "Seven segment display driver"
+		
+endmenu
