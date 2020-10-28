@@ -56,7 +56,7 @@ STATIC void complex_print(const mp_print_t *print, mp_obj_t o_in, mp_print_kind_
     char buf[32];
     const int precision = 16;
     #endif
-    if (o->real == 0) {
+    if (FLOAT_EQ(o->real,0)) {
         mp_format_float(o->imag, buf, sizeof(buf), 'g', precision, '\0');
         mp_printf(print, "%sj", buf);
     } else {
@@ -118,7 +118,7 @@ STATIC mp_obj_t complex_unary_op(mp_unary_op_t op, mp_obj_t o_in) {
     mp_obj_complex_t *o = MP_OBJ_TO_PTR(o_in);
     switch (op) {
         case MP_UNARY_OP_BOOL:
-            return mp_obj_new_bool(o->real != 0 || o->imag != 0);
+            return mp_obj_new_bool(FLOAT_NE(o->real, 0) || FLOAT_NE(o->imag, 0));
         case MP_UNARY_OP_HASH:
             return MP_OBJ_NEW_SMALL_INT(mp_float_hash(o->real) ^ mp_float_hash(o->imag));
         case MP_UNARY_OP_POSITIVE:
@@ -208,13 +208,13 @@ mp_obj_t mp_obj_complex_binary_op(mp_binary_op_t op, mp_float_t lhs_real, mp_flo
 
         case MP_BINARY_OP_TRUE_DIVIDE:
         case MP_BINARY_OP_INPLACE_TRUE_DIVIDE:
-            if (rhs_imag == 0) {
-                if (rhs_real == 0) {
+            if (FLOAT_EQ(rhs_imag, 0)) {
+                if (FLOAT_EQ(rhs_real, 0)) {
                     mp_raise_msg(&mp_type_ZeroDivisionError, MP_ERROR_TEXT("complex divide by zero"));
                 }
                 lhs_real /= rhs_real;
                 lhs_imag /= rhs_real;
-            } else if (rhs_real == 0) {
+            } else if (FLOAT_EQ(rhs_real, 0)) {
                 mp_float_t real = lhs_imag / rhs_imag;
                 lhs_imag = -lhs_real / rhs_imag;
                 lhs_real = real;
@@ -234,9 +234,9 @@ mp_obj_t mp_obj_complex_binary_op(mp_binary_op_t op, mp_float_t lhs_real, mp_flo
             //        = exp(x3 + i*y3)
             //        = exp(x3)*(cos(y3) + i*sin(y3))
             mp_float_t abs1 = MICROPY_FLOAT_C_FUN(sqrt)(lhs_real * lhs_real + lhs_imag * lhs_imag);
-            if (abs1 == 0) {
-                if (rhs_imag == 0 && rhs_real >= 0) {
-                    lhs_real = (rhs_real == 0);
+            if (FLOAT_EQ(abs1, 0)) {
+                if (FLOAT_EQ(rhs_imag, 0) && (FLOAT_EQ(rhs_real, 0) || rhs_real >= 0)) {
+                    lhs_real = FLOAT_EQ(rhs_real, 0);
                 } else {
                     mp_raise_msg(&mp_type_ZeroDivisionError, MP_ERROR_TEXT("0.0 to a complex power"));
                 }
@@ -253,7 +253,7 @@ mp_obj_t mp_obj_complex_binary_op(mp_binary_op_t op, mp_float_t lhs_real, mp_flo
         }
 
         case MP_BINARY_OP_EQUAL:
-            return mp_obj_new_bool(lhs_real == rhs_real && lhs_imag == rhs_imag);
+            return mp_obj_new_bool(FLOAT_EQ(lhs_real, rhs_real) && FLOAT_EQ(lhs_imag, rhs_imag));
 
         default:
             return MP_OBJ_NULL; // op not supported

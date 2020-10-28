@@ -47,6 +47,9 @@ typedef unsigned int uint;
 
 /** generic ops *************************************************/
 
+#define FLOAT_EQ(a, b) (fabsf((a)-(b)) < 1e-6f)
+#define FLOAT_NE(a, b) (fabsf((a)-(b)) > 1e-6f)
+
 #ifndef MIN
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #endif

@@ -58,7 +58,16 @@ rtpython_SOURCES += \
 	rtpython.c\
 	measured.c\
 	syscalls.c\
-	ui.c
+	ui.c\
+	rust/rust.rs
+
+SUFFIXES = .rs
+
+.rs.o:
+	rustc -C opt-level=2 \
+		--target thumbv7em-none-eabihf\
+		-g --emit obj \
+		-L /home/martin/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/thumbv7m-none-eabihf/lib/ -o $@ $<
 
 SUBDIRS = system driver py
 AUTOMAKE_OPTIONS = subdir-objects

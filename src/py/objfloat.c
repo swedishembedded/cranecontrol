@@ -145,7 +145,7 @@ STATIC mp_obj_t float_unary_op(mp_unary_op_t op, mp_obj_t o_in) {
     mp_float_t val = mp_obj_float_get(o_in);
     switch (op) {
         case MP_UNARY_OP_BOOL:
-            return mp_obj_new_bool(val != 0);
+            return mp_obj_new_bool(FLOAT_NE(val, 0));
         case MP_UNARY_OP_HASH:
             return MP_OBJ_NEW_SMALL_INT(mp_float_hash(val));
         case MP_UNARY_OP_POSITIVE:
@@ -210,7 +210,7 @@ STATIC void mp_obj_float_divmod(mp_float_t *x, mp_float_t *y) {
     mp_float_t div = (*x - mod) / *y;
 
     // Python specs require that mod has same sign as second operand
-    if (mod == MICROPY_FLOAT_ZERO) {
+    if (FLOAT_EQ(mod, MICROPY_FLOAT_ZERO)) {
         mod = MICROPY_FLOAT_C_FUN(copysign)(MICROPY_FLOAT_ZERO, *y);
     } else {
         if ((mod < MICROPY_FLOAT_ZERO) != (*y < MICROPY_FLOAT_ZERO)) {
@@ -220,7 +220,7 @@ STATIC void mp_obj_float_divmod(mp_float_t *x, mp_float_t *y) {
     }
 
     mp_float_t floordiv;
-    if (div == MICROPY_FLOAT_ZERO) {
+    if (FLOAT_EQ(div, MICROPY_FLOAT_ZERO)) {
         // if division is zero, take the correct sign of zero
         floordiv = MICROPY_FLOAT_C_FUN(copysign)(MICROPY_FLOAT_ZERO, *x / *y);
     } else {
@@ -257,7 +257,7 @@ mp_obj_t mp_obj_float_binary_op(mp_binary_op_t op, mp_float_t lhs_val, mp_obj_t 
             break;
         case MP_BINARY_OP_FLOOR_DIVIDE:
         case MP_BINARY_OP_INPLACE_FLOOR_DIVIDE:
-            if (rhs_val == 0) {
+            if (FLOAT_EQ(rhs_val, 0)) {
             zero_division_error:
                 mp_raise_msg(&mp_type_ZeroDivisionError, MP_ERROR_TEXT("divide by zero"));
             }
@@ -268,19 +268,19 @@ mp_obj_t mp_obj_float_binary_op(mp_binary_op_t op, mp_float_t lhs_val, mp_obj_t 
             break;
         case MP_BINARY_OP_TRUE_DIVIDE:
         case MP_BINARY_OP_INPLACE_TRUE_DIVIDE:
-            if (rhs_val == 0) {
+            if (FLOAT_EQ(rhs_val, 0)) {
                 goto zero_division_error;
             }
             lhs_val /= rhs_val;
             break;
         case MP_BINARY_OP_MODULO:
         case MP_BINARY_OP_INPLACE_MODULO:
-            if (rhs_val == MICROPY_FLOAT_ZERO) {
+            if (FLOAT_EQ(rhs_val, MICROPY_FLOAT_ZERO)) {
                 goto zero_division_error;
             }
             lhs_val = MICROPY_FLOAT_C_FUN(fmod)(lhs_val, rhs_val);
             // Python specs require that mod has same sign as second operand
-            if (lhs_val == MICROPY_FLOAT_ZERO) {
+            if (FLOAT_EQ(lhs_val, MICROPY_FLOAT_ZERO)) {
                 lhs_val = MICROPY_FLOAT_C_FUN(copysign)(0.0, rhs_val);
             } else {
                 if ((lhs_val < MICROPY_FLOAT_ZERO) != (rhs_val < MICROPY_FLOAT_ZERO)) {
@@ -290,10 +290,10 @@ mp_obj_t mp_obj_float_binary_op(mp_binary_op_t op, mp_float_t lhs_val, mp_obj_t 
             break;
         case MP_BINARY_OP_POWER:
         case MP_BINARY_OP_INPLACE_POWER:
-            if (lhs_val == 0 && rhs_val < 0 && !isinf(rhs_val)) {
+            if (FLOAT_EQ(lhs_val, 0) && rhs_val < 0 && !isinf(rhs_val)) {
                 goto zero_division_error;
             }
-            if (lhs_val < 0 && rhs_val != MICROPY_FLOAT_C_FUN(floor)(rhs_val)) {
+            if (lhs_val < 0 && FLOAT_NE(rhs_val, MICROPY_FLOAT_C_FUN(floor)(rhs_val))) {
                 #if MICROPY_PY_BUILTINS_COMPLEX
                 return mp_obj_complex_binary_op(MP_BINARY_OP_POWER, lhs_val, 0, rhs_in);
                 #else
@@ -303,7 +303,7 @@ mp_obj_t mp_obj_float_binary_op(mp_binary_op_t op, mp_float_t lhs_val, mp_obj_t 
             lhs_val = MICROPY_FLOAT_C_FUN(pow)(lhs_val, rhs_val);
             break;
         case MP_BINARY_OP_DIVMOD: {
-            if (rhs_val == 0) {
+            if (FLOAT_EQ(rhs_val, 0)) {
                 goto zero_division_error;
             }
             mp_obj_float_divmod(&lhs_val, &rhs_val);
@@ -318,7 +318,7 @@ mp_obj_t mp_obj_float_binary_op(mp_binary_op_t op, mp_float_t lhs_val, mp_obj_t 
         case MP_BINARY_OP_MORE:
             return mp_obj_new_bool(lhs_val > rhs_val);
         case MP_BINARY_OP_EQUAL:
-            return mp_obj_new_bool(lhs_val == rhs_val);
+            return mp_obj_new_bool(FLOAT_EQ(lhs_val, rhs_val));
         case MP_BINARY_OP_LESS_EQUAL:
             return mp_obj_new_bool(lhs_val <= rhs_val);
         case MP_BINARY_OP_MORE_EQUAL:

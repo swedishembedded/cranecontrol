@@ -241,7 +241,7 @@ STATIC mp_obj_t mp_math_log(size_t n_args, const mp_obj_t *args) {
         mp_float_t base = mp_obj_get_float(args[1]);
         if (base <= (mp_float_t)0.0) {
             math_error();
-        } else if (base == (mp_float_t)1.0) {
+        } else if (FLOAT_EQ(base, (mp_float_t)1.0)) {
             mp_raise_msg(&mp_type_ZeroDivisionError, MP_ERROR_TEXT("divide by zero"));
         }
         return mp_obj_new_float(l / MICROPY_FLOAT_C_FUN(log)(base));
