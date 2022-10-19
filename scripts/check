@@ -62,16 +62,16 @@ echo -e "Checking COMMIT_RANGE: ${COMMIT_RANGE}"
 PAGER=cat git log --oneline --graph --decorate --abbrev-commit ${COMMIT_RANGE}
 echo -e "---------------------------------------------------"
 
-#ZEPHYR_BASE=$ROOT $ZEPHYR_BASE/scripts/ci/check_compliance.py \
-#	-e Gitlint \
-#	-e Identity \
-#	-e Kconfig \
-#	-e KconfigBasic \
-#	-c $COMMIT_RANGE || {
-#	echo "Checking compliance failed"
-#	echo "Run: ./scripts/fix"
-#	exit 1
-#}
+ZEPHYR_BASE=$ROOT $ZEPHYR_BASE/scripts/ci/check_compliance.py \
+	-e Gitlint \
+	-e Identity \
+	-e Kconfig \
+	-e KconfigBasic \
+	-c $COMMIT_RANGE || {
+	echo "Checking compliance failed"
+	echo "Run: ./scripts/fix"
+	exit 1
+}
 
 check_file_formatting(){
 	FILE=$1
