@@ -5,8 +5,9 @@ rtpython_LDFLAGS=-Wl,--no-undefined -Wl,-Map,rtpython.map
 rtpython_LDADD=$(LDADD) $(WITH_LIBS) \
 			 $(top_builddir)/src/driver/libdriver.a\
 			 $(top_builddir)/src/system/libfirmware.a\
-			 $(top_builddir)/src/py/libpy.a\
 			 -lm
+
+#rtpython_LDADD+=$(top_builddir)/src/py/libpy.a
 
 if WITH_TARGET_LINUX
 rtpython_LDADD+=-lrt -lpthread
@@ -20,9 +21,9 @@ rtpython_SOURCES+=target/stm32f4xx/startup_stm32f429_439xx.s
 rtpython_LDFLAGS+=-Wl,-T$(srcdir)/target/stm32f4xx/stm32f429zet6.ld
 endif
 
-if WITH_TARGET_STM32F40_41XXX
+if WITH_TARGET_STM32F407VGT6
 rtpython_SOURCES+=target/stm32f4xx/startup_stm32f40_41xxx.s
-rtpython_LDFLAGS+=-T$(srcdir)/target/stm32f4xx/stm32f413_320K_1M.ld
+rtpython_LDFLAGS+=-T$(srcdir)/target/stm32f4xx/stm32f407vgt6.ld
 endif
 
 if WITH_TARGET_STM32F10X
@@ -43,7 +44,7 @@ devicetree.c: $(WITH_DEVICETREE)
 .PHONY: rtpython
 
 rtpython_SOURCES += \
-	modfb.c\
+	blinky.c\
 	fb.c\
 	fb_can.c\
 	fb_cmd.c\
@@ -55,19 +56,23 @@ rtpython_SOURCES += \
 	fb_preset.c\
 	fb_state_operational.c\
 	fb_inputs.c\
-	rtpython.c\
 	measured.c\
 	syscalls.c\
-	ui.c\
-	rust/rust.rs
+	ui.c
+	
+#rust.c\
+#rust/rust.rs
+
+#rtpython_SOURCES += python.c modfb.c
 
 SUFFIXES = .rs
 
-.rs.o:
-	rustc -C opt-level=2 \
-		--target thumbv7em-none-eabihf\
-		-g --emit obj \
-		-L /home/martin/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/thumbv7m-none-eabihf/lib/ -o $@ $<
+#.rs.o:
+#	rustc -C opt-level=2 \
+#		--target thumbv7em-none-eabihf\
+#		-g --emit obj \
+#		-L /home/martin/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/thumbv7m-none-eabihf/lib/ -o $@ $<
+#
 
 SUBDIRS = system driver py
 AUTOMAKE_OPTIONS = subdir-objects

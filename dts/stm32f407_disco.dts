@@ -1,0 +1,79 @@
+/dts-v1/;
+
+//!+HOST: arm-none-eabi
+//!+TARGET: stm32f407vgt6
+//!+CFLAGS: --specs=nosys.specs -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork -DSTM32F40_41xxx -DHSE_VALUE=8000000
+//!+LDFLAGS:
+//+CMD_FLASH: st-flash --reset write ##FILE## 0x8000000
+//!+CMD_FLASH: openocd -f interface/stlink-v2.cfg -f board/stm32f4discovery.cfg -c "program ##FILE## verify reset exit"
+
+#include <libfirmware/dts/stm32f4xx.dtsi>
+#include <libfirmware/dts/stm32f4xx.h>
+#include <libfirmware/dts/stm32f4xx_gpio.h>
+#include <libfirmware/dts/stm32f4xx_tim.h>
+#include <libfirmware/dts/stm32f4xx_adc.h>
+
+/ {
+	cpu {
+		/* SystemCoreClock = ((HSE_VALUE / PLL_M) * PLL_N) / PLL_P; */
+		/* USBClock = ((HSE_VALUE / PLL_M) * PLL_N) / PLL_Q; */
+		compatible = "st,stm32_cpu";
+		hse_value = <8000000>;
+		hclk_div = <1>;
+		pclk1_div = <1>;
+		pclk2_div = <1>;
+		pllm = <8>;
+		plln = <336>;
+		pllp = <2>;
+		pllq = <7>;
+	};
+
+	leds: leds {
+		compatible = "st,stm32_leds";
+		pins = <&led_pins>;
+		led_pins: led_pins {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOD GPIO_Pin_12 GPIO_Mode_OUT
+				GPIOD GPIO_Pin_13 GPIO_Mode_OUT
+				GPIOD GPIO_Pin_14 GPIO_Mode_OUT
+				GPIOD GPIO_Pin_15 GPIO_Mode_OUT
+			>;
+		};
+	};
+
+	blinky {
+		compatible = "app,blinky";
+		leds = <&leds>;
+	};
+
+	serial {
+		debug_uart: debug {
+			compatible = "st,stm32_uart";
+			baud = <921600>;
+			reg = <USART1>;
+			interrupt = <USART1_IRQn>;
+			printk_port = <1>;
+			insert-cr-before-lf = <1>;
+
+			debug_serial_pins {
+				compatible = "st,stm32_gpio";
+				pinctrl = <
+					GPIOA GPIO_Pin_9 (GPIO_AF_USART1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_50MHz) /* TX */
+					GPIOA GPIO_Pin_10 (GPIO_AF_USART1 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_50MHz) /* RX */
+				>;
+			};
+		};
+	};
+
+	regmap: regmap {
+		compatible = "fw,regmap";
+	};
+
+	console: console {
+		compatible = "fw,console";
+		serial = <&debug_uart>;
+		regmap = <&regmap>;
+	};
+};
+

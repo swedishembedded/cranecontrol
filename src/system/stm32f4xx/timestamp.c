@@ -9,23 +9,13 @@
 // force overflow ~10s after boot
 static volatile uint32_t _sys_ticks = 0;
 
-/*
-void time_init(void){
-	RCC_ClocksTypeDef clocks;
-	RCC_GetClocksFreq(&clocks);
-	usTicks = clocks.SYSCLK_Frequency / 1000000;
-    SysTick_Config(SystemCoreClock / 1000);
-}
-
-*/
-
 void vApplicationTickHook(void){
 	__sync_fetch_and_add(&_sys_ticks, 1);
 }
 
 static void _get_ticks(uint32_t *_ticks, uint32_t *_cycles){
-    register uint32_t ticks;
-	register uint32_t cycle_cnt;
+    uint32_t ticks;
+	uint32_t cycle_cnt;
     do {
         ticks = _sys_ticks;
         cycle_cnt = SysTick->LOAD - SysTick->VAL;

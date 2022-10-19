@@ -7,3 +7,4 @@
 #include "kernel/include/task.h"
 #include "kernel/include/queue.h"
 #include "kernel/include/semphr.h"
+#include "kernel/include/event_groups.h"

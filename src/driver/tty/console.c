@@ -95,7 +95,7 @@ static int strtokenize(char *buf, size_t len, char *tokens[], uint8_t ntokens){
 	return tok;
 }
 
-static int _console_printf(console_device_t dev, const char *fmt, ...){
+int _console_printf(console_device_t dev, const char *fmt, ...){
 	struct console *self = container_of(dev, struct console, dev.ops);
 
 	// lock printf buffer

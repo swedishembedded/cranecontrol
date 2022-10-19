@@ -7,7 +7,7 @@
 //!+CFLAGS: --specs=nosys.specs -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork -DSTM32F429_439xx -DHSE_VALUE=8000000
 //!+LDFLAGS:
 //+CMD_FLASH: st-flash --reset write ##FILE## 0x8000000
-//!+CMD_FLASH: openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg -c "program ##FILE## verify reset exit"
+//!+CMD_FLASH: openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c "program ##FILE## verify reset exit"
 
 #include <libfirmware/dts/stm32f4xx.dtsi>
 #include <libfirmware/dts/stm32f4xx.h>
@@ -47,6 +47,7 @@
 			printk_port = <1>;
 			insert-cr-before-lf = <1>;
 		};
+		/*
 		uext_uart: uext_uart {
 			compatible = "st,stm32_uart";
 			baud = <921600>;
@@ -56,11 +57,12 @@
 			uext_uart_serial_pins {
 				compatible = "st,stm32_gpio";
 				pinctrl = <
-					GPIOE GPIO_Pin_0 (GPIO_AF_UART8 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_50MHz) /* RX */
-					GPIOE GPIO_Pin_1 (GPIO_AF_UART8 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_50MHz) /* TX */
+					GPIOE GPIO_Pin_0 (GPIO_AF_UART8 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_50MHz) 
+					GPIOE GPIO_Pin_1 (GPIO_AF_UART8 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_50MHz) 
 				>;
 			};
 		};
+		*/
 	};
 
 	regmap: regmap {
@@ -73,12 +75,13 @@
 		regmap = <&regmap>;
 	};
 
+/*
 	modbus {
 		serial = <&uext_uart>;
 		regmap = <&regmap>;
 		addr = <0x01>;
 	};
-
+*/
 	leds: leds {
 		compatible = "st,stm32_leds";
 		pins = <&led_pins>;
@@ -756,6 +759,16 @@
 		regmap = <&regmap_slave>;
 	};
 */
+
+	rust {
+		compatible = "app,rust";
+		console = <&console>;
+	};
+
+	python {
+		compatible = "app,python";
+		console = <&console>;
+	};
 
 	application {
 		compatible = "app,flyingbergman";

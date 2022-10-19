@@ -30,9 +30,15 @@ struct stm32_uart {
 #define UART_NUM_DEVICES 8
 static struct stm32_uart *_uart_ptr[UART_NUM_DEVICES] = {0, 0, 0, 0, 0, 0};
 
-static int _serial_write(serial_port_t serial, const void *data, size_t size,
-                         uint32_t timeout) {
-	struct stm32_uart *self = container_of(serial, struct stm32_uart, dev.ops);
+static int _serial_write(
+		serial_port_t serial,
+		const void *data,
+		size_t size,
+        uint32_t timeout) {
+	struct stm32_uart *self = container_of(
+			serial,
+			struct stm32_uart,
+			dev.ops);
 	if(!self)
 		return -1;
 	uint8_t *buf = (uint8_t *)data;
@@ -120,43 +126,43 @@ static int32_t _uart_irq(struct stm32_uart *self) {
 void USART1_IRQHandler(void) {
 	struct stm32_uart *hw = _get_hw(1);
 	int32_t __unused wake = _uart_irq(hw);
-	// portYIELD_FROM_ISR(wake);
+	thread_yield_from_isr(wake);
 }
 
 void USART2_IRQHandler(void) {
 	struct stm32_uart *hw = _get_hw(2);
 	int32_t __unused wake = _uart_irq(hw);
-	// portYIELD_FROM_ISR(wake);
+	thread_yield_from_isr(wake);
 }
 
 void USART3_IRQHandler(void) {
 	struct stm32_uart *hw = _get_hw(3);
 	int32_t __unused wake = _uart_irq(hw);
-	// portYIELD_FROM_ISR(wake);
+	thread_yield_from_isr(wake);
 }
 
 void UART4_IRQHandler(void) {
 	struct stm32_uart *hw = _get_hw(4);
 	int32_t __unused wake = _uart_irq(hw);
-	// portYIELD_FROM_ISR(wake);
+	thread_yield_from_isr(wake);
 }
 
 void UART5_IRQHandler(void) {
 	struct stm32_uart *hw = _get_hw(5);
 	int32_t __unused wake = _uart_irq(hw);
-	// portYIELD_FROM_ISR(wake);
+	thread_yield_from_isr(wake);
 }
 
 void USART6_IRQHandler(void) {
 	struct stm32_uart *hw = _get_hw(6);
 	int32_t __unused wake = _uart_irq(hw);
-	// portYIELD_FROM_ISR(wake);
+	thread_yield_from_isr(wake);
 }
 
 void UART8_IRQHandler(void) {
 	struct stm32_uart *hw = _get_hw(8);
 	int32_t __unused wake = _uart_irq(hw);
-	// portYIELD_FROM_ISR(wake);
+	thread_yield_from_isr(wake);
 }
 
 static const struct serial_device_ops _serial_ops = {.read = _serial_read,

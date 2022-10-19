@@ -61,8 +61,15 @@ struct mcp4461 {
 
 static int _mcp4461_write_reg(struct mcp4461 *self, uint8_t reg, uint8_t val){
 	int ret = 0;
-	uint8_t data[] = {reg | MCP4XXX_OP_WRITE | (uint8_t)(val >> 8), (uint8_t)(val & 0xff)};
-	if((ret = i2c_transfer(self->i2c, self->addr, data, 2, NULL, 0, MCP4461_TIMEOUT)) < 0) return ret;
+	uint8_t data[] = {
+		reg | MCP4XXX_OP_WRITE | (uint8_t)(val >> 8),
+		(uint8_t)(val & 0xff)
+	};
+	if((ret = i2c_transfer(
+					self->i2c,
+					self->addr,
+					data, 2, NULL, 0, MCP4461_TIMEOUT)) < 0)
+		return ret;
 	return 0;
 }
 

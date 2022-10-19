@@ -45,6 +45,7 @@ libfirmware_a_SOURCES+=linux/chip.c\
 	linux/linux_vcan.c\
 	linux/linux_leds.c\
 	linux/thread.c\
+	linux/thread_evt.c\
 	linux/thread_mutex.c\
 	linux/thread_queue.c\
 	linux/thread_sem.c\
@@ -179,6 +180,7 @@ STM32F4XX_FILES=stm32f4xx/stdperiph/misc.c\
 	stm32f4xx/watchdog.c \
 	freertos/atomic.c\
 	freertos/thread.c\
+	freertos/thread_evt.c\
 	freertos/thread_mutex.c\
 	freertos/thread_queue.c\
 	freertos/thread_sem.c\
@@ -220,7 +222,13 @@ libfirmware_a_CFLAGS += -I$(srcdir)/freertos/kernel/include -I$(srcdir)/freertos
 libfirmware_a_CFLAGS += -I$(top_srcdir)/include/libfirmware/stm32f4xx -I$(top_srcdir)/include/libfirmware/CMSIS
 endif
 
-if WITH_TARGET_STM32F40_41XXX
+if WITH_TARGET_STM32F429ZET6
+libfirmware_a_SOURCES += $(STM32F4XX_FILES)
+libfirmware_a_CFLAGS += -I$(srcdir)/freertos/kernel/include -I$(srcdir)/freertos/kernel/portable/GCC/ARM_CM4F/ -I$(top_srcdir)/include/stm32f4xx -I$(top_srcdir)/include/CMSIS -DSTM32F429_439xx -DUSE_STDPERIPH_DRIVER
+libfirmware_a_CFLAGS += -I$(top_srcdir)/include/libfirmware/stm32f4xx -I$(top_srcdir)/include/libfirmware/CMSIS
+endif
+
+if WITH_TARGET_STM32F407VGT6
 libfirmware_a_SOURCES += $(STM32F4XX_FILES)
 libfirmware_a_CFLAGS += -I$(srcdir)/freertos/kernel/include -I$(srcdir)/freertos/kernel/portable/GCC/ARM_CM4F/ -I$(top_srcdir)/include/stm32f4xx -I$(top_srcdir)/include/CMSIS -DSTM32F40_41xxx -DUSE_STDPERIPH_DRIVER
 libfirmware_a_CFLAGS += -I$(top_srcdir)/include/libfirmware/stm32f4xx -I$(top_srcdir)/include/libfirmware/CMSIS

@@ -1,0 +1,550 @@
+/dts-v1/;
+
+//!+HOST: arm-none-eabi
+//!+TARGET: stm32f429zet6
+//:ROM 512k :RAM 192k :LOAD_ADDR 0x08000000
+//!+DEPENDS: libfirmware libdriver
+//!+CFLAGS: --specs=nosys.specs -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork -DSTM32F429_439xx -DHSE_VALUE=8000000
+//!+LDFLAGS:
+//+CMD_FLASH: st-flash --reset write ##FILE## 0x8000000
+//!+CMD_FLASH: openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg -c "program ##FILE## verify reset exit"
+
+#include <libfirmware/dts/stm32f4xx.dtsi>
+#include <libfirmware/dts/stm32f4xx.h>
+#include <libfirmware/dts/stm32f4xx_gpio.h>
+#include <libfirmware/dts/stm32f4xx_tim.h>
+#include <libfirmware/dts/stm32f4xx_adc.h>
+#include <libfirmware/dts/canopen.h>
+#include <libdriver/dts/mcp2317.h>
+#include "dts/flyingbergman.h"
+
+/ {
+	cpu {
+		/* SystemCoreClock = ((HSE_VALUE / PLL_M) * PLL_N) / PLL_P; */
+		/* USBClock = ((HSE_VALUE / PLL_M) * PLL_N) / PLL_Q; */
+		compatible = "st,stm32_cpu";
+		hse_value = <8000000>;
+		hclk_div = <1>;
+		pclk1_div = <1>;
+		pclk2_div = <1>;
+		pllm = <8>;
+		plln = <336>;
+		pllp = <2>;
+		pllq = <7>;
+	};
+
+	events: events {
+		compatible = "fw,events";
+		priority = <5>;
+	};
+
+	serial {
+		debug_uart: debug {
+			compatible = "st,stm32_uart";
+			baud = <921600>;
+			reg = <USART1>;
+			interrupt = <USART1_IRQn>;
+			printk_port = <1>;
+			insert-cr-before-lf = <1>;
+		};
+	};
+
+	regmap: regmap {
+		compatible = "fw,regmap";
+	};
+
+	console: console {
+		compatible = "fw,console";
+		serial = <&debug_uart>;
+		regmap = <&regmap>;
+	};
+
+	leds: leds {
+		compatible = "st,stm32_leds";
+		pins = <&led_pins>;
+	};
+
+	gpio {
+		compatible = "st,stm32_gpio";
+		debug_serial_pins {
+			pinctrl = <
+				GPIOA GPIO_Pin_9 (GPIO_AF_USART1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_50MHz) /* TX */
+				GPIOA GPIO_Pin_10 (GPIO_AF_USART1 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_50MHz) /* RX */
+			>;
+		};
+
+		led_pins: led_pins {
+			pinctrl = <
+				GPIOA GPIO_Pin_8 GPIO_Mode_OUT
+			>;
+		};
+	};
+
+	spi {
+		spi3: spi3 {
+			compatible = "st,stm32_spi";
+			reg = <SPI3>;
+			pins {
+				compatible = "st,stm32_gpio";
+				pinctrl = <
+					GPIOC GPIO_Pin_10 (GPIO_AF_SPI3 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* SCK */
+					GPIOC GPIO_Pin_11 (GPIO_AF_SPI3 | GPIO_OType_OD | GPIO_PuPd_DOWN | GPIO_Speed_100MHz) /* MISO */
+					GPIOC GPIO_Pin_12 (GPIO_AF_SPI3 | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* MOSI */
+				>;
+			};
+			spi3_ctrl_pins: spi3_ctrl_pins {
+				compatible = "st,stm32_gpio";
+				pinctrl = <
+					GPIOG GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz) /*GPEX_CS*/
+					GPIOG GPIO_Pin_3 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPIO_CS*/
+					GPIOG GPIO_Pin_4 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPIO_RESET*/
+					GPIOD GPIO_Pin_3 (GPIO_Mode_OUT | GPIO_OType_PP | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPEX_RESET*/
+					GPIOD GPIO_Pin_2 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPEX_INTA*/
+					GPIOD GPIO_Pin_6 (GPIO_Mode_IN | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /*GPEX_INTB*/
+				>;
+				defaults = <1 1 1 1 1 1>;
+			};
+
+			encoder1_gpio: encoder1_gpio {
+				compatible = "st,stm32_gpio";
+				pinctrl = <
+					GPIOD GPIO_Pin_4 (GPIO_Mode_OUT| GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /* CS */
+					GPIOD GPIO_Pin_5 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* ENCSH1 (P40) */
+					GPIOF GPIO_Pin_6 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* PWM_IN1 (P39) */
+				>;
+				defaults = <1 1 1>;
+			};
+
+			encoder2_gpio: encoder2_gpio {
+				compatible = "st,stm32_gpio";
+				pinctrl = <
+					GPIOD GPIO_Pin_15 (GPIO_Mode_OUT| GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_100MHz)  /* CS */
+					GPIOD GPIO_Pin_11 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* ENCSH2 (P44) */
+					GPIOF GPIO_Pin_7 (GPIO_Mode_IN | GPIO_PuPd_UP | GPIO_Speed_100MHz) /* PWM_IN2 (P43) */
+				>;
+				defaults = <1 1 1>;
+			};
+
+		};
+	};
+
+	i2c1_gpio {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOB GPIO_Pin_7 (GPIO_AF_I2C1 | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_2MHz)
+			GPIOB GPIO_Pin_8 (GPIO_AF_I2C1 | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_2MHz)
+		>;
+		default = <1 1>;
+	};
+
+	tim8: tim8 {
+		compatible = "st,stm32_tim";
+		reg = <TIM8>;
+		mode = <TIM_CounterMode_CenterAligned1>;
+		freq = <18000>;
+		clock_div = <0>;
+		rep_count = <1>;
+		enable = <1>;
+		master_mode = <TIM_MasterSlaveMode_Enable>;
+		output_trigger = <TIM_TRGOSource_Update>;
+		slave_mode = <TIM_SlaveMode_Reset>;
+		input_trigger = <TIM_TS_ITR0>;
+		dead_time = <1500>;
+
+/*
+		events {
+			publisher = <&events>;
+			update = <FB_EVENT_MOTOR2_UPDATE>;
+		};
+*/
+		channel1 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		channel2 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		channel3 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOA GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLA */
+				GPIOC GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHA */
+				GPIOB GPIO_Pin_14 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLB */
+				GPIOC GPIO_Pin_7 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHB */
+				GPIOB GPIO_Pin_15 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLC */
+				GPIOC GPIO_Pin_8 (GPIO_AF_TIM8 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHC */
+				GPIOA GPIO_Pin_6 (GPIO_AF_TIM8 | GPIO_Mode_IN | GPIO_PuPd_UP) /* BRKIN */
+			>;
+		};
+	};
+
+	tim1: tim1 {
+		compatible = "st,stm32_tim";
+		reg = <TIM1>;
+		mode = <TIM_CounterMode_CenterAligned1>;
+		freq = <18000>;
+		clock_div = <0>;
+		rep_count = <1>;
+		master_mode = <TIM_MasterSlaveMode_Enable>;
+		output_trigger = <TIM_TRGOSource_Enable>;
+		dead_time = <200>;
+/*
+		events {
+			publisher = <&events>;
+			update = <FB_EVENT_MOTOR1_UPDATE>;
+		};
+		*/
+		channel1 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		channel2 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		channel3 {
+			mode = <TIM_OCMode_PWM1>;
+			pout_en = <1>;
+			nout_en = <1>;
+			pulse = <500>;
+			ppol = <0>;
+			npol = <0>;
+			pidle = <0>;
+			nidle = <1>;
+			preload = <1>;
+		};
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOE GPIO_Pin_8 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLA */
+				GPIOE GPIO_Pin_9 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHA */
+				GPIOE GPIO_Pin_10 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLB */
+				GPIOE GPIO_Pin_11 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHB */
+				GPIOE GPIO_Pin_12 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INLC */
+				GPIOE GPIO_Pin_13 (GPIO_AF_TIM1 | GPIO_OType_PP | GPIO_Speed_2MHz) /* INHC */
+				GPIOE GPIO_Pin_15 (GPIO_AF_TIM1 | GPIO_Mode_IN | GPIO_PuPd_UP) /* BRKIN */
+			>;
+		};
+	};
+
+	adc: adc {
+		compatible = "st,stm32_adc";
+		prescaler = <ADC_Prescaler_Div8>;
+		trigger = <ADC_ExternalTrigConv_T8_TRGO>;
+		trigger_edge = <ADC_ExternalTrigConvEdge_RisingFalling>;
+		console = <&console>;
+		channels = <
+			ADC1 ADC_Channel_3 1 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_5 1 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_14 1 ADC_SampleTime_3Cycles
+
+			ADC1 ADC_Channel_4 2 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_14 2 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_9 2 ADC_SampleTime_3Cycles
+
+			ADC1 ADC_Channel_10 3 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_13 3 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_15 3 ADC_SampleTime_3Cycles
+
+			ADC1 ADC_Channel_11 4 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_15 4 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_6 4 ADC_SampleTime_3Cycles
+
+			ADC1 ADC_Channel_12 5 ADC_SampleTime_3Cycles
+			ADC2 ADC_Channel_9 5 ADC_SampleTime_3Cycles
+			ADC3 ADC_Channel_15 5 ADC_SampleTime_3Cycles
+		>;
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				/* ADC1 */
+				GPIOA GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOB1 CH3 */
+				GPIOA GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOA1 CH4 */
+				GPIOC GPIO_Pin_0 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSA1 CH10 */
+				GPIOC GPIO_Pin_1 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSB1 CH11 */
+				GPIOC GPIO_Pin_2 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSC1 CH12 */
+				/* ADC2 */
+				GPIOA GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOB2 CH5 */
+				GPIOC GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* SOA2 CH14 */
+				GPIOC GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSA2 CH13 */
+				GPIOC GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSB2 CH15 */
+				GPIOB GPIO_Pin_1 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VSC2 CH9 */
+				/* ADC3 */
+				GPIOF GPIO_Pin_3 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* VMOT CH9 */
+				GPIOF GPIO_Pin_4 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* POT CH14 */
+				GPIOF GPIO_Pin_5 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* TEMP1 CH15 */
+				GPIOF GPIO_Pin_8 (GPIO_Mode_AN | GPIO_PuPd_NOPULL) /* TEMP2 CH6 */
+			>;
+		};
+	};
+
+	ainpwen_pins {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOF GPIO_Pin_2 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_50MHz)
+		>;
+		defaults = <1>;
+	};
+
+	encpwen_pins {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOB GPIO_Pin_10 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_50MHz)
+			GPIOB GPIO_Pin_11 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_50MHz)
+		>;
+		defaults = <1 1>;
+	};
+
+	encoder2 {
+		compatible = "fw,max14890";
+		spi = <&spi3>;
+		gpio = <&encoder1_gpio>;
+		cs_pin = <0>;
+	};
+
+	encoder1 {
+		compatible = "fw,max14890";
+		spi = <&spi3>;
+		gpio = <&encoder2_gpio>;
+		cs_pin = <0>;
+	};
+
+	enc2: tim2 {
+		compatible = "st,stm32_tim";
+		reg = <TIM2>;
+		mode = <TIM_EncoderMode_TI12>;
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOA GPIO_Pin_15 (GPIO_AF_TIM2 | GPIO_Mode_IN | GPIO_PuPd_UP) /* ENCA1 */
+				GPIOB GPIO_Pin_3 (GPIO_AF_TIM2 | GPIO_Mode_IN | GPIO_PuPd_UP) /* ENCB1 */
+			>;
+		};
+	};
+
+	tim3: tim3 {
+		compatible = "st,stm32_tim";
+		reg = <TIM3>;
+		mode = <TIM_CounterMode_Up>;
+		freq = <60000>;
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOA GPIO_Pin_0 (GPIO_AF_TIM3 | GPIO_Mode_IN) /* HALLA */
+				GPIOA GPIO_Pin_1 (GPIO_AF_TIM3 | GPIO_Mode_IN) /* HALLB */
+				GPIOA GPIO_Pin_2 (GPIO_AF_TIM3 | GPIO_Mode_IN) /* HALLC */
+			>;
+		};
+	};
+
+	enc1: tim4 {
+		compatible = "st,stm32_tim";
+		reg = <TIM4>;
+		mode = <TIM_EncoderMode_TI12>;
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOD GPIO_Pin_12 (GPIO_AF_TIM4 | GPIO_Mode_IN | GPIO_PuPd_UP) /* ENCA2 */
+				GPIOD GPIO_Pin_13 (GPIO_AF_TIM4 | GPIO_Mode_IN | GPIO_PuPd_UP) /* ENCB2 */
+			>;
+		};
+	};
+
+	tim5: tim5 {
+		compatible = "st,stm32_tim";
+		reg = <TIM5>;
+		mode = <TIM_CounterMode_Up>;
+		freq = <60000>;
+		gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOB GPIO_Pin_4 (GPIO_AF_TIM5 | GPIO_Mode_IN) /* HALLA */
+				GPIOB GPIO_Pin_5 (GPIO_AF_TIM5 | GPIO_Mode_IN) /* HALLB */
+				GPIOB GPIO_Pin_0 (GPIO_AF_TIM5 | GPIO_Mode_IN) /* HALLC */
+			>;
+		};
+	};
+
+	motor1_gpio: motor1_gpio {
+		compatible = "st,stm32_gpio";
+		/* order is important! */
+		pinctrl = <
+			GPIOF GPIO_Pin_11 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* EN_GATE */
+			GPIOF GPIO_Pin_13 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* GAIN */
+			GPIOF GPIO_Pin_14 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* MOC */
+			GPIOF GPIO_Pin_12 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
+			GPIOF GPIO_Pin_9 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
+			GPIOF GPIO_Pin_10 (GPIO_Mode_IN | GPIO_PuPd_UP) /* FAULT */
+		>;
+	};
+
+	motor2_gpio: motor2_gpio {
+		compatible = "st,stm32_gpio";
+		/* order is important! */
+		pinctrl = <
+			GPIOD GPIO_Pin_9 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* EN_GATE */
+			GPIOF GPIO_Pin_15 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* GAIN */
+			GPIOD GPIO_Pin_8 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* MOC */
+			GPIOG GPIO_Pin_5 (GPIO_Mode_OUT | GPIO_PuPd_NOPULL | GPIO_OType_PP | GPIO_Speed_2MHz) /* DC_CAL */
+			GPIOD GPIO_Pin_10 (GPIO_Mode_IN | GPIO_PuPd_UP) /* OCW */
+			GPIOD GPIO_Pin_7 (GPIO_Mode_IN | GPIO_PuPd_UP) /* FAULT */
+		>;
+	};
+
+	drv8302_yaw: drv8302_1 {
+		compatible = "fw,drv8302";
+		console = <&console>;
+		pwm = <&tim1>;
+		adc = <&adc>;
+		enc = <&enc1>;
+		hall = <&tim3>;
+		gpio = <&motor1_gpio>;
+		i_chan = <0 1>;
+		v_chan = <2 3 4>;
+	};
+
+	drv8302_pitch: drv8302_2 {
+		compatible = "fw,drv8302";
+		console = <&console>;
+		pwm = <&tim8>;
+		adc = <&adc>;
+		enc = <&enc2>;
+		hall = <&tim5>;
+		gpio = <&motor2_gpio>;
+		i_chan = <0 1>;
+		v_chan = <2 3 4>;
+	};
+
+	gpio_sw {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOC GPIO_Pin_9 (GPIO_Mode_OUT | GPIO_OType_OD | GPIO_PuPd_UP | GPIO_Speed_2MHz)
+		>;
+	};
+
+	/* This is normal configuration */
+	can1: can1 {
+		compatible = "st,stm32_can";
+		reg = <CAN1>;
+		prescaler = <12>;
+		sjw = <1>;
+		bs1 = <11>;
+		bs2 = <2>;
+		console = <&console>;
+		can1_gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOD GPIO_Pin_0 (GPIO_AF_CAN1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+				GPIOD GPIO_Pin_1 (GPIO_AF_CAN1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+			>;
+		};
+	};
+
+	can2: can2 {
+		compatible = "st,stm32_can";
+		reg = <CAN2>;
+		prescaler = <5>;
+		sjw = <1>;
+		bs1 = <13>;
+		bs2 = <2>;
+		console = <&console>;
+		can2_gpio {
+			compatible = "st,stm32_gpio";
+			pinctrl = <
+				GPIOB GPIO_Pin_12 (GPIO_AF_CAN2 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+				GPIOB GPIO_Pin_13 (GPIO_AF_CAN2 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+			>;
+		};
+	};
+
+	usb_gpio {
+		compatible = "st,stm32_gpio";
+		pinctrl = <
+			GPIOA GPIO_Pin_11 (GPIO_AF_OTG_FS | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+			GPIOA GPIO_Pin_12 (GPIO_AF_OTG_FS | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+		>;
+	};
+
+	usb_fs: usb_fs {
+		compatible = "st,usb-serial";
+		console = <&console>;
+	};
+
+	vcp_con {
+		compatible = "fw,console";
+		serial = <&usb_fs>;
+	};
+
+	application {
+		compatible = "app,flyingbergman";
+		leds = <&leds>;
+		console = <&console>;
+		/*sw_gpio = <&mcp2317_1>;*/
+		/*gpio_ex = <&gpio_ex>;*/
+		sw_pins = <8 9 10 11 12 13 14 15>;
+		/*sw_leds = <&sw_leds>;*/
+		adc = <&adc>;
+		mot_x = <&tim1>;
+		mot_y = <&tim8>;
+		/*mux = <&pot_mux_gpio>;*/
+		enc1 = <&enc1>;
+		enc1_gpio = <&encoder1_gpio>;
+		enc2 = <&enc2>;
+		enc2_gpio = <&encoder2_gpio>;
+		/*eeprom = <&eeprom>;*/
+		/*oc_pot = <&oc_pot>;*/
+		/*an_out = <&an_out>;*/
+		can1 = <&can1>;
+		can2 = <&can2>;
+		regmap = <&regmap>;
+		/*canopen = <&canopen>;*/
+		/*flash = <&ice40_flash>;*/
+		//canopen_slave = <&canopen_slave>;
+		drv_pitch = <&drv8302_pitch>;
+		drv_yaw = <&drv8302_yaw>;
+		events = <&events>;
+		//debug_gpio = <&uext_gpio>;
+		//canopen_slave = <&canopen_slave>;
+		//regmap_slave = <&regmap_slave>;
+	};
+};

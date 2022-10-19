@@ -50,76 +50,6 @@ static int _fb_cmd_trace(console_device_t con, void *userptr, int argc,
 	return 0;
 }
 
-console_device_t _python_con = NULL;
-struct fb *_python_fb_ptr = NULL;
-
-// Receive single character
-int mp_hal_stdin_rx_chr(void) {
-	char ch = 0;
-	if(_python_con){
-		while(console_read(_python_con, &ch, 1, 100) != 1){
-		}
-	}
-	return (int)ch;
-}
-
-// Send string of given length
-void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
-	while(len--)
-    console_printf(_python_con,"%c", *str++);
-}
-void mp_hal_stdout_tx_strn_cooked(const char *str, mp_uint_t len) {
-	while(len--)
-    console_printf(_python_con, "%c", *str++);
-}
-void mp_hal_stdout_tx_str(const char *str) {
-    console_printf(_python_con, "%s", str);
-}
-int mp_import_stat(const char *file){
-	return 0;
-}
-
-static char *stack_top = NULL;
-void gc_collect(){
-   // WARNING: This gc_collect implementation doesn't try to get root
-    // pointers from CPU registers, and thus may function incorrectly.
-    void *dummy;
-    gc_collect_start();
-    gc_collect_root(&dummy, ((mp_uint_t)stack_top - (mp_uint_t)&dummy) / sizeof(mp_uint_t));
-    gc_collect_end();
-    gc_dump_info();
-}
-
-mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs) {
-   return mp_const_none;
-}
-
-MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
-
-void nlr_jump_fail(void *val){
-	console_printf(_python_con, "jump fail!\n");
-	while(1){}
-}
-
-static int _fb_cmd_python(console_device_t con, void *userptr, int argc,
-                         char **argv) {
-	struct fb *self = (struct fb *)userptr;
-	_python_fb_ptr = self;
-
-	char stack_dummy = 0;
-	_python_con = con;
-	stack_top = &stack_dummy;
-
-	static char heap[2048*4];
-	gc_init(heap, heap + sizeof(heap));
-
-	mp_init();
-	pyexec_friendly_repl();
-	mp_deinit();
-
-	return 0;
-}
-
 /*
 static int _modbus_cmd(console_device_t con, void *userptr, int argc,
                          char **argv) {
@@ -592,8 +522,6 @@ static int _motor_cmd(console_device_t con, void *userptr, int argc, char **argv
 }
 
 void fb_cmd_init(struct fb *self) {
-	console_add_command(self->console, self, "python",
-	                    "A python interpreter", "", _fb_cmd_python);
 	console_add_command(self->console, self, "trace",
 	                    "A trace utility that outputs VCD file", "", _fb_cmd_trace);
 	console_add_command(self->console, self, "an_out",

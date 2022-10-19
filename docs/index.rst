@@ -10,8 +10,7 @@ RocketPLC - Open Source Programmable Logic Controller
    :maxdepth: 2
    :caption: Contents:
 
-   introduction
-   building
+   flyingbergman
 
 Indices and tables
 ==================

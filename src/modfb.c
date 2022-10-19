@@ -4,7 +4,7 @@
 #include "py/builtin.h"
 #include "fb.h"
 
-extern struct fb *_python_fb_ptr;
+struct fb *_python_fb_ptr;
 
 // This is the function which will be called from Python as example.add_ints(a, b).
 STATIC mp_obj_t mp_fb_readswitch(mp_obj_t o_idx) {

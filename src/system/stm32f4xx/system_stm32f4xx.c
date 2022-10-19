@@ -433,14 +433,7 @@ void SystemInit(void)
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
 	DWT->CYCCNT = 0; // reset the counter
 	DWT->CTRL |= 1 ; // enable the counter
-/*
-	memcpy(__isr_vector, (uint32_t*)SCB->VTOR, sizeof(uint32_t) * VECTOR_TABLE_ENTRIES);
-	memset(__isr_counts, 0, sizeof(atomic_t) * VECTOR_TABLE_ENTRIES);
-	for(int c = 0; c < VECTOR_TABLE_ENTRIES; c++){
-		__isr_vector[c] = (uint32_t)__profile_isr;
-	}
-	SCB->VTOR = SRAM_BASE | (uint32_t)__isr_vector;
-*/
+
 	__libc_init_array();
 
     // OK, WHY is this skipped here if defined as NVIC_SetPriorityGroupConfig??

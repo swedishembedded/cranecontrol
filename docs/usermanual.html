@@ -1,0 +1,2224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-05-08 Wed 16:25 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Flying Bergman Crane System Controller</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="martin" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="file:usermanual.css"/>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">The Flying Bergman Crane System Controller</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgc02d9de">1. Introduction</a>
+<ul>
+<li><a href="#orgfca252d">1.1. About this board</a></li>
+<li><a href="#orge769285">1.2. Differences compared to Swedish Embedded Motordrive 2X</a></li>
+</ul>
+</li>
+<li><a href="#orgb2affd0">2. FlyingBergman Quick Start</a></li>
+<li><a href="#orgf5dbe8d">3. Pin description and pinout</a>
+<ul>
+<li><a href="#org1fca073">3.1. Interfaces</a>
+<ul>
+<li><a href="#orga720c55">3.1.1. Motor outputs</a></li>
+<li><a href="#org32f0aff">3.1.2. Main power input</a></li>
+<li><a href="#org820101b">3.1.3. Brake resistor output</a></li>
+<li><a href="#orga6177ac">3.1.4. Universal encoder inputs</a></li>
+<li><a href="#org7cdefd9">3.1.5. Hall sensor inputs</a></li>
+<li><a href="#orge3da846">3.1.6. High voltage inputs</a></li>
+<li><a href="#org92754cd">3.1.7. 12V output</a></li>
+<li><a href="#org84973c3">3.1.8. Button inputs with optional LED backlight outputs</a></li>
+<li><a href="#org05c31e7">3.1.9. CAN-FD interface</a></li>
+<li><a href="#org5e3fe96">3.1.10. CAN interfaces</a></li>
+<li><a href="#org4544c5e">3.1.11. LCD display connector</a></li>
+<li><a href="#org0a05303">3.1.12. Expansion interface</a></li>
+<li><a href="#org21e8659">3.1.13. USB FS interface</a></li>
+<li><a href="#org9d02e51">3.1.14. EtherCAT interface</a></li>
+<li><a href="#orgbe282b5">3.1.15. Analog inputs</a></li>
+<li><a href="#orgaecf616">3.1.16. Debug connector</a></li>
+<li><a href="#org42ca56e">3.1.17. Analog outputs</a></li>
+<li><a href="#org5b9adcb">3.1.18. CAN address switch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org5fdf99d">4. Getting started</a>
+<ul>
+<li><a href="#org26ed365">4.1. Connecting motors</a>
+<ul>
+<li><a href="#org76ad32b">4.1.1. DC motors</a></li>
+<li><a href="#orgfd13428">4.1.2. AC motors</a></li>
+</ul>
+</li>
+<li><a href="#org3a3e71f">4.2. UART console interface</a>
+<ul>
+<li><a href="#org13427fc">4.2.1. cpuinfo :: cpu information</a></li>
+<li><a href="#org2dfa67c">4.2.2. reboot :: restart the board</a></li>
+<li><a href="#orgf925415">4.2.3. can :: CAN bus low level access</a></li>
+<li><a href="#org44b17b1">4.2.4. i2c :: low level i2c access</a></li>
+<li><a href="#orgb23b6c6">4.2.5. ui :: user interface</a></li>
+</ul>
+</li>
+<li><a href="#org7eab74d">4.3. CANOpen interface</a></li>
+</ul>
+</li>
+<li><a href="#orgdb70f95">5. Developing software</a>
+<ul>
+<li><a href="#orga998e84">5.1. Required tools for development and flashing</a></li>
+<li><a href="#org19c23ff">5.2. Compiling and flashing firmware</a></li>
+</ul>
+</li>
+<li><a href="#orgb9956b4">6. Electrical characteristics</a>
+<ul>
+<li><a href="#orga1a671f">6.1. Current consumption</a></li>
+<li><a href="#org5ebf265">6.2. Voltage levels</a></li>
+</ul>
+</li>
+<li><a href="#orgb9f891d">7. Board revisions</a>
+<ul>
+<li><a href="#org545c384">7.1. Revision A</a>
+<ul>
+<li><a href="#orgb786d86">7.1.1. Problems with revision A</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org949d623">8. Glossary</a></li>
+</ul>
+</div>
+</div>
+<p>
+User manual
+</p>
+
+<div id="outline-container-orgc02d9de" class="outline-2">
+<h2 id="orgc02d9de"><span class="section-number-2">1</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+This user manual aims to describe in detail the usage, debugging and
+implementation of the Flying Bergman motor controller. It is a continuously
+evolving document and if, as the reader of this manual, you feel that something
+is either not here or is not explained in sufficient detail then please do send
+you feedback to <code>info@swedishembedded.com</code> and your feedback will be taken into
+consideration for future releases of this document..
+</p>
+
+
+<div class="figure">
+<p><img src="./FlyingBergman-Board.jpg" alt="FlyingBergman-Board.jpg" />
+</p>
+<p><span class="figure-number">Figure 1: </span>Flying Bergman Controller Board</p>
+</div>
+
+
+<div class="figure">
+<p><img src="./FlyingBergman-Crane.jpg" alt="FlyingBergman-Crane.jpg" />
+</p>
+<p><span class="figure-number">Figure 2: </span>Flying Bergman Crane System</p>
+</div>
+</div>
+
+<div id="outline-container-orgfca252d" class="outline-3">
+<h3 id="orgfca252d"><span class="section-number-3">1.1</span> About this board</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+This board is designed to control Flying Bergman Crane System. The system
+consists of a control unit and a motor control board both of which are connected
+together by a cable. The same board design is intended to be used in both the
+motor control application as well as the user hand held control panel. The CAN
+bus address switch (<a href="#org25d19b2">S2</a>) is used to switch software mode between master
+(control panel) and slave (motor drive).
+</p>
+
+<p>
+When this board was designed, it was intended to be as versatile as possible and
+provide good foundation for further development and experimentation. It may not
+be the cheapest design, but it is most definitely a very flexible one and can be
+mixed and matched with other hardware and software to produce the best end user
+experience.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge769285" class="outline-3">
+<h3 id="orge769285"><span class="section-number-3">1.2</span> Differences compared to Swedish Embedded Motordrive 2X</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+The block diagram below shows peripherals mounted on the Flying Bergman board
+and the ones that are not available on this variation are grayed out.
+</p>
+
+
+<div class="figure">
+<p><img src="./FlyingBergman-BlockDiagram.jpg" alt="FlyingBergman-BlockDiagram.jpg" />
+</p>
+<p><span class="figure-number">Figure 3: </span>Block diagram of the controller board</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgb2affd0" class="outline-2">
+<h2 id="orgb2affd0"><span class="section-number-2">2</span> FlyingBergman Quick Start</h2>
+<div class="outline-text-2" id="text-2">
+<dl class="org-dl">
+<dt>Power on</dt><dd><p>
+Power on the fully connected FlyingBergman system (two boards, motors,
+input devices etc).
+</p>
+
+<p>
+The <code>home button led</code> should slowly loop between high and low intensity.
+</p>
+
+<p>
+<code>Joystick</code> is disabled.
+</p></dd>
+
+<dt>Initialize</dt><dd><p>
+Press <code>home button</code> once.
+</p>
+
+<p>
+The <code>home button led</code> will start blinking quickly
+</p>
+
+<p>
+Joystick is operational.
+</p></dd>
+<dt>Home in</dt><dd><p>
+Move crane into home position using the joystick.
+</p>
+
+<p>
+Press and hold <code>home button</code> for <code>3 seconds</code> to save home position
+</p>
+
+<p>
+<code>Preset buttons</code> should light in <code>dim</code> glow and all presets have been reset.
+</p>
+
+<p>
+Crane is now operational <code>in manual mode</code>. To use presets follow steps below.
+</p>
+
+<p>
+<code>Adjust</code> desired <code>intensity</code> and maximum <code>speed</code> using the knobs on the control
+panel.
+</p></dd>
+<dt>Position</dt><dd><p>
+Move the crane into <code>position</code> using the <code>joystick</code>
+</p>
+
+<p>
+Press and <code>hold</code> one of the <code>preset</code> buttons for <code>3 seconds</code> to save the position as that
+preset
+</p>
+
+<p>
+When preset is set, corresponding <code>preset led</code> will light with constant
+<code>bright</code> light.
+</p>
+
+<p>
+Repeating this operation on a preset that's been saved previously will
+overwrite the previous preset with new position.
+</p></dd>
+<dt>Activate</dt><dd><p>
+To <code>Activate preset</code>, quickly <code>press preset button</code> corresponding to that
+preset.
+</p>
+
+<p>
+The crane will instantly start moving to the preset position using currently set
+intensity and maximum speed.
+</p>
+
+<p>
+To <code>abort</code> the <code>move</code>, simply <code>wiggle</code> the <code>joystick</code> from the center
+position.
+</p></dd>
+</dl>
+</div>
+</div>
+
+<div id="outline-container-orgf5dbe8d" class="outline-2">
+<h2 id="orgf5dbe8d"><span class="section-number-2">3</span> Pin description and pinout</h2>
+<div class="outline-text-2" id="text-3">
+
+<div class="figure">
+<p><img src="./FlyingBergman-Pinout.png" alt="FlyingBergman-Pinout.png" />
+</p>
+<p><span class="figure-number">Figure 4: </span>Graphical overview of the Flying Bergman board pinout.</p>
+</div>
+</div>
+
+<div id="outline-container-org1fca073" class="outline-3">
+<h3 id="org1fca073"><span class="section-number-3">3.1</span> Interfaces</h3>
+<div class="outline-text-3" id="text-3-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Ref</th>
+<th scope="col" class="org-left">Name</th>
+<th scope="col" class="org-left">Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><a href="#org6bb5b10">P46</a>,<a href="#org0f1a77d">P45</a></td>
+<td class="org-left">Motors</td>
+<td class="org-left">3 phase PMSM or DC motor connectors</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgb0ae336">P18</a></td>
+<td class="org-left">Main power</td>
+<td class="org-left">Main power connector</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org2147cc6">P49</a></td>
+<td class="org-left">Brake resistor</td>
+<td class="org-left">Brake resistor output</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org58f0844">P37</a>,<a href="#org58a36fe">P41</a></td>
+<td class="org-left">Motor encoder</td>
+<td class="org-left">Universal encoder interface</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org78d1cf1">P48</a>,<a href="#org78d1cf1">P47</a></td>
+<td class="org-left">Hall sensor</td>
+<td class="org-left">Hall sensor inputs</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org29f30a2">P44</a>,<a href="#org4a5a134">P43</a>,<a href="#orge994de0">P42</a>,<a href="#orgc49f73b">P38</a>,<a href="#orgfa4ee8c">P39</a>,<a href="#org1d66944">P40</a></td>
+<td class="org-left">Sensor inputs</td>
+<td class="org-left">Brake and high voltage sensor digital inputs</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org9e5849c">P23</a></td>
+<td class="org-left">12V output</td>
+<td class="org-left">3A 12V output</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgadb2f98">P1</a>,<a href="#orgadb2f98">P2</a>,<a href="#orgadb2f98">P3</a>,<a href="#orgadb2f98">P4</a>,<a href="#orgadb2f98">P5</a>,<a href="#orgadb2f98">P6</a>,<a href="#orgadb2f98">P7</a>,<a href="#orgadb2f98">P8</a></td>
+<td class="org-left">Buttons and LEDs</td>
+<td class="org-left">Internally debounced button connectors with led outputs</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgef6d9e9">P24</a></td>
+<td class="org-left">CAN-FD</td>
+<td class="org-left">CAN-FD high speed interface (if available on board revision)</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org97888af">P20</a></td>
+<td class="org-left">CAN2 interface</td>
+<td class="org-left">CAN2.0B capable interface</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgbac5a43">P19</a></td>
+<td class="org-left">CAN1 interface</td>
+<td class="org-left">CAN2.0B capable interface</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org7402219">P25</a></td>
+<td class="org-left">LCD display</td>
+<td class="org-left">Parallel 8-bit LCD display connector (can support other display through software)</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org18e253c">P17</a></td>
+<td class="org-left">Debug</td>
+<td class="org-left">Serial JTAG + default debug console UART</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org2230b14">P28</a></td>
+<td class="org-left">UEXT interface</td>
+<td class="org-left">Expansion interface with UART, I2C and SPI</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgf859e1f">J1</a></td>
+<td class="org-left">USB-FS</td>
+<td class="org-left">USB FS (12Mbit) serial interface</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org5cd4171">J2</a>,<a href="#org07af8ea">J3</a></td>
+<td class="org-left">EtherCAT interface</td>
+<td class="org-left">EtherCAT slave interface</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org1d66944">P40</a>,<a href="#org1d66944">P14</a>,<a href="#org1d66944">P13</a>,<a href="#org1d66944">P9</a>,<a href="#org1d66944">P11</a>,<a href="#org1d66944">P16</a>,<a href="#org1d66944">P16</a></td>
+<td class="org-left">Analog inputs</td>
+<td class="org-left">5V capable analog inputs with preamplifiers</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#org2a66b44">P21</a>,<a href="#orgb5606fc">P27</a>,<a href="#orge657a9d">P26</a>,<a href="#org5a2276f">P22</a></td>
+<td class="org-left">Analog outputs</td>
+<td class="org-left">Resistive analog outputs (digital potentiometer)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div id="outline-container-orga720c55" class="outline-4">
+<h4 id="orga720c55"><span class="section-number-4">3.1.1</span> <a id="org6bb5b10"></a><a id="org0f1a77d"></a>Motor outputs</h4>
+<div class="outline-text-4" id="text-3-1-1">
+<p>
+These are the main motor outputs. Depending on the software, these connectors
+can drive various types of motors. Please check if desired configuration is
+supported by the firmware version that you are currently using.
+</p>
+
+<p>
+<a href="#org27fc34f">Revision A</a> of the board uses a connector that does not quite fit on the PCB.
+Newer versions of the board will use a better connector (<a href="https://www.mouser.se/ProductDetail/651-1720479">1720479</a>).
+</p>
+
+<p>
+Regardless of the board revision, the following plug can be used: <a href="https://www.mouser.se/ProductDetail/651-1778078">1778078</a>
+</p>
+</div>
+<ol class="org-ol">
+<li><a id="org1134de7"></a><b>PMSM 3-Phase motor</b><br />
+<div class="outline-text-5" id="text-3-1-1-1">
+<p>
+In this configuration the ouputs will be generating 3-phase sinusoidal voltages.
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Pin</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">A</td>
+<td class="org-left">Phase A</td>
+</tr>
+
+<tr>
+<td class="org-left">B</td>
+<td class="org-left">Phase B</td>
+</tr>
+
+<tr>
+<td class="org-left">C</td>
+<td class="org-left">Phase C</td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+<li><a id="org5ce4462"></a><b>One DC motor or servo</b><br />
+<div class="outline-text-5" id="text-3-1-1-2">
+<p>
+When connecting one DC servo or motor then only leads B and C are used. The
+output should be configured for one servo (default for FlyingBergman firmware)
+and will be generating switching DC voltage on lead B and C which will be
+reversed if the motor should travel in reverse (negative direction).
+</p>
+
+<p>
+The positive lead on the motor is whichever wire, when connected to positive
+output C (and the other wire connected to common ground) would make sensed motor
+position to increase in the positive direction.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Pin</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">A</td>
+<td class="org-left">Unused</td>
+</tr>
+
+<tr>
+<td class="org-left">B</td>
+<td class="org-left">Negative lead</td>
+</tr>
+
+<tr>
+<td class="org-left">C</td>
+<td class="org-left">Positive lead</td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+<li><a id="orge78c708"></a><b>Two DC motors or servos</b><br />
+<div class="outline-text-5" id="text-3-1-1-3">
+<p>
+In this configuration, two motors can be powered from the same connector and
+lead B will be outputting a constant voltage that is 1/2 of the main supply
+voltage. It is worth noting that the highest voltage applied to each motor can
+be at most 1/2 of the supply voltage so the motors will spin half as fast as
+they otherwise would if one connector is dedicated to one motor.
+</p>
+
+<p>
+Also, in this configuration the motors must either have some type of analog
+sensor or be driven in open loop since it is not possible to connect 4 hall
+sensors to the board at the same time.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Pin</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">A</td>
+<td class="org-left">Positive lead motor 1</td>
+</tr>
+
+<tr>
+<td class="org-left">B</td>
+<td class="org-left">Common ground</td>
+</tr>
+
+<tr>
+<td class="org-left">C</td>
+<td class="org-left">Positive lead motor 2</td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+</ol>
+</div>
+
+<div id="outline-container-org32f0aff" class="outline-4">
+<h4 id="org32f0aff"><span class="section-number-4">3.1.2</span> <a id="orgb0ae336"></a>Main power input</h4>
+<div class="outline-text-4" id="text-3-1-2">
+<p>
+This is the main power input that should be connected to a battery or some power
+source that can provide the necessary motor current. The drive can be powered
+from bench power supply since the internal diode used for brake resistor circuit
+will prevent reverse currents from flowing to the power supply when motor is
+regenerating.
+</p>
+
+<blockquote>
+<p>
+NOTE: this has the disadvantage that regeneration is not possible on a
+production unit when using the batter, however the effect of regeneration is for
+the most part only relevant in a setting where gravity can free spin the motor.
+In the FlyingBergman application the motors use worm gears and so are impossible
+to spin manually. Thus the effect of regeneration is insignifficant.
+</p>
+</blockquote>
+
+<p>
+Main power input is protected against reverse polarity connection.
+</p>
+
+<p>
+Do not exceed <a href="#org022dbe7">maximum ratings</a> for the power input. It is a very good idea to
+keep the supply voltage at least 12V below maximum rating because during
+deceleration the power rail voltage level may rise and so it is good to have a
+margin. This is specially true if no brake resistor is connected. In such
+situation it is very important to limit the maximum deceleration rate of the
+motor in order to avoid possible damage to the board due to a sudden
+overvoltage.
+</p>
+
+<p>
+The power connector <a href="https://www.mouser.se/ProductDetail/651-1720466">1720466</a> uses corresponding plug: <a href="https://www.mouser.se/ProductDetail/651-1778065">1778065</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org820101b" class="outline-4">
+<h4 id="org820101b"><span class="section-number-4">3.1.3</span> <a id="org2147cc6"></a>Brake resistor output</h4>
+<div class="outline-text-4" id="text-3-1-3">
+<p>
+This output is designed to drive a brake resistor which will be engaged as soon
+as the motor power rail voltage rises higher than VSUPPLY+0.6V. This typically
+happens when the motor is commanded to come to a sudden stop but still has
+inertia which continues to force it to go forward. With geared motors this
+effect is shorter but still present.
+</p>
+
+<p>
+To keep the voltage level under control, the brake circuit on the board
+automatically connects the brake resistor between <a href="#orgb0978a1">VMOT</a> and <a href="#org5ac5e61">GND</a>. This creates a
+high current flow through the brake resistor, dumping the excess energy as heat
+instead of damaging the board. It is recommended to either use a brake resistor
+or limit maximum commanded deceleration rate of the motor.
+</p>
+
+<p>
+The plug for this connector is: <a href="https://www.mouser.se/ProductDetail/710-691363110002">691363110002</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orga6177ac" class="outline-4">
+<h4 id="orga6177ac"><span class="section-number-4">3.1.4</span> <a id="org58f0844"></a><a id="org58a36fe"></a>Universal encoder inputs</h4>
+<div class="outline-text-4" id="text-3-1-4">
+<p>
+These inputs use a versatile hardware encoder interface which is capable of
+operating at voltages up to +-40V DC. It supports both differential and single
+ended encoders encoders. This is achieved using <a href="https://datasheets.maximintegrated.com/en/ds/MAX14890E.pdf">MAX14890</a> IC from Microchip which
+also provides simplified error detection to detect faulty wires and other
+connectivity errors. See the datasheet for more detail.
+</p>
+
+<blockquote>
+<p>
+Note: at the time of this writing, the firmware does not currently check for
+connectivity errors on the encoder lines. When this has been added, this note
+will be removed.
+</p>
+
+<p>
+Also, only single ended mode is currently configured and used.
+</p>
+</blockquote>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Electrical characteristics</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Absolute maximum input voltage</td>
+<td class="org-left">-40V</td>
+<td class="org-left">-</td>
+<td class="org-left">+40V</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org7cdefd9" class="outline-4">
+<h4 id="org7cdefd9"><span class="section-number-4">3.1.5</span> <a id="org78d1cf1"></a><a id="orgedee9bb"></a>Hall sensor inputs</h4>
+<div class="outline-text-4" id="text-3-1-5">
+<p>
+This is a 5V HALL sensor connector with 5V power ouptut for hall sensor. If this
+input is not used it can be configured in software as a generic 5V level input.
+</p>
+
+<p>
+Connect the hall sensor as follows:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Lead</th>
+<th scope="col" class="org-left">Hall sensor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">A</td>
+<td class="org-left">Hall sensor for phase A</td>
+</tr>
+
+<tr>
+<td class="org-left">B</td>
+<td class="org-left">Hall sensor for phase A</td>
+</tr>
+
+<tr>
+<td class="org-left">C</td>
+<td class="org-left">Hall sensor for phase A</td>
+</tr>
+
+<tr>
+<td class="org-left">5V</td>
+<td class="org-left">Common hall sensor power input</td>
+</tr>
+
+<tr>
+<td class="org-left">GND</td>
+<td class="org-left">Ground</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+The input is connected through a resistor divider to STM32 hall sensor capable
+inputs. Therefore voltage characteristics described in the <a href="https://www.st.com/resource/en/datasheet/dm00071990.pdf#93">STM32F429</a> datasheet
+apply after taking into consideration the resistor divider..
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Electrical characteristics</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Input signal high level</td>
+<td class="org-left">VSS-0.3V</td>
+<td class="org-left">5V</td>
+<td class="org-left">6V</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-orge3da846" class="outline-4">
+<h4 id="orge3da846"><span class="section-number-4">3.1.6</span> <a id="org29f30a2"></a><a id="org4a5a134"></a><a id="orge994de0"></a><a id="orgc49f73b"></a><a id="orgfa4ee8c"></a><a id="org1d66944"></a>High voltage inputs</h4>
+<div class="outline-text-4" id="text-3-1-6">
+<p>
+These are extra inputs that are connected through the MAX14890 encoder interface
+and support high voltage signals.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Electrical characteristics</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Absolute maximum input voltage</td>
+<td class="org-left">-40V</td>
+<td class="org-left">-</td>
+<td class="org-left">+40V</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org92754cd" class="outline-4">
+<h4 id="org92754cd"><span class="section-number-4">3.1.7</span> <a id="org9e5849c"></a>12V output</h4>
+<div class="outline-text-4" id="text-3-1-7">
+<p>
+The output of the on-board 12V regulator is available through a vertical
+connector on the top side of the board. This output is limited by fuse to 3A
+output current. Therefore do not exceeed 80% of the current limit on this
+output.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Electrical characteristics</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Output voltage</td>
+<td class="org-left">11.5V</td>
+<td class="org-left">12.0V</td>
+<td class="org-left">12.5V</td>
+</tr>
+
+<tr>
+<td class="org-left">Absolute maximum current</td>
+<td class="org-left">-</td>
+<td class="org-left">-</td>
+<td class="org-left">3A</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org84973c3" class="outline-4">
+<h4 id="org84973c3"><span class="section-number-4">3.1.8</span> <a id="orgadb2f98"></a>Button inputs with optional LED backlight outputs</h4>
+<div class="outline-text-4" id="text-3-1-8">
+<p>
+These are button connectors with optional dimming backlight LED output. The
+button inputs have internal pullups and are designed to be connected via
+mechanical buttons or switches to the GND line. All button inputs are debounced
+in hardware using the <a href="https://datasheets.maximintegrated.com/en/ds/MAX6816-MAX6818.pdf">MAX6818</a> button interface.
+</p>
+
+<p>
+The LED output is fully programmable using the on-board <a href="http://www.ti.com/lit/ds/symlink/lp55231.pdf">LP55231</a> LED controller.
+All LED outputs have internal power dissipation limit that automatically keeps
+it within operating conditions of the LED controller..
+</p>
+
+<p>
+The connector has three pins:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Pin</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">GND</td>
+<td class="org-left">Common ground</td>
+</tr>
+
+<tr>
+<td class="org-left">SW</td>
+<td class="org-left">Button input</td>
+</tr>
+
+<tr>
+<td class="org-left">LED</td>
+<td class="org-left">LED PWM output</td>
+</tr>
+</tbody>
+</table>
+
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Electrical characteristics</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">SW pin input voltage</td>
+<td class="org-left">-30V</td>
+<td class="org-left">-</td>
+<td class="org-left">+30V</td>
+</tr>
+
+<tr>
+<td class="org-left">LED pin output current</td>
+<td class="org-left">0</td>
+<td class="org-left">-</td>
+<td class="org-left">100mA</td>
+</tr>
+
+<tr>
+<td class="org-left">LED output voltage</td>
+<td class="org-left">-</td>
+<td class="org-left">4.5V</td>
+<td class="org-left">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org05c31e7" class="outline-4">
+<h4 id="org05c31e7"><span class="section-number-4">3.1.9</span> <a id="orgef6d9e9"></a>CAN-FD interface</h4>
+<div class="outline-text-4" id="text-3-1-9">
+<p>
+This is a high speed CAN-FD interface currently not supported on the
+FlyingBergman board.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5e3fe96" class="outline-4">
+<h4 id="org5e3fe96"><span class="section-number-4">3.1.10</span> <a id="org97888af"></a><a id="orgbac5a43"></a>CAN interfaces</h4>
+<div class="outline-text-4" id="text-3-1-10">
+<p>
+These are standard CAN2.0B 1Mbit/s can interfaces implemented using <a href="https://www.nxp.com/docs/en/data-sheet/TJA1044.pdf">TJA1044</a> CAN
+bus transceiver. The interfaces support CANOpen protocol as implemented by the
+firmware. CANOpen uses device addressing and the lower 4 bits of the device
+address can be set using the on-board <a href="#org25d19b2">3.1.18</a> micro dip-switch.
+</p>
+
+<p>
+It is currently a convention with FlyingBergman boards to use address 0x01 for
+the control unit and 0x02 for motor driver unit.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Electrical characteristics</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Maximum voltage on H and L pins</td>
+<td class="org-left">-42V</td>
+<td class="org-left">-</td>
+<td class="org-left">+42V</td>
+</tr>
+
+<tr>
+<td class="org-left">Maximum differential voltage on H &amp; L</td>
+<td class="org-left">-27V</td>
+<td class="org-left">-</td>
+<td class="org-left">+27V</td>
+</tr>
+
+<tr>
+<td class="org-left">Maximum data rate</td>
+<td class="org-left">-</td>
+<td class="org-left">-</td>
+<td class="org-left">1Mbit/s</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org4544c5e" class="outline-4">
+<h4 id="org4544c5e"><span class="section-number-4">3.1.11</span> <a id="org7402219"></a>LCD display connector</h4>
+<div class="outline-text-4" id="text-3-1-11">
+<p>
+This connector is currently not implemented in software.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0a05303" class="outline-4">
+<h4 id="org0a05303"><span class="section-number-4">3.1.12</span> <a id="org2230b14"></a>Expansion interface</h4>
+<div class="outline-text-4" id="text-3-1-12">
+<p>
+This is an expansion interface allowing connection of sensors, displays and
+other peripherals that connect to the board over UART, I2C or SPI electrical
+interface. This interface has been popularized by a bulgarian company named
+<a href="https://www.olimex.com">Olimex</a> who has been manufacturing <a href="https://www.olimex.com/Products/Modules/">many expansion modules</a> that all use the UEXT
+interface.
+</p>
+
+<p>
+This interface is currently not used on the FlyingBergman board.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org21e8659" class="outline-4">
+<h4 id="org21e8659"><span class="section-number-4">3.1.13</span> <a id="orgf859e1f"></a>USB FS interface</h4>
+<div class="outline-text-4" id="text-3-1-13">
+<p>
+This is a high speed USB interface.
+</p>
+
+<p>
+It is capable of speeds up to 12Mbit/s and makes it possible to make the board
+appear to a computer as any kind of USB device. This opens up to possibilities
+such as making configuration EEPROM writable as a disk drive from the computer
+side or making high speed current measurements available over a USBTMC protocol
+(allowing easy interoperability with sigrok enabled GUI tools).
+</p>
+
+<p>
+As of today (2019-05-08), only partial software support has been implemented for this interface.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9d02e51" class="outline-4">
+<h4 id="org9d02e51"><span class="section-number-4">3.1.14</span> <a id="org07af8ea"></a><a id="org5cd4171"></a>EtherCAT interface</h4>
+<div class="outline-text-4" id="text-3-1-14">
+<p>
+This is a high speed ethernet interface capable of operating in EtherCAT mode.
+It provides similar type of network as CAN bus, but with much better error
+tolerance and a lot faster speeds (100Mbit/s for ethercat and 1-5Mbit/s for
+CAN).
+</p>
+
+<p>
+The embedded <a href="http://ww1.microchip.com/downloads/en/devicedoc/00001909a.pdf">LAN9252</a> controller houses complete EtherCAT protocol stack and
+enables communication with the board over conventional Ethernet network.
+</p>
+
+<p>
+At this time (2019-05-08) this interface has not been implemented in software
+yet.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgbe282b5" class="outline-4">
+<h4 id="orgbe282b5"><span class="section-number-4">3.1.15</span> <a id="org07d05f3"></a>Analog inputs</h4>
+<div class="outline-text-4" id="text-3-1-15">
+<p>
+Analog inputs support both passive (potentiometer) and active (hall joystick)
+inputs. They are connected through on-board op-amps and support 5V voltage
+levels which are translated to 3.3V for input to the on-board controller.
+</p>
+
+<p>
+The board provides 8 analog inputs, 4 of which are paired into two pairs on 4
+pin connector each (P9 and P11) which are intended to be used for two joysticks
+(although there is nothing special about these inputs other than larger
+connectors being used).
+</p>
+
+<p>
+All 8 analog inputs are multiplexed, meaning that fully simultaneous sensing on
+all inputs at once is not possible. The software has to cycle through each input
+in turn and sample it. The sample rate is determined by software (but is
+generally much lower than for on-board signals). This means that these inputs
+are not suitable for sensing high frequency signals.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Electrical characteristics</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Maximum input voltage</td>
+<td class="org-left">0</td>
+<td class="org-left">-</td>
+<td class="org-left">7V</td>
+</tr>
+
+<tr>
+<td class="org-left">Measurable voltage range</td>
+<td class="org-left">0.1V</td>
+<td class="org-left">-</td>
+<td class="org-left">4.9V</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-orgaecf616" class="outline-4">
+<h4 id="orgaecf616"><span class="section-number-4">3.1.16</span> <a id="org18e253c"></a>Debug connector</h4>
+<div class="outline-text-4" id="text-3-1-16">
+<p>
+This is a debug connector designed for connecting <a href="#orgbc42161">ST-Link-V2</a> debugger together
+with a 3.3v UART to USB converter for accessing the interactive console on the
+device. The UART lines connect internally to UART1 on the STM32.
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">Pin</th>
+<th scope="col" class="org-left">Name</th>
+<th scope="col" class="org-left">Description</th>
+<th scope="col" class="org-left">Connects to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-left">VCC</td>
+<td class="org-left">3.3v intput power. Should only be connected if the board must be powered from the programmer</td>
+<td class="org-left"><a href="#orgf877a66">USB to UART</a> or <a href="#orgbc42161">ST-Link-V2</a> dongle 3.3v output</td>
+</tr>
+
+<tr>
+<td class="org-right">2</td>
+<td class="org-left">GND</td>
+<td class="org-left">Return ground</td>
+<td class="org-left">BOTH <a href="#orgf877a66">USB to UART</a> and <a href="#orgbc42161">ST-Link-V2</a> dongle <sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup></td>
+</tr>
+
+<tr>
+<td class="org-right">3</td>
+<td class="org-left">TX</td>
+<td class="org-left">Serial text console output. Connect to TX line on the <a href="#orgf877a66">USB to UART</a> dongle <sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup></td>
+<td class="org-left"><a href="#orgf877a66">USB to UART</a></td>
+</tr>
+
+<tr>
+<td class="org-right">4</td>
+<td class="org-left">RX</td>
+<td class="org-left">Serial text console input. Connect to TX line on the <a href="#orgf877a66">USB to UART</a> dongle</td>
+<td class="org-left"><a href="#orgf877a66">USB to UART</a></td>
+</tr>
+
+<tr>
+<td class="org-right">5</td>
+<td class="org-left">RST</td>
+<td class="org-left">Chip reset signal. Can be left unconnected.</td>
+<td class="org-left"><a href="#orgbc42161">ST-Link-V2</a></td>
+</tr>
+
+<tr>
+<td class="org-right">6</td>
+<td class="org-left">SWIO</td>
+<td class="org-left">Serial JTAG Data. Connects to <a href="#orgbc42161">ST-Link-V2</a> SWIO pin</td>
+<td class="org-left"><a href="#orgbc42161">ST-Link-V2</a></td>
+</tr>
+
+<tr>
+<td class="org-right">7</td>
+<td class="org-left">SWCLK</td>
+<td class="org-left">Serial JTAG Clock. Connects to</td>
+<td class="org-left"><a href="#orgbc42161">ST-Link-V2</a></td>
+</tr>
+
+<tr>
+<td class="org-right">8</td>
+<td class="org-left">SWO</td>
+<td class="org-left">ARM debug trace output. Usually not used but can be used to extract high speed trace directly from the core. Works like UART TX line with internal hardware fifo.</td>
+<td class="org-left">Additional <a href="#orgf877a66">USB to UART</a> dongle</td>
+</tr>
+
+<tr>
+<td class="org-right">9</td>
+<td class="org-left">BOOT</td>
+<td class="org-left">Boot mode selection. Pull to 3v3 to enable boot mode if flashing over the <a href="#orgf877a66">USB to UART</a> converter. Leave unconnected if flashing using <a href="#orgbc42161">ST-Link-V2</a>.</td>
+<td class="org-left">3.3v power line</td>
+</tr>
+
+<tr>
+<td class="org-right">10</td>
+<td class="org-left">N/C</td>
+<td class="org-left">Not connected</td>
+<td class="org-left">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org42ca56e" class="outline-4">
+<h4 id="org42ca56e"><span class="section-number-4">3.1.17</span> <a id="org2a66b44"></a><a id="orgb5606fc"></a><a id="orge657a9d"></a><a id="org5a2276f"></a>Analog outputs</h4>
+<div class="outline-text-4" id="text-3-1-17">
+<p>
+These outputs are not used on FlyingBergman boards.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5b9adcb" class="outline-4">
+<h4 id="org5b9adcb"><span class="section-number-4">3.1.18</span> <a id="org25d19b2"></a>CAN address switch</h4>
+<div class="outline-text-4" id="text-3-1-18">
+<p>
+This switch can be used to set CAN bus address for this device.
+</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5fdf99d" class="outline-2">
+<h2 id="org5fdf99d"><span class="section-number-2">4</span> Getting started</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+Before starting out it is a good idea
+To power on the board connect a supply capable of delivering
+<a href="#org26b10e7">required supply voltage</a> and <a href="#org000f9fb">current</a> to the main power connector of the board.
+</p>
+</div>
+
+<div id="outline-container-org26ed365" class="outline-3">
+<h3 id="org26ed365"><span class="section-number-3">4.1</span> Connecting motors</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+Motors are connected to two motor connectors: <a href="#org0f1a77d">P45</a> and <a href="#org6bb5b10">P46</a>. Each connector has
+wires which are labeled A, B and C. Each pair of outputs (ie A + B) supports
+fully sinusoidal differential output suitable for driving inductive loads and
+motors.
+</p>
+
+<blockquote>
+<p>
+NOTE: the Flying Bergman project uses only DC motors so the three phase functionality of the
+inverter is never used.
+</p>
+</blockquote>
+</div>
+
+<div id="outline-container-org76ad32b" class="outline-4">
+<h4 id="org76ad32b"><span class="section-number-4">4.1.1</span> DC motors</h4>
+<div class="outline-text-4" id="text-4-1-1">
+<p>
+Connect each motor to the C (positive) and B (negative) outputs of each connector. The connections to
+the motors need to match connections of motor encoder or analog position sensor.
+The information about motor pinout is usually found in the motor datasheet or on
+some label on the motor itself. If no label is available then use trial and
+error to find the right pinout. The pinout rules are as follows:
+</p>
+
+<ul class="org-ul">
+<li>When motor "positive" wire from the DC motor is connected to "positive" pin C
+on the motor connector then the position sensor should read constantly
+increasing position.</li>
+<li>If position decrease instead of increasing then simply swap the motor wires
+connected to pin B and pin C or switch encoder/sensor signals if it desirable
+that "positive" rotation should happen in a specific physical direction.</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgfd13428" class="outline-4">
+<h4 id="orgfd13428"><span class="section-number-4">4.1.2</span> AC motors</h4>
+<div class="outline-text-4" id="text-4-1-2">
+<p>
+Support (2019-05-08) for AC motors is currently not implemented in software.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3a3e71f" class="outline-3">
+<h3 id="org3a3e71f"><span class="section-number-3">4.2</span> UART console interface</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+Manu commands related to both peripherals and device functionality are available
+for testing through the debug console. This is a simple console where different
+device drivers included in the build can register their commands.
+</p>
+
+<p>
+To connect to the console use an application like picocom.
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">picocom -b <span style="color: #dd8844; font-weight: bold;">921600</span> /dev/ttyUSB0
+</pre>
+</div>
+
+<p>
+Upon successful connection you should press enter once to see if you can get a
+shell. If the board is operational then you should see <code>#</code> at the begining of
+the line to indicate that commands can be entered.
+</p>
+
+<p>
+You can type any unrecognized command to get help:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">&gt; asadf
+cpuinfo
+        show cpu info
+reboot
+        reboot cpu
+can1
+        STM32 CAN interface
+...
+</pre>
+</div>
+
+<p>
+Many device driver commands are bound to names that are defined in the device
+tree. For example if you define a can interface like this in the device tree:
+</p>
+<div class="org-src-container">
+<pre class="src src-dts"><span style="color: #dfdfdf;">can1</span>: <span style="color: #FCCE7B;">can1</span> {
+    <span style="color: #dfdfdf;">compatible</span> = <span style="color: #99bb66;">"st,stm32_can"</span>;
+    <span style="color: #dfdfdf;">reg</span> = &lt;CAN1&gt;;
+    <span style="color: #dfdfdf;">prescaler</span> = &lt;<span style="color: #dd8844; font-weight: bold;">8</span>&gt;;
+    <span style="color: #dfdfdf;">sjw</span> = &lt;<span style="color: #dd8844; font-weight: bold;">1</span>&gt;;
+    <span style="color: #dfdfdf;">bs1</span> = &lt;<span style="color: #dd8844; font-weight: bold;">5</span>&gt;;
+    <span style="color: #dfdfdf;">bs2</span> = &lt;<span style="color: #dd8844; font-weight: bold;">2</span>&gt;;
+    <span style="color: #dfdfdf;">console</span> = &lt;&amp;<span style="color: #dfdfdf;">console</span>&gt;;
+    <span style="color: #FCCE7B;">can1_gpio</span> {
+        <span style="color: #dfdfdf;">compatible</span> = <span style="color: #99bb66;">"st,stm32_gpio"</span>;
+        <span style="color: #dfdfdf;">pinctrl</span> = &lt;
+            GPIOA GPIO_Pin_11 (GPIO_AF_CAN1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+            GPIOA GPIO_Pin_12 (GPIO_AF_CAN1 | GPIO_OType_PP | GPIO_PuPd_NOPULL | GPIO_Speed_100MHz)
+        &gt;;
+    };
+};
+</pre>
+</div>
+
+<p>
+Then the command responsible for getting information about this interface will
+be called <code>can1</code>. This is however driver specific, so depending on how a driver
+chooses to register commands, this behavior may differ.
+</p>
+
+<p>
+Available debug console commands on this board:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Command</th>
+<th scope="col" class="org-left">Short description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">cpuinfo</td>
+<td class="org-left">dumps information about the processor</td>
+</tr>
+
+<tr>
+<td class="org-left">reboot</td>
+<td class="org-left">restart the system</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orge58aec8">can1</a></td>
+<td class="org-left">can1 interface low level access</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgd9b118c">i2c1</a></td>
+<td class="org-left">i2c1 interface low level access</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgd9b118c">i2c2</a></td>
+<td class="org-left">i2c2 interface low level access</td>
+</tr>
+
+<tr>
+<td class="org-left"><a href="#orgc1fc1ab">ui</a></td>
+<td class="org-left">a simple curses user interface</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="outline-container-org13427fc" class="outline-4">
+<h4 id="org13427fc"><span class="section-number-4">4.2.1</span> <a id="org3022548"></a>cpuinfo :: cpu information</h4>
+<div class="outline-text-4" id="text-4-2-1">
+<p>
+This command shows information about the cpu. Most of these values are only
+interesting for debugging the CPU configuration.
+</p>
+
+<p>
+Example:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">    &gt; cpuinfo
+    RCC: pllm: 8, plln: 200, pllp: 2, pllsrc = 1, pllq = 4, pllr = <span style="color: #dd8844; font-weight: bold;">0</span>
+    CPU clock source: HSE
+    PLL clock source: HSE
+    Processor clock speed: <span style="color: #dd8844; font-weight: bold;">1050000</span> <span style="color: #51afef;">(</span>exact<span style="color: #51afef;">)</span>
+    SYSCLK: 100000000, HCLK: 50000000, PCLK1: 50000000, PCLK2: 50000000, USB: <span style="color: #dd8844; font-weight: bold;">50000000</span>
+    SysTick reload value: <span style="color: #dd8844; font-weight: bold;">50000</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org2dfa67c" class="outline-4">
+<h4 id="org2dfa67c"><span class="section-number-4">4.2.2</span> <a id="org6cc9a47"></a>reboot :: restart the board</h4>
+<div class="outline-text-4" id="text-4-2-2">
+<p>
+Reboots the processor.
+</p>
+
+<p>
+Options:
+</p>
+
+<dl class="org-dl">
+<dt>b</dt><dd>reboot to system bootloader. This is useful for flashing over UART
+interfaces.</dd>
+</dl>
+
+<p>
+Example:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">&gt; reboot
+.. system reboots ..
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf925415" class="outline-4">
+<h4 id="orgf925415"><span class="section-number-4">4.2.3</span> <a id="orge58aec8"></a>can :: CAN bus low level access</h4>
+<div class="outline-text-4" id="text-4-2-3">
+<p>
+This command provides low level access to the CAN bus driver.
+</p>
+
+<p>
+Options:
+</p>
+
+<dl class="org-dl">
+<dt>status</dt><dd><p>
+show status for the interface
+</p>
+<div class="org-src-container">
+<pre class="src src-ascii">  &gt; can1 status
+        TX count: 0
+        TX dropped: 0
+        RX count: 0
+        RX dropped: 0
+        TX timeout: 0
+        RX on FIFO0: 0
+        RX on FIFO1: 0
+        Total errors: 0
+        Bus off errors: 0
+        Bus passive errors: 0
+        Bus errors warnings: 0
+        FIFO Overflow errors: 0
+</pre>
+</div></dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-org44b17b1" class="outline-4">
+<h4 id="org44b17b1"><span class="section-number-4">4.2.4</span> <a id="orgd9b118c"></a>i2c :: low level i2c access</h4>
+<div class="outline-text-4" id="text-4-2-4">
+<p>
+This command allows low level access to the i2c driver. It is instantiated with
+the name of the node in the device tree for each defined i2c interface.
+</p>
+
+<p>
+Options:
+</p>
+
+<dl class="org-dl">
+<dt>status</dt><dd><p>
+show status for the i2c interface
+</p>
+<div class="org-src-container">
+<pre class="src src-ascii">&gt; i2c1 status
+    TCN Complete:   151333
+    TCN Failed:     0
+    Timeouts:       0
+    Sent:           227048 bytes
+    Received:       75626 bytes
+    BERR Errors:    0
+    ARLO Errors:    0
+    AF Errors:      0
+    OVR Errors:     0
+    PEC Errors:     0
+    TOUT Errors:    0
+    SMBALERT Errors:0
+</pre>
+</div></dd>
+</dl>
+</div>
+</div>
+
+<div id="outline-container-orgb23b6c6" class="outline-4">
+<h4 id="orgb23b6c6"><span class="section-number-4">4.2.5</span> <a id="orgc1fc1ab"></a>ui :: user interface</h4>
+<div class="outline-text-4" id="text-4-2-5">
+<p>
+This is a very simple ui that can be used to get an overview over measured
+variables.
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org7eab74d" class="outline-3">
+<h3 id="org7eab74d"><span class="section-number-3">4.3</span> CANOpen interface</h3>
+<div class="outline-text-3" id="text-4-3">
+<blockquote>
+<p>
+NOTE: this section is currently a draft so while canopen interface is
+operational, it currently does not export the variables below.
+</p>
+</blockquote>
+
+<p>
+The CANOpen interface provides access to all the measurements as well as many
+other metrics that are not available over the UART interface. The board does not
+actually expose a well defined CANOpen profile at this stage. Instead it exposes
+a basic communication profile allowing configuration of synchronized PDOs and it
+also exposes all of the variables as part of the manufacturer segment in canopen
+(starting at 0x2000). This should give sufficient flexibility for testing this
+concept without putting too much time into trying to make it into a "proper"
+CANOpen device (which it is not even close to being).
+</p>
+
+<p>
+Below is a summary of available SDO variables related to this sensor
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">ID in code</th>
+<th scope="col" class="org-right">SDO</th>
+<th scope="col" class="org-right">Subindex</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>DEVICE</sub><sub>STATUS</sub></td>
+<td class="org-right">0x2000</td>
+<td class="org-right">00</td>
+<td class="org-left">Device status</td>
+</tr>
+
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>PITCH</sub><sub>DEMAND</sub></td>
+<td class="org-right">0x2001</td>
+<td class="org-right">00</td>
+<td class="org-left">Pitch demand sent by the controller</td>
+</tr>
+
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>YAW</sub><sub>DEMAND</sub></td>
+<td class="org-right">0x2002</td>
+<td class="org-right">00</td>
+<td class="org-left">Yaw demand sent by the controller</td>
+</tr>
+
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>PITCH</sub><sub>CURRENT</sub></td>
+<td class="org-right">0x2003</td>
+<td class="org-right">00</td>
+<td class="org-left">Measured current through pitch motor</td>
+</tr>
+
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>YAW</sub><sub>CURRENT</sub></td>
+<td class="org-right">0x2004</td>
+<td class="org-right">00</td>
+<td class="org-left">Measured current through yaw motor</td>
+</tr>
+
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>PITCH</sub><sub>POSITION</sub></td>
+<td class="org-right">0x2005</td>
+<td class="org-right">00</td>
+<td class="org-left">Measured pitch motor position</td>
+</tr>
+
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>YAW</sub><sub>POSITION</sub></td>
+<td class="org-right">0x2006</td>
+<td class="org-right">00</td>
+<td class="org-left">Measured yaw motor position</td>
+</tr>
+
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>MICRS</sub></td>
+<td class="org-right">0x2007</td>
+<td class="org-right">00</td>
+<td class="org-left">Current time in microseconds (wraps!)</td>
+</tr>
+
+<tr>
+<td class="org-left">CANOPEN<sub>FB</sub><sub>VMOT</sub></td>
+<td class="org-right">0x2008</td>
+<td class="org-right">00</td>
+<td class="org-left">Measured DC line voltage</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Whoever is the CANOpen master unit on the bus (by default this is the control
+panel), then configures these variables to be sent from one unit to another.
+</p>
+
+<p>
+Here is an example of setting up automatic PDO to read out the position from the
+sensor using the api provided by this firmware:
+</p>
+
+<p>
+Below code configures the sender node to send a PDO object at each sync interval
+and then configures the receiver to map the incoming pdo (PDOs are mapped by the
+cob<sub>id</sub>) to the same internal variables on the receiving side.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="color: #51afef;">struct</span> <span style="color: #FCCE7B;">canopen_pdo_config</span> <span style="color: #dfdfdf;">conf</span> = {
+    .cob_id = <span style="color: #dd8844; font-weight: bold;">0x200</span>,
+    .index = <span style="color: #dd8844; font-weight: bold;">0</span>,
+    .type = CANOPEN_PDO_TYPE_CYCLIC(<span style="color: #dd8844; font-weight: bold;">1</span>),
+    .inhibit_time = <span style="color: #dd8844; font-weight: bold;">0</span>,
+    .event_time = <span style="color: #dd8844; font-weight: bold;">0</span>,
+    .map = {
+        CANOPEN_PDO_MAP_ENTRY(<span style="color: #dd8844; font-weight: bold;">0x200100</span>, CANOPEN_PDO_SIZE_32),
+        CANOPEN_PDO_MAP_ENTRY(<span style="color: #dd8844; font-weight: bold;">0x200200</span>, CANOPEN_PDO_SIZE_32),
+        <span style="color: #dd8844; font-weight: bold;">0</span>
+    }
+};
+<span style="color: #666666;">// </span><span style="color: #666666;">configure transmission of this pdo on the sender</span>
+<span style="color: #51afef;">if</span>(canopen_pdo_tx(self-&gt;canopen_mem, FB_CANOPEN_SENDER_ADDRESS, &amp;conf) &lt; <span style="color: #dd8844; font-weight: bold;">0</span>) {
+    <span style="color: #51afef;">return</span> -EIO;
+}
+<span style="color: #666666;">// </span><span style="color: #666666;">configure reception of this pdo on the receiver</span>
+<span style="color: #51afef;">if</span>(canopen_pdo_rx(self-&gt;canopen_mem, FB_CANOPEN_RECEIVER_ADDRESS, &amp;conf) &lt; <span style="color: #dd8844; font-weight: bold;">0</span>) {
+    <span style="color: #51afef;">return</span> -EIO;
+}
+</pre>
+</div>
+
+<p>
+The use of CANOpen API is a bit more involved and thus outside the scope of this
+manul. More details about the api can be found in the canopen api header file: <a href="../theboss/src/libfirmware/include/canopen.h">../theboss/src/libfirmware/include/canopen.h</a>
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgdb70f95" class="outline-2">
+<h2 id="orgdb70f95"><span class="section-number-2">5</span> Developing software</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+All build instructions are targeted at debian/ubuntu. If
+you do not have a linux machine then it is a good idea that you get one or run
+linux inside a virtual machine for best results. I do assume that you already
+have development experience and can figure out smaller details by yourself
+because you may run into minor issues along the way which I may not have
+considered in this section of the manual.
+</p>
+</div>
+
+<div id="outline-container-orga998e84" class="outline-3">
+<h3 id="orga998e84"><span class="section-number-3">5.1</span> Required tools for development and flashing</h3>
+<div class="outline-text-3" id="text-5-1">
+<ul class="org-ul">
+<li><a id="orgf877a66">USB to UART</a> converter such as this one: <a href="https://uk.farnell.com/ftdi/ttl-234x-3v3-we/cable-usb-to-uart-free-end-1-8m/dp/2753011">USB to Serial</a></li>
+<li><p>
+<a id="orgbc42161">ST-Link-V2</a> serial debugger: <a href="https://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-/181928076825?ef_id=CjwKCAjwqqrmBRAAEiwAdpDXtDG02Yw6KAhiyAgh6Vu3JilZ3uEHRlPgBj89dcWrWFv8UVBzLPdQpRoCpeYQAvD_BwE:G:s">eBay ST-Link-V2</a>
+</p>
+
+
+<div class="figure">
+<p><img src="./USB-to-UART-FTDI.jpg" alt="USB-to-UART-FTDI.jpg" />
+</p>
+<p><span class="figure-number">Figure 5: </span><a href="#orgf877a66">USB to UART</a> converter</p>
+</div>
+
+<div class="figure">
+<p><img src="./ST-Link-V2.jpg" alt="ST-Link-V2.jpg" />
+</p>
+<p><span class="figure-number">Figure 6: </span><a href="#orgbc42161">ST-Link-V2</a></p>
+</div></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org19c23ff" class="outline-3">
+<h3 id="org19c23ff"><span class="section-number-3">5.2</span> Compiling and flashing firmware</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+First you will need to get st-flash utility, cross compilation toolchain and the
+device-tree-compiler.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="color: #FCCE7B;">sudo</span> apt-get install gcc-arm-none-eabi device-tree-compiler
+<span style="color: #FCCE7B;">sudo</span> sh -c <span style="color: #99bb66;">'(</span>
+<span style="color: #99bb66;">        </span><span style="color: #99bb66;">cd</span><span style="color: #99bb66;"> /tmp &amp;&amp; </span><span style="color: #99bb66;">cd</span><span style="color: #99bb66;"> $(</span><span style="color: #C57BDB; font-weight: bold;">mktemp</span><span style="color: #99bb66;"> -d)</span>
+<span style="color: #99bb66;">        </span><span style="color: #99bb66;">git</span><span style="color: #99bb66;"> clone https://github.com/texane/stlink.git &amp;&amp;</span>
+<span style="color: #99bb66;">        </span><span style="color: #99bb66;">cd</span><span style="color: #99bb66;"> stlink &amp;&amp; </span><span style="color: #99bb66;">mkdir</span><span style="color: #99bb66;"> build &amp;&amp; </span><span style="color: #99bb66;">cd</span><span style="color: #99bb66;"> build &amp;&amp;</span>
+<span style="color: #99bb66;">        cmake -DCMAKE_BUILD_TYPE=Release .. &amp;&amp;</span>
+<span style="color: #99bb66;">        </span><span style="color: #99bb66;">make</span><span style="color: #99bb66;"> &amp;&amp;</span>
+<span style="color: #99bb66;">        </span><span style="color: #99bb66;">make</span><span style="color: #99bb66;"> install</span>
+<span style="color: #99bb66;">)'</span>;
+</pre>
+</div>
+
+<p>
+Get latest firmware source code from Flying Bergman.
+</p>
+
+<p>
+Extract the source code somewhere on your system. Then go to the source folder
+and build the firmware:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="color: #FCCE7B;">cd</span> flyingbergman &amp;&amp; <span style="color: #FCCE7B;">make</span> reconfigure &amp;&amp; <span style="color: #FCCE7B;">make</span>
+</pre>
+</div>
+
+<p>
+You should now be able to flash the firmware to the board. Plug in the
+<a href="#orgbc42161">ST-Link-V2</a> programmer according to the <a href="#orgadb2f98">debug connector pinout</a>
+and flash the firmware:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="color: #FCCE7B;">make</span> flash
+</pre>
+</div>
+
+<p>
+You should now see the status led blinking after the board has been reset. If it
+does not blink then something has gone wrong and you should disconnect the power
+from the board.
+</p>
+
+<p>
+If the status led is not blinking then something probably went wrong during
+initialization. Connect to the board using <a href="#orgf877a66">USB to UART</a> converter and check the
+boot sequence for errors.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb9956b4" class="outline-2">
+<h2 id="orgb9956b4"><span class="section-number-2">6</span> Electrical characteristics</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-orga1a671f" class="outline-3">
+<h3 id="orga1a671f"><span class="section-number-3">6.1</span> Current consumption</h3>
+<div class="outline-text-3" id="text-6-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Metric</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><a id="org1f2f614"></a>Logic with all peripherals operational</td>
+<td class="org-left">120mA</td>
+<td class="org-left">300mA</td>
+<td class="org-left">-</td>
+</tr>
+
+<tr>
+<td class="org-left"><a id="org000f9fb"></a>Everything with motors att full power</td>
+<td class="org-left">-</td>
+<td class="org-left">40A</td>
+<td class="org-left">TODO</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-org5ebf265" class="outline-3">
+<h3 id="org5ebf265"><span class="section-number-3">6.2</span> Voltage levels</h3>
+<div class="outline-text-3" id="text-6-2">
+<p>
+<a id="org022dbe7"></a>
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Metric</th>
+<th scope="col" class="org-left">Min</th>
+<th scope="col" class="org-left">Typ</th>
+<th scope="col" class="org-left">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><a id="org1dcd85a"></a><a id="org26b10e7"></a>Main power supply voltage</td>
+<td class="org-left">14V</td>
+<td class="org-left">24V</td>
+<td class="org-left">63V</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+If 12V regulator output is not required then the board can function with lower
+voltages. However motor speeds will be much smaller. The CPU can also be
+powered from the 3.3V pin on the debug connector - however that will not power
+any other peripherals on the board.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb9f891d" class="outline-2">
+<h2 id="orgb9f891d"><span class="section-number-2">7</span> Board revisions</h2>
+<div class="outline-text-2" id="text-7">
+</div>
+<div id="outline-container-org545c384" class="outline-3">
+<h3 id="org545c384"><span class="section-number-3">7.1</span> <a id="org27fc34f"></a>Revision A</h3>
+<div class="outline-text-3" id="text-7-1">
+</div>
+<div id="outline-container-orgb786d86" class="outline-4">
+<h4 id="orgb786d86"><span class="section-number-4">7.1.1</span> Problems with revision A</h4>
+<div class="outline-text-4" id="text-7-1-1">
+<ul class="org-ul">
+<li>Motor connector plug goes in upside down</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org949d623" class="outline-2">
+<h2 id="org949d623"><span class="section-number-2">8</span> Glossary</h2>
+<div class="outline-text-2" id="text-8">
+<dl class="org-dl">
+<dt><a id="orgb0978a1"></a>VMOT</dt><dd>motor power supply voltage internal on the board which is used
+to power the motors. This voltage is obtained from main power supply voltage
+by first passing through a high power diode (D29 on the schematic).</dd>
+<dt><a id="org5ac5e61"></a>GND</dt><dd>global ground connection.</dd>
+</dl>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+It is important to connect both grounds because if you rely
+on USB hub to ground both together then you will notice that either serial
+console or the <a href="#orgbc42161">ST-Link-V2</a> programmer will not be able to communicate with the
+chip properly. It will work sometimes and not work other times.
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.2" class="footnum" href="#fnr.2">2</a></sup> <div class="footpara"><p class="footpara">
+Some serial dongles call their signals TXD (presumably
+'TX-device') and RXD. In such cases the idea is that you connect TX line from
+the dongle to the TX line on the connector. This is wrong way to call the
+signals but some dongles follow this convention.
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<p class="author">Author: martin</p>
+<p class="date">Created: 2019-05-08 Wed 16:25</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
