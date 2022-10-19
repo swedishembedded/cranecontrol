@@ -82,29 +82,34 @@ struct lp55231 {
 	struct mutex lock;
 };
 
-static int _lp55231_write_reg(struct lp55231 *self, uint8_t reg, uint8_t value){
-	uint8_t data[] = {reg, value};
+static int _lp55231_write_reg(struct lp55231 *self, uint8_t reg, uint8_t value)
+{
+	uint8_t data[] = { reg, value };
 	return i2c_transfer(self->i2c, self->addr, data, 2, NULL, 0, LP55231_TIMEOUT);
 }
 
-static int _lp55231_read_reg(struct lp55231 *self, uint8_t reg, uint8_t *val){
+static int _lp55231_read_reg(struct lp55231 *self, uint8_t reg, uint8_t *val)
+{
 	return i2c_transfer(self->i2c, self->addr, &reg, 1, val, 1, LP55231_TIMEOUT);
 }
 
-static int _lp55231_read_led_voltage(struct lp55231 *self, unsigned led, float *voltage){
-	if(led > 9) return -EINVAL;
+static int _lp55231_read_led_voltage(struct lp55231 *self, unsigned led, float *voltage)
+{
+	if (led > 9)
+		return -EINVAL;
 
 	// start a conversion
 	_lp55231_write_reg(self, LP55231_REG_LED_TEST,
-			(uint8_t)(LP55231_REG_LED_TEST_START_CONVERSION_BIT | (led & 0x1f)));
+			   (uint8_t)(LP55231_REG_LED_TEST_START_CONVERSION_BIT | (led & 0x1f)));
 
 	// the measurement takes 2.7ms according to datasheet
 	thread_sleep_ms(4);
 
 	uint8_t status = 0;
-	if(_lp55231_read_reg(self, LP55231_REG_STATUS, &status) == 0 && (status & LP55231_REG_STATUS_LED_TEST_DONE_BIT)){
+	if (_lp55231_read_reg(self, LP55231_REG_STATUS, &status) == 0 &&
+	    (status & LP55231_REG_STATUS_LED_TEST_DONE_BIT)) {
 		uint8_t res = 0;
-		if(_lp55231_read_reg(self, LP55231_REG_LED_TEST_ADC, &res) == 0){
+		if (_lp55231_read_reg(self, LP55231_REG_LED_TEST_ADC, &res) == 0) {
 			*voltage = (float)res * 0.03f - 1.478f;
 			return 0;
 		}
@@ -112,21 +117,24 @@ static int _lp55231_read_led_voltage(struct lp55231 *self, unsigned led, float *
 	return -1;
 }
 
-static int _lp55231_analog_write(analog_device_t dev, unsigned int chan, float value){
+static int _lp55231_analog_write(analog_device_t dev, unsigned int chan, float value)
+{
 	struct lp55231 *self = container_of(dev, struct lp55231, analog_dev.ops);
 
 	thread_mutex_lock(&self->lock);
 
-	chan = (chan > 9)?9:chan;
+	chan = (chan > 9) ? 9 : chan;
 	value = constrain_float(value, 0.f, 1.f);
-	int ret = _lp55231_write_reg(self, (uint8_t)(LP55231_REG_D1_PWM + chan), (uint8_t)(127.f * value));
+	int ret = _lp55231_write_reg(self, (uint8_t)(LP55231_REG_D1_PWM + chan),
+				     (uint8_t)(127.f * value));
 
 	thread_mutex_unlock(&self->lock);
 
 	return ret;
 }
 
-static int _lp55231_analog_read(analog_device_t dev, unsigned int chan, float *data){
+static int _lp55231_analog_read(analog_device_t dev, unsigned int chan, float *data)
+{
 	struct lp55231 *self = container_of(dev, struct lp55231, analog_dev.ops);
 
 	thread_mutex_lock(&self->lock);
@@ -136,22 +144,27 @@ static int _lp55231_analog_read(analog_device_t dev, unsigned int chan, float *d
 	return r;
 }
 
-static struct analog_device_ops _lp55231_analog_ops = {
-	.write = _lp55231_analog_write,
-	.read = _lp55231_analog_read
-};
+static struct analog_device_ops _lp55231_analog_ops = { .write = _lp55231_analog_write,
+							.read = _lp55231_analog_read };
 
-static int _lp55231_probe(void *fdt, int fdt_node){
+static int _lp55231_probe(void *fdt, int fdt_node)
+{
 	i2c_device_t i2c = i2c_find_by_ref(fdt, fdt_node, "i2c");
 	uint8_t addr = (uint8_t)fdt_get_int_or_default(fdt, fdt_node, "reg", 0x32);
 	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
 	uint32_t en_pin = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "en_pin", 0);
 
-	if(!i2c) { printk(PRINT_ERROR "lp55231: no i2c\n"); return -EINVAL; }
-	if(!gpio) { printk(PRINT_ERROR "lp55231: no gpio\n"); return -EINVAL; }
+	if (!i2c) {
+		printk(PRINT_ERROR "lp55231: no i2c\n");
+		return -EINVAL;
+	}
+	if (!gpio) {
+		printk(PRINT_ERROR "lp55231: no gpio\n");
+		return -EINVAL;
+	}
 
 	struct lp55231 *self = kzmalloc(sizeof(struct lp55231));
-	if(!self){
+	if (!self) {
 		printk(PRINT_ERROR "lp55231: nomem\n");
 		return -1;
 	}
@@ -175,12 +188,13 @@ static int _lp55231_probe(void *fdt, int fdt_node){
 	thread_sleep_ms(1);
 
 	// select clock and charge pump mode
-	_lp55231_write_reg(self, LP55231_REG_MISC, LP55231_REG_MISC_CLOCK_INTERNAL | LP55231_REG_MISC_CP_FORCED_BYPASS);
+	_lp55231_write_reg(self, LP55231_REG_MISC,
+			   LP55231_REG_MISC_CLOCK_INTERNAL | LP55231_REG_MISC_CP_FORCED_BYPASS);
 
 	printk("lp55231: checking LED voltages...\n");
-	for(unsigned c = 0; c < LP55231_LED_COUNT; c++){
+	for (unsigned c = 0; c < LP55231_LED_COUNT; c++) {
 		float volts = 0;
-		if(_lp55231_read_led_voltage(self, c, &volts)  == 0) {
+		if (_lp55231_read_led_voltage(self, c, &volts) == 0) {
 			printk("lp55231: LED %d: voltage %dmV\n", c, (int32_t)(volts * 1000));
 		} else {
 			printk(PRINT_ERROR "lp55231: could not read LED %d voltage\n", c);
@@ -188,10 +202,9 @@ static int _lp55231_probe(void *fdt, int fdt_node){
 	}
 
 	// initialize all leds to half pwm
-	for(int c = 0; c < 8; c++){
+	for (int c = 0; c < 8; c++) {
 		_lp55231_write_reg(self, (uint8_t)(LP55231_REG_D1_PWM + c), 0x80);
 	}
-
 
 	analog_device_init(&self->analog_dev, fdt, fdt_node, &_lp55231_analog_ops);
 	analog_device_register(&self->analog_dev);
@@ -201,7 +214,8 @@ static int _lp55231_probe(void *fdt, int fdt_node){
 	return 0;
 }
 
-static int _lp55231_remove(void *fdt, int fdt_mode){
+static int _lp55231_remove(void *fdt, int fdt_mode)
+{
 	return 0;
 }
 

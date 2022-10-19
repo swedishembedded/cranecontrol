@@ -31,5 +31,3 @@
 #include <libfirmware/i2c.h>
 
 #include <libfdt/libfdt.h>
-
-

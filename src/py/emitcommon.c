@@ -30,32 +30,35 @@
 
 #if MICROPY_ENABLE_COMPILER
 
-void mp_emit_common_get_id_for_modification(scope_t *scope, qstr qst) {
-    // name adding/lookup
-    id_info_t *id = scope_find_or_add_id(scope, qst, ID_INFO_KIND_GLOBAL_IMPLICIT);
-    if (SCOPE_IS_FUNC_LIKE(scope->kind) && id->kind == ID_INFO_KIND_GLOBAL_IMPLICIT) {
-        // rebind as a local variable
-        id->kind = ID_INFO_KIND_LOCAL;
-    }
+void mp_emit_common_get_id_for_modification(scope_t *scope, qstr qst)
+{
+	// name adding/lookup
+	id_info_t *id = scope_find_or_add_id(scope, qst, ID_INFO_KIND_GLOBAL_IMPLICIT);
+	if (SCOPE_IS_FUNC_LIKE(scope->kind) && id->kind == ID_INFO_KIND_GLOBAL_IMPLICIT) {
+		// rebind as a local variable
+		id->kind = ID_INFO_KIND_LOCAL;
+	}
 }
 
-void mp_emit_common_id_op(emit_t *emit, const mp_emit_method_table_id_ops_t *emit_method_table, scope_t *scope, qstr qst) {
-    // assumes pass is greater than 1, ie that all identifiers are defined in the scope
+void mp_emit_common_id_op(emit_t *emit, const mp_emit_method_table_id_ops_t *emit_method_table,
+			  scope_t *scope, qstr qst)
+{
+	// assumes pass is greater than 1, ie that all identifiers are defined in the scope
 
-    id_info_t *id = scope_find(scope, qst);
-    assert(id != NULL);
+	id_info_t *id = scope_find(scope, qst);
+	assert(id != NULL);
 
-    // call the emit backend with the correct code
-    if (id->kind == ID_INFO_KIND_GLOBAL_IMPLICIT) {
-        emit_method_table->global(emit, qst, MP_EMIT_IDOP_GLOBAL_NAME);
-    } else if (id->kind == ID_INFO_KIND_GLOBAL_EXPLICIT) {
-        emit_method_table->global(emit, qst, MP_EMIT_IDOP_GLOBAL_GLOBAL);
-    } else if (id->kind == ID_INFO_KIND_LOCAL) {
-        emit_method_table->local(emit, qst, id->local_num, MP_EMIT_IDOP_LOCAL_FAST);
-    } else {
-        assert(id->kind == ID_INFO_KIND_CELL || id->kind == ID_INFO_KIND_FREE);
-        emit_method_table->local(emit, qst, id->local_num, MP_EMIT_IDOP_LOCAL_DEREF);
-    }
+	// call the emit backend with the correct code
+	if (id->kind == ID_INFO_KIND_GLOBAL_IMPLICIT) {
+		emit_method_table->global(emit, qst, MP_EMIT_IDOP_GLOBAL_NAME);
+	} else if (id->kind == ID_INFO_KIND_GLOBAL_EXPLICIT) {
+		emit_method_table->global(emit, qst, MP_EMIT_IDOP_GLOBAL_GLOBAL);
+	} else if (id->kind == ID_INFO_KIND_LOCAL) {
+		emit_method_table->local(emit, qst, id->local_num, MP_EMIT_IDOP_LOCAL_FAST);
+	} else {
+		assert(id->kind == ID_INFO_KIND_CELL || id->kind == ID_INFO_KIND_FREE);
+		emit_method_table->local(emit, qst, id->local_num, MP_EMIT_IDOP_LOCAL_DEREF);
+	}
 }
 
 #endif // MICROPY_ENABLE_COMPILER

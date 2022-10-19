@@ -17,7 +17,7 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
-  */ 
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_msc_bot.h"
@@ -28,89 +28,79 @@
   * @{
   */
 
-
 /** @defgroup MSC_BOT 
   * @brief BOT protocol module
   * @{
-  */ 
+  */
 
 /** @defgroup MSC_BOT_Private_TypesDefinitions
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup MSC_BOT_Private_Defines
   * @{
-  */ 
+  */
 
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup MSC_BOT_Private_Macros
   * @{
-  */ 
+  */
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup MSC_BOT_Private_Variables
   * @{
-  */ 
-uint16_t             MSC_BOT_DataLen;
-uint8_t              MSC_BOT_State;
-uint8_t              MSC_BOT_Status;
+  */
+uint16_t MSC_BOT_DataLen;
+uint8_t MSC_BOT_State;
+uint8_t MSC_BOT_Status;
 
 #ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED
-  #if defined ( __ICCARM__ ) /*!< IAR Compiler */
-    #pragma data_alignment=4   
-  #endif
+#if defined(__ICCARM__) /*!< IAR Compiler */
+#pragma data_alignment = 4
+#endif
 #endif /* USB_OTG_HS_INTERNAL_DMA_ENABLED */
-__ALIGN_BEGIN uint8_t              MSC_BOT_Data[MSC_MEDIA_PACKET] __ALIGN_END ;
+__ALIGN_BEGIN uint8_t MSC_BOT_Data[MSC_MEDIA_PACKET] __ALIGN_END;
 
 #ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED
-  #if defined ( __ICCARM__ ) /*!< IAR Compiler */
-    #pragma data_alignment=4   
-  #endif
+#if defined(__ICCARM__) /*!< IAR Compiler */
+#pragma data_alignment = 4
+#endif
 #endif /* USB_OTG_HS_INTERNAL_DMA_ENABLED */
-__ALIGN_BEGIN MSC_BOT_CBW_TypeDef  MSC_BOT_cbw __ALIGN_END ;
+__ALIGN_BEGIN MSC_BOT_CBW_TypeDef MSC_BOT_cbw __ALIGN_END;
 
 #ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED
-  #if defined ( __ICCARM__ ) /*!< IAR Compiler */
-    #pragma data_alignment=4   
-  #endif
+#if defined(__ICCARM__) /*!< IAR Compiler */
+#pragma data_alignment = 4
+#endif
 #endif /* USB_OTG_HS_INTERNAL_DMA_ENABLED */
-__ALIGN_BEGIN MSC_BOT_CSW_TypeDef  MSC_BOT_csw __ALIGN_END ;
+__ALIGN_BEGIN MSC_BOT_CSW_TypeDef MSC_BOT_csw __ALIGN_END;
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup MSC_BOT_Private_FunctionPrototypes
   * @{
-  */ 
-static void MSC_BOT_CBW_Decode (USB_OTG_CORE_HANDLE  *pdev);
+  */
+static void MSC_BOT_CBW_Decode(USB_OTG_CORE_HANDLE *pdev);
 
-static void MSC_BOT_SendData (USB_OTG_CORE_HANDLE  *pdev, 
-                              uint8_t* pbuf, 
-                              uint16_t len);
+static void MSC_BOT_SendData(USB_OTG_CORE_HANDLE *pdev, uint8_t *pbuf, uint16_t len);
 
-static void MSC_BOT_Abort(USB_OTG_CORE_HANDLE  *pdev);
+static void MSC_BOT_Abort(USB_OTG_CORE_HANDLE *pdev);
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup MSC_BOT_Private_Functions
   * @{
-  */ 
-
-
+  */
 
 /**
 * @brief  MSC_BOT_Init
@@ -118,19 +108,16 @@ static void MSC_BOT_Abort(USB_OTG_CORE_HANDLE  *pdev);
 * @param  pdev: device instance
 * @retval None
 */
-void MSC_BOT_Init (USB_OTG_CORE_HANDLE  *pdev)
+void MSC_BOT_Init(USB_OTG_CORE_HANDLE *pdev)
 {
-  MSC_BOT_State = BOT_IDLE;
-  MSC_BOT_Status = BOT_STATE_NORMAL;
-  USBD_STORAGE_fops->Init(0);
-  
-  DCD_EP_Flush(pdev, MSC_OUT_EP);
-  DCD_EP_Flush(pdev, MSC_IN_EP);
-  /* Prapare EP to Receive First BOT Cmd */
-  DCD_EP_PrepareRx (pdev,
-                    MSC_OUT_EP,
-                    (uint8_t *)&MSC_BOT_cbw,
-                    BOT_CBW_LENGTH);    
+	MSC_BOT_State = BOT_IDLE;
+	MSC_BOT_Status = BOT_STATE_NORMAL;
+	USBD_STORAGE_fops->Init(0);
+
+	DCD_EP_Flush(pdev, MSC_OUT_EP);
+	DCD_EP_Flush(pdev, MSC_IN_EP);
+	/* Prapare EP to Receive First BOT Cmd */
+	DCD_EP_PrepareRx(pdev, MSC_OUT_EP, (uint8_t *)&MSC_BOT_cbw, BOT_CBW_LENGTH);
 }
 
 /**
@@ -139,15 +126,12 @@ void MSC_BOT_Init (USB_OTG_CORE_HANDLE  *pdev)
 * @param  pdev: device instance
 * @retval  None
 */
-void MSC_BOT_Reset (USB_OTG_CORE_HANDLE  *pdev)
+void MSC_BOT_Reset(USB_OTG_CORE_HANDLE *pdev)
 {
-  MSC_BOT_State = BOT_IDLE;
-  MSC_BOT_Status = BOT_STATE_RECOVERY;
-  /* Prapare EP to Receive First BOT Cmd */
-  DCD_EP_PrepareRx (pdev,
-                    MSC_OUT_EP,
-                    (uint8_t *)&MSC_BOT_cbw,
-                    BOT_CBW_LENGTH);    
+	MSC_BOT_State = BOT_IDLE;
+	MSC_BOT_Status = BOT_STATE_RECOVERY;
+	/* Prapare EP to Receive First BOT Cmd */
+	DCD_EP_PrepareRx(pdev, MSC_OUT_EP, (uint8_t *)&MSC_BOT_cbw, BOT_CBW_LENGTH);
 }
 
 /**
@@ -156,9 +140,9 @@ void MSC_BOT_Reset (USB_OTG_CORE_HANDLE  *pdev)
 * @param  pdev: device instance
 * @retval None
 */
-void MSC_BOT_DeInit (USB_OTG_CORE_HANDLE  *pdev)
+void MSC_BOT_DeInit(USB_OTG_CORE_HANDLE *pdev)
 {
-  MSC_BOT_State = BOT_IDLE;
+	MSC_BOT_State = BOT_IDLE;
 }
 
 /**
@@ -168,30 +152,24 @@ void MSC_BOT_DeInit (USB_OTG_CORE_HANDLE  *pdev)
 * @param  epnum: endpoint index
 * @retval None
 */
-void MSC_BOT_DataIn (USB_OTG_CORE_HANDLE  *pdev, 
-                     uint8_t epnum)
+void MSC_BOT_DataIn(USB_OTG_CORE_HANDLE *pdev, uint8_t epnum)
 {
-  
-  switch (MSC_BOT_State)
-  {
-  case BOT_DATA_IN:
-    if(SCSI_ProcessCmd(pdev,
-                        MSC_BOT_cbw.bLUN,
-                        &MSC_BOT_cbw.CB[0]) < 0)
-    {
-      MSC_BOT_SendCSW (pdev, CSW_CMD_FAILED);
-    }
-    break;
-    
-  case BOT_SEND_DATA:
-  case BOT_LAST_DATA_IN:
-    MSC_BOT_SendCSW (pdev, CSW_CMD_PASSED);
-    
-    break;
-    
-  default:
-    break;
-  }
+	switch (MSC_BOT_State) {
+	case BOT_DATA_IN:
+		if (SCSI_ProcessCmd(pdev, MSC_BOT_cbw.bLUN, &MSC_BOT_cbw.CB[0]) < 0) {
+			MSC_BOT_SendCSW(pdev, CSW_CMD_FAILED);
+		}
+		break;
+
+	case BOT_SEND_DATA:
+	case BOT_LAST_DATA_IN:
+		MSC_BOT_SendCSW(pdev, CSW_CMD_PASSED);
+
+		break;
+
+	default:
+		break;
+	}
 }
 /**
 * @brief  MSC_BOT_DataOut
@@ -200,30 +178,24 @@ void MSC_BOT_DataIn (USB_OTG_CORE_HANDLE  *pdev,
 * @param  epnum: endpoint index
 * @retval None
 */
-void MSC_BOT_DataOut (USB_OTG_CORE_HANDLE  *pdev, 
-                      uint8_t epnum)
+void MSC_BOT_DataOut(USB_OTG_CORE_HANDLE *pdev, uint8_t epnum)
 {
-  switch (MSC_BOT_State)
-  {
-  case BOT_IDLE:
-    MSC_BOT_CBW_Decode(pdev);
-    break;
-    
-  case BOT_DATA_OUT:
-    
-    if(SCSI_ProcessCmd(pdev,
-                        MSC_BOT_cbw.bLUN,
-                        &MSC_BOT_cbw.CB[0]) < 0)
-    {
-      MSC_BOT_SendCSW (pdev, CSW_CMD_FAILED);
-    }
+	switch (MSC_BOT_State) {
+	case BOT_IDLE:
+		MSC_BOT_CBW_Decode(pdev);
+		break;
 
-    break;
-    
-  default:
-    break;
-  }
-  
+	case BOT_DATA_OUT:
+
+		if (SCSI_ProcessCmd(pdev, MSC_BOT_cbw.bLUN, &MSC_BOT_cbw.CB[0]) < 0) {
+			MSC_BOT_SendCSW(pdev, CSW_CMD_FAILED);
+		}
+
+		break;
+
+	default:
+		break;
+	}
 }
 
 /**
@@ -232,52 +204,32 @@ void MSC_BOT_DataOut (USB_OTG_CORE_HANDLE  *pdev,
 * @param  pdev: device instance
 * @retval None
 */
-static void  MSC_BOT_CBW_Decode (USB_OTG_CORE_HANDLE  *pdev)
+static void MSC_BOT_CBW_Decode(USB_OTG_CORE_HANDLE *pdev)
 {
+	MSC_BOT_csw.dTag = MSC_BOT_cbw.dTag;
+	MSC_BOT_csw.dDataResidue = MSC_BOT_cbw.dDataLength;
 
-  MSC_BOT_csw.dTag = MSC_BOT_cbw.dTag;
-  MSC_BOT_csw.dDataResidue = MSC_BOT_cbw.dDataLength;
-  
-  if ((USBD_GetRxCount (pdev ,MSC_OUT_EP) != BOT_CBW_LENGTH) ||
-      (MSC_BOT_cbw.dSignature != BOT_CBW_SIGNATURE)||
-        (MSC_BOT_cbw.bLUN > 1) || 
-          (MSC_BOT_cbw.bCBLength < 1) || 
-            (MSC_BOT_cbw.bCBLength > 16))
-  {
-    
-    SCSI_SenseCode(MSC_BOT_cbw.bLUN, 
-                   ILLEGAL_REQUEST, 
-                   INVALID_CDB);
-     MSC_BOT_Status = BOT_STATE_ERROR;   
-    MSC_BOT_Abort(pdev);
- 
-  }
-  else
-  {
-    if(SCSI_ProcessCmd(pdev,
-                              MSC_BOT_cbw.bLUN,
-                              &MSC_BOT_cbw.CB[0]) < 0)
-    {
-      MSC_BOT_Abort(pdev);
-    }
-    /*Burst xfer handled internally*/
-    else if ((MSC_BOT_State != BOT_DATA_IN) && 
-             (MSC_BOT_State != BOT_DATA_OUT) &&
-             (MSC_BOT_State != BOT_LAST_DATA_IN)) 
-    {
-      if (MSC_BOT_DataLen > 0)
-      {
-        MSC_BOT_SendData(pdev,
-                         MSC_BOT_Data, 
-                         MSC_BOT_DataLen);
-      }
-      else if (MSC_BOT_DataLen == 0) 
-      {
-        MSC_BOT_SendCSW (pdev,
-                         CSW_CMD_PASSED);
-      }
-    }
-  }
+	if ((USBD_GetRxCount(pdev, MSC_OUT_EP) != BOT_CBW_LENGTH) ||
+	    (MSC_BOT_cbw.dSignature != BOT_CBW_SIGNATURE) || (MSC_BOT_cbw.bLUN > 1) ||
+	    (MSC_BOT_cbw.bCBLength < 1) || (MSC_BOT_cbw.bCBLength > 16)) {
+		SCSI_SenseCode(MSC_BOT_cbw.bLUN, ILLEGAL_REQUEST, INVALID_CDB);
+		MSC_BOT_Status = BOT_STATE_ERROR;
+		MSC_BOT_Abort(pdev);
+
+	} else {
+		if (SCSI_ProcessCmd(pdev, MSC_BOT_cbw.bLUN, &MSC_BOT_cbw.CB[0]) < 0) {
+			MSC_BOT_Abort(pdev);
+		}
+		/*Burst xfer handled internally*/
+		else if ((MSC_BOT_State != BOT_DATA_IN) && (MSC_BOT_State != BOT_DATA_OUT) &&
+			 (MSC_BOT_State != BOT_LAST_DATA_IN)) {
+			if (MSC_BOT_DataLen > 0) {
+				MSC_BOT_SendData(pdev, MSC_BOT_Data, MSC_BOT_DataLen);
+			} else if (MSC_BOT_DataLen == 0) {
+				MSC_BOT_SendCSW(pdev, CSW_CMD_PASSED);
+			}
+		}
+	}
 }
 
 /**
@@ -288,17 +240,14 @@ static void  MSC_BOT_CBW_Decode (USB_OTG_CORE_HANDLE  *pdev)
 * @param  len: Data Length
 * @retval None
 */
-static void  MSC_BOT_SendData(USB_OTG_CORE_HANDLE  *pdev,
-                              uint8_t* buf, 
-                              uint16_t len)
+static void MSC_BOT_SendData(USB_OTG_CORE_HANDLE *pdev, uint8_t *buf, uint16_t len)
 {
-  
-  len = MIN (MSC_BOT_cbw.dDataLength, len);
-  MSC_BOT_csw.dDataResidue -= len;
-  MSC_BOT_csw.bStatus = CSW_CMD_PASSED;
-  MSC_BOT_State = BOT_SEND_DATA;
-  
-  DCD_EP_Tx (pdev, MSC_IN_EP, buf, len);  
+	len = MIN(MSC_BOT_cbw.dDataLength, len);
+	MSC_BOT_csw.dDataResidue -= len;
+	MSC_BOT_csw.bStatus = CSW_CMD_PASSED;
+	MSC_BOT_State = BOT_SEND_DATA;
+
+	DCD_EP_Tx(pdev, MSC_IN_EP, buf, len);
 }
 
 /**
@@ -308,24 +257,16 @@ static void  MSC_BOT_SendData(USB_OTG_CORE_HANDLE  *pdev,
 * @param  status : CSW status
 * @retval None
 */
-void  MSC_BOT_SendCSW (USB_OTG_CORE_HANDLE  *pdev,
-                              uint8_t CSW_Status)
+void MSC_BOT_SendCSW(USB_OTG_CORE_HANDLE *pdev, uint8_t CSW_Status)
 {
-  MSC_BOT_csw.dSignature = BOT_CSW_SIGNATURE;
-  MSC_BOT_csw.bStatus = CSW_Status;
-  MSC_BOT_State = BOT_IDLE;
-  
-  DCD_EP_Tx (pdev, 
-             MSC_IN_EP, 
-             (uint8_t *)&MSC_BOT_csw, 
-             BOT_CSW_LENGTH);
-  
-  /* Prapare EP to Receive next Cmd */
-  DCD_EP_PrepareRx (pdev,
-                    MSC_OUT_EP,
-                    (uint8_t *)&MSC_BOT_cbw, 
-                    BOT_CBW_LENGTH);  
-  
+	MSC_BOT_csw.dSignature = BOT_CSW_SIGNATURE;
+	MSC_BOT_csw.bStatus = CSW_Status;
+	MSC_BOT_State = BOT_IDLE;
+
+	DCD_EP_Tx(pdev, MSC_IN_EP, (uint8_t *)&MSC_BOT_csw, BOT_CSW_LENGTH);
+
+	/* Prapare EP to Receive next Cmd */
+	DCD_EP_PrepareRx(pdev, MSC_OUT_EP, (uint8_t *)&MSC_BOT_cbw, BOT_CBW_LENGTH);
 }
 
 /**
@@ -335,24 +276,17 @@ void  MSC_BOT_SendCSW (USB_OTG_CORE_HANDLE  *pdev,
 * @retval status
 */
 
-static void  MSC_BOT_Abort (USB_OTG_CORE_HANDLE  *pdev)
+static void MSC_BOT_Abort(USB_OTG_CORE_HANDLE *pdev)
 {
+	if ((MSC_BOT_cbw.bmFlags == 0) && (MSC_BOT_cbw.dDataLength != 0) &&
+	    (MSC_BOT_Status == BOT_STATE_NORMAL)) {
+		DCD_EP_Stall(pdev, MSC_OUT_EP);
+	}
+	DCD_EP_Stall(pdev, MSC_IN_EP);
 
-  if ((MSC_BOT_cbw.bmFlags == 0) && 
-      (MSC_BOT_cbw.dDataLength != 0) &&
-      (MSC_BOT_Status == BOT_STATE_NORMAL) )
-  {
-    DCD_EP_Stall(pdev, MSC_OUT_EP );
-  }
-  DCD_EP_Stall(pdev, MSC_IN_EP);
-  
-  if(MSC_BOT_Status == BOT_STATE_ERROR)
-  {
-    DCD_EP_PrepareRx (pdev,
-                      MSC_OUT_EP,
-                      (uint8_t *)&MSC_BOT_cbw, 
-                      BOT_CBW_LENGTH);    
-  }
+	if (MSC_BOT_Status == BOT_STATE_ERROR) {
+		DCD_EP_PrepareRx(pdev, MSC_OUT_EP, (uint8_t *)&MSC_BOT_cbw, BOT_CBW_LENGTH);
+	}
 }
 
 /**
@@ -363,31 +297,26 @@ static void  MSC_BOT_Abort (USB_OTG_CORE_HANDLE  *pdev)
 * @retval None
 */
 
-void  MSC_BOT_CplClrFeature (USB_OTG_CORE_HANDLE  *pdev, uint8_t epnum)
+void MSC_BOT_CplClrFeature(USB_OTG_CORE_HANDLE *pdev, uint8_t epnum)
 {
-  if(MSC_BOT_Status == BOT_STATE_ERROR )/* Bad CBW Signature */
-  {
-    DCD_EP_Stall(pdev, MSC_IN_EP);
-    MSC_BOT_Status = BOT_STATE_NORMAL;    
-  }
-  else if(((epnum & 0x80) == 0x80) && ( MSC_BOT_Status != BOT_STATE_RECOVERY))
-  {
-    MSC_BOT_SendCSW (pdev, CSW_CMD_FAILED);
-  }
-  
+	if (MSC_BOT_Status == BOT_STATE_ERROR) /* Bad CBW Signature */
+	{
+		DCD_EP_Stall(pdev, MSC_IN_EP);
+		MSC_BOT_Status = BOT_STATE_NORMAL;
+	} else if (((epnum & 0x80) == 0x80) && (MSC_BOT_Status != BOT_STATE_RECOVERY)) {
+		MSC_BOT_SendCSW(pdev, CSW_CMD_FAILED);
+	}
 }
 /**
   * @}
-  */ 
-
-
-/**
-  * @}
-  */ 
-
+  */
 
 /**
   * @}
-  */ 
+  */
+
+/**
+  * @}
+  */
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

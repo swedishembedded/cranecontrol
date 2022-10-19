@@ -1,13 +1,13 @@
 #pragma once
 
 enum {
-  FB_LED_PRESET_1 = 7,
-  FB_LED_PRESET_2 = 6,
-  FB_LED_PRESET_3 = 5,
-  FB_LED_PRESET_4 = 4,
-  FB_LED_HOME = 3,
-  FB_LED_CONN_STATUS = 2,
-  FB_LED_COUNT = 8
+	FB_LED_PRESET_1 = 7,
+	FB_LED_PRESET_2 = 6,
+	FB_LED_PRESET_3 = 5,
+	FB_LED_PRESET_4 = 4,
+	FB_LED_HOME = 3,
+	FB_LED_CONN_STATUS = 2,
+	FB_LED_COUNT = 8
 };
 
 typedef enum {

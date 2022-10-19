@@ -30,9 +30,9 @@
 #include "py/lexer.h"
 
 enum {
-    MP_FROZEN_NONE,
-    MP_FROZEN_STR,
-    MP_FROZEN_MPY,
+	MP_FROZEN_NONE,
+	MP_FROZEN_STR,
+	MP_FROZEN_MPY,
 };
 
 int mp_find_frozen_module(const char *str, size_t len, void **data);

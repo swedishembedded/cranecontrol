@@ -22,7 +22,7 @@
 	* Davide Gironi, original implementation
 */
 
-#pragma once 
+#pragma once
 
 //setup ports
 #define L74HC595_DDR DDRB
@@ -34,9 +34,8 @@ struct l74hc595 {
 	pio_dev_t gpio;
 	gpio_pin_t ce_pin;
 	gpio_pin_t stc_pin;
-}; 
+};
 
-void l74hc595_init(struct l74hc595 *self, serial_dev_t spi,
-	pio_dev_t gpio, gpio_pin_t ce_pin, gpio_pin_t stc_pin);
+void l74hc595_init(struct l74hc595 *self, serial_dev_t spi, pio_dev_t gpio, gpio_pin_t ce_pin,
+		   gpio_pin_t stc_pin);
 void l74hc595_write(struct l74hc595 *self, uint8_t val);
- 

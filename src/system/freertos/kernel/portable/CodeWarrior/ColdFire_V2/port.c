@@ -71,59 +71,56 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-
-#define portINITIAL_FORMAT_VECTOR		( ( StackType_t ) 0x4000 )
+#define portINITIAL_FORMAT_VECTOR ((StackType_t)0x4000)
 
 /* Supervisor mode set. */
-#define portINITIAL_STATUS_REGISTER		( ( StackType_t ) 0x2000)
+#define portINITIAL_STATUS_REGISTER ((StackType_t)0x2000)
 
 /* Used to keep track of the number of nested calls to taskENTER_CRITICAL().  This
 will be set to 0 prior to the first task being started. */
 static uint32_t ulCriticalNesting = 0x9999UL;
 
+#define portSAVE_CONTEXT()                                                                         \
+	lea.l(-60, % sp), % sp;                                                                    \
+	movem.l % d0 - % fp, (% sp);                                                               \
+	move.l pxCurrentTCB, % a0;                                                                 \
+	move.l % sp, (% a0);
 
-#define portSAVE_CONTEXT()				\
-	lea.l		(-60, %sp), %sp;		\
-	movem.l		%d0-%fp, (%sp);			\
-	move.l		pxCurrentTCB, %a0;		\
-	move.l		%sp, (%a0);
-
-#define portRESTORE_CONTEXT()			\
-	move.l		pxCurrentTCB, %a0;		\
-	move.l		(%a0), %sp;				\
-	movem.l		(%sp), %d0-%fp;			\
-	lea.l		%sp@(60), %sp;			\
+#define portRESTORE_CONTEXT()                                                                      \
+	move.l pxCurrentTCB, % a0;                                                                 \
+	move.l(% a0), % sp;                                                                        \
+	movem.l(% sp), % d0 - % fp;                                                                \
+	lea.l % sp @(60), % sp;                                                                    \
 	rte
-
-
 
 /*-----------------------------------------------------------*/
 
-StackType_t *pxPortInitialiseStack( StackType_t * pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
+StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, TaskFunction_t pxCode,
+				   void *pvParameters)
 {
-	*pxTopOfStack = ( StackType_t ) pvParameters;
+	*pxTopOfStack = (StackType_t)pvParameters;
 	pxTopOfStack--;
 
-	*pxTopOfStack = (StackType_t) 0xDEADBEEF;
+	*pxTopOfStack = (StackType_t)0xDEADBEEF;
 	pxTopOfStack--;
 
 	/* Exception stack frame starts with the return address. */
-	*pxTopOfStack = ( StackType_t ) pxCode;
+	*pxTopOfStack = (StackType_t)pxCode;
 	pxTopOfStack--;
 
-	*pxTopOfStack = ( portINITIAL_FORMAT_VECTOR << 16UL ) | ( portINITIAL_STATUS_REGISTER );
+	*pxTopOfStack = (portINITIAL_FORMAT_VECTOR << 16UL) | (portINITIAL_STATUS_REGISTER);
 	pxTopOfStack--;
 
-	*pxTopOfStack = ( StackType_t ) 0x0; /*FP*/
+	*pxTopOfStack = (StackType_t)0x0; /*FP*/
 	pxTopOfStack -= 14; /* A5 to D0. */
 
-    return pxTopOfStack;
+	return pxTopOfStack;
 }
 /*-----------------------------------------------------------*/
 
-BaseType_t xPortStartScheduler( void )
+BaseType_t xPortStartScheduler(void)
 {
-extern void vPortStartFirstTask( void );
+	extern void vPortStartFirstTask(void);
 
 	ulCriticalNesting = 0UL;
 
@@ -137,53 +134,48 @@ extern void vPortStartFirstTask( void );
 }
 /*-----------------------------------------------------------*/
 
-void vPortEndScheduler( void )
+void vPortEndScheduler(void)
 {
 	/* Not implemented as there is nothing to return to. */
 }
 /*-----------------------------------------------------------*/
 
-void vPortEnterCritical( void )
+void vPortEnterCritical(void)
 {
-	if( ulCriticalNesting == 0UL )
-	{
+	if (ulCriticalNesting == 0UL) {
 		/* Guard against context switches being pended simultaneously with a
 		critical section being entered. */
-		do
-		{
+		do {
 			portDISABLE_INTERRUPTS();
-			if( MCF_INTC0_INTFRCH == 0UL )
-			{
+			if (MCF_INTC0_INTFRCH == 0UL) {
 				break;
 			}
 
 			portENABLE_INTERRUPTS();
 
-		} while( 1 );
+		} while (1);
 	}
 	ulCriticalNesting++;
 }
 /*-----------------------------------------------------------*/
 
-void vPortExitCritical( void )
+void vPortExitCritical(void)
 {
 	ulCriticalNesting--;
-	if( ulCriticalNesting == 0 )
-	{
+	if (ulCriticalNesting == 0) {
 		portENABLE_INTERRUPTS();
 	}
 }
 /*-----------------------------------------------------------*/
 
-void vPortYieldHandler( void )
+void vPortYieldHandler(void)
 {
-uint32_t ulSavedInterruptMask;
+	uint32_t ulSavedInterruptMask;
 
 	ulSavedInterruptMask = portSET_INTERRUPT_MASK_FROM_ISR();
-		/* Note this will clear all forced interrupts - this is done for speed. */
-		MCF_INTC0_INTFRCL = 0;
-		vTaskSwitchContext();
-	portCLEAR_INTERRUPT_MASK_FROM_ISR( ulSavedInterruptMask );
+	/* Note this will clear all forced interrupts - this is done for speed. */
+	MCF_INTC0_INTFRCL = 0;
+	vTaskSwitchContext();
+	portCLEAR_INTERRUPT_MASK_FROM_ISR(ulSavedInterruptMask);
 }
 /*-----------------------------------------------------------*/
-

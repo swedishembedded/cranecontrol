@@ -6,15 +6,18 @@ extern "C" {
 }
 
 class DeviceTreeSWTest : public ::testing::Test {
-protected:
-	void SetUp() {
+    protected:
+	void SetUp()
+	{
 	}
 
-	void TearDown() {
+	void TearDown()
+	{
 	}
 };
 
-TEST_F(DeviceTreeSWTest, create_device_tree){
+TEST_F(DeviceTreeSWTest, create_device_tree)
+{
 	char buf[512];
 	int val = 1234;
 	EXPECT_EQ(fdt_create(buf, sizeof(buf)), 0);
@@ -26,7 +29,8 @@ TEST_F(DeviceTreeSWTest, create_device_tree){
 	EXPECT_EQ(fdt_totalsize(buf), 90);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();
 }

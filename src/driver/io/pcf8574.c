@@ -33,44 +33,48 @@
 
 //#define PCF8574_LCD_DEVICEID 7
 
-void pcf8574_init(struct pcf8574 *self, i2c_dev_t i2c, uint8_t device_id) {
+void pcf8574_init(struct pcf8574 *self, i2c_dev_t i2c, uint8_t device_id)
+{
 	self->i2c = i2c;
 	self->device_id = device_id;
-	self->in_reg = self->out_reg = 0xff; 
+	self->in_reg = self->out_reg = 0xff;
 }
 
-static void _pcf8574_flush(struct pcf8574 *self){
-	i2c_start_write(self->i2c,
-		((PCF8574_ADDRBASE+self->device_id)<<1), &self->out_reg, 1);
+static void _pcf8574_flush(struct pcf8574 *self)
+{
+	i2c_start_write(self->i2c, ((PCF8574_ADDRBASE + self->device_id) << 1), &self->out_reg, 1);
 	i2c_stop(self->i2c);
 }
 
-static void _pcf8574_read(struct pcf8574 *self){
-	i2c_start_read(self->i2c,
-		((PCF8574_ADDRBASE+self->device_id)<<1), &self->in_reg, 1);
+static void _pcf8574_read(struct pcf8574 *self)
+{
+	i2c_start_read(self->i2c, ((PCF8574_ADDRBASE + self->device_id) << 1), &self->in_reg, 1);
 	i2c_stop(self->i2c);
 }
 
-uint8_t pcf8574_write_word(struct pcf8574 *self, uint8_t data) {
+uint8_t pcf8574_write_word(struct pcf8574 *self, uint8_t data)
+{
 	self->out_reg = data;
-	_pcf8574_flush(self); 
-	return 0; 
-}
-
-uint8_t pcf8574_write_pin(struct pcf8574 *self, uint8_t pin, uint8_t value) {
-	pin &= 0x07; // this is an 8 bit device
-	self->out_reg = (value)?(self->out_reg | (1 << pin)):(self->out_reg & ~(1 << pin));
-	_pcf8574_flush(self); 
+	_pcf8574_flush(self);
 	return 0;
 }
 
-uint8_t pcf8574_read_word(struct pcf8574 *self) {
-	_pcf8574_read(self);
-	return self->in_reg; 
+uint8_t pcf8574_write_pin(struct pcf8574 *self, uint8_t pin, uint8_t value)
+{
+	pin &= 0x07; // this is an 8 bit device
+	self->out_reg = (value) ? (self->out_reg | (1 << pin)) : (self->out_reg & ~(1 << pin));
+	_pcf8574_flush(self);
+	return 0;
 }
 
-uint8_t pcf8574_read_pin(struct pcf8574 *self, uint8_t pin) {
+uint8_t pcf8574_read_word(struct pcf8574 *self)
+{
 	_pcf8574_read(self);
-	return (self->in_reg & (1 << (pin & 0x07)))?1:0; 
+	return self->in_reg;
 }
 
+uint8_t pcf8574_read_pin(struct pcf8574 *self, uint8_t pin)
+{
+	_pcf8574_read(self);
+	return (self->in_reg & (1 << (pin & 0x07))) ? 1 : 0;
+}

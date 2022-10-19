@@ -4,8 +4,8 @@ AUTOMAKE_OPTIONS = subdir-objects
 include Makefile.am.coverage
 
 flash:
-	arm-none-eabi-size $(top_builddir)/src/rtpython
-	arm-none-eabi-objcopy -O binary $(top_builddir)/src/rtpython $(top_builddir)/src/rtpython.hex
+	arm-none-eabi-size $(top_builddir)/src/cranecontrol
+	arm-none-eabi-objcopy -O binary $(top_builddir)/src/cranecontrol $(top_builddir)/src/cranecontrol.hex
 	$(RTPYTHON_TARGET_CMD_FLASH)
 
 EXTRA_DIST =                   \

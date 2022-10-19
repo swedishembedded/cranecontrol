@@ -62,26 +62,27 @@
 #define ASM_X86_REG_ARG_4 ASM_X86_REG_EBX
 
 // condition codes, used for jcc and setcc (despite their j-name!)
-#define ASM_X86_CC_JB  (0x2) // below, unsigned
+#define ASM_X86_CC_JB (0x2) // below, unsigned
 #define ASM_X86_CC_JAE (0x3) // above or equal, unsigned
-#define ASM_X86_CC_JZ  (0x4)
-#define ASM_X86_CC_JE  (0x4)
+#define ASM_X86_CC_JZ (0x4)
+#define ASM_X86_CC_JE (0x4)
 #define ASM_X86_CC_JNZ (0x5)
 #define ASM_X86_CC_JNE (0x5)
 #define ASM_X86_CC_JBE (0x6) // below or equal, unsigned
-#define ASM_X86_CC_JA  (0x7) // above, unsigned
-#define ASM_X86_CC_JL  (0xc) // less, signed
+#define ASM_X86_CC_JA (0x7) // above, unsigned
+#define ASM_X86_CC_JL (0xc) // less, signed
 #define ASM_X86_CC_JGE (0xd) // greater or equal, signed
 #define ASM_X86_CC_JLE (0xe) // less or equal, signed
-#define ASM_X86_CC_JG  (0xf) // greater, signed
+#define ASM_X86_CC_JG (0xf) // greater, signed
 
 typedef struct _asm_x86_t {
-    mp_asm_base_t base;
-    int num_locals;
+	mp_asm_base_t base;
+	int num_locals;
 } asm_x86_t;
 
-static inline void asm_x86_end_pass(asm_x86_t *as) {
-    (void)as;
+static inline void asm_x86_end_pass(asm_x86_t *as)
+{
+	(void)as;
 }
 
 void asm_x86_mov_r32_r32(asm_x86_t *as, int dest_r32, int src_r32);
@@ -147,45 +148,48 @@ void asm_x86_call_ind(asm_x86_t *as, size_t fun_id, mp_uint_t n_args, int temp_r
 // Holds a pointer to mp_fun_table
 #define REG_FUN_TABLE ASM_X86_REG_FUN_TABLE
 
-#define ASM_T               asm_x86_t
-#define ASM_END_PASS        asm_x86_end_pass
-#define ASM_ENTRY           asm_x86_entry
-#define ASM_EXIT            asm_x86_exit
+#define ASM_T asm_x86_t
+#define ASM_END_PASS asm_x86_end_pass
+#define ASM_ENTRY asm_x86_entry
+#define ASM_EXIT asm_x86_exit
 
-#define ASM_JUMP            asm_x86_jmp_label
-#define ASM_JUMP_IF_REG_ZERO(as, reg, label, bool_test) \
-    do { \
-        if (bool_test) { \
-            asm_x86_test_r8_with_r8(as, reg, reg); \
-        } else { \
-            asm_x86_test_r32_with_r32(as, reg, reg); \
-        } \
-        asm_x86_jcc_label(as, ASM_X86_CC_JZ, label); \
-    } while (0)
-#define ASM_JUMP_IF_REG_NONZERO(as, reg, label, bool_test) \
-    do { \
-        if (bool_test) { \
-            asm_x86_test_r8_with_r8(as, reg, reg); \
-        } else { \
-            asm_x86_test_r32_with_r32(as, reg, reg); \
-        } \
-        asm_x86_jcc_label(as, ASM_X86_CC_JNZ, label); \
-    } while (0)
-#define ASM_JUMP_IF_REG_EQ(as, reg1, reg2, label) \
-    do { \
-        asm_x86_cmp_r32_with_r32(as, reg1, reg2); \
-        asm_x86_jcc_label(as, ASM_X86_CC_JE, label); \
-    } while (0)
+#define ASM_JUMP asm_x86_jmp_label
+#define ASM_JUMP_IF_REG_ZERO(as, reg, label, bool_test)                                            \
+	do {                                                                                       \
+		if (bool_test) {                                                                   \
+			asm_x86_test_r8_with_r8(as, reg, reg);                                     \
+		} else {                                                                           \
+			asm_x86_test_r32_with_r32(as, reg, reg);                                   \
+		}                                                                                  \
+		asm_x86_jcc_label(as, ASM_X86_CC_JZ, label);                                       \
+	} while (0)
+#define ASM_JUMP_IF_REG_NONZERO(as, reg, label, bool_test)                                         \
+	do {                                                                                       \
+		if (bool_test) {                                                                   \
+			asm_x86_test_r8_with_r8(as, reg, reg);                                     \
+		} else {                                                                           \
+			asm_x86_test_r32_with_r32(as, reg, reg);                                   \
+		}                                                                                  \
+		asm_x86_jcc_label(as, ASM_X86_CC_JNZ, label);                                      \
+	} while (0)
+#define ASM_JUMP_IF_REG_EQ(as, reg1, reg2, label)                                                  \
+	do {                                                                                       \
+		asm_x86_cmp_r32_with_r32(as, reg1, reg2);                                          \
+		asm_x86_jcc_label(as, ASM_X86_CC_JE, label);                                       \
+	} while (0)
 #define ASM_JUMP_REG(as, reg) asm_x86_jmp_reg((as), (reg))
 #define ASM_CALL_IND(as, idx) asm_x86_call_ind(as, idx, mp_f_n_args[idx], ASM_X86_REG_EAX)
 
-#define ASM_MOV_LOCAL_REG(as, local_num, reg_src) asm_x86_mov_r32_to_local((as), (reg_src), (local_num))
+#define ASM_MOV_LOCAL_REG(as, local_num, reg_src)                                                  \
+	asm_x86_mov_r32_to_local((as), (reg_src), (local_num))
 #define ASM_MOV_REG_IMM(as, reg_dest, imm) asm_x86_mov_i32_to_r32((as), (imm), (reg_dest))
 #define ASM_MOV_REG_IMM_FIX_U16(as, reg_dest, imm) asm_x86_mov_i32_to_r32((as), (imm), (reg_dest))
 #define ASM_MOV_REG_IMM_FIX_WORD(as, reg_dest, imm) asm_x86_mov_i32_to_r32((as), (imm), (reg_dest))
-#define ASM_MOV_REG_LOCAL(as, reg_dest, local_num) asm_x86_mov_local_to_r32((as), (local_num), (reg_dest))
+#define ASM_MOV_REG_LOCAL(as, reg_dest, local_num)                                                 \
+	asm_x86_mov_local_to_r32((as), (local_num), (reg_dest))
 #define ASM_MOV_REG_REG(as, reg_dest, reg_src) asm_x86_mov_r32_r32((as), (reg_dest), (reg_src))
-#define ASM_MOV_REG_LOCAL_ADDR(as, reg_dest, local_num) asm_x86_mov_local_addr_to_r32((as), (local_num), (reg_dest))
+#define ASM_MOV_REG_LOCAL_ADDR(as, reg_dest, local_num)                                            \
+	asm_x86_mov_local_addr_to_r32((as), (local_num), (reg_dest))
 #define ASM_MOV_REG_PCREL(as, reg_dest, label) asm_x86_mov_reg_pcrel((as), (reg_dest), (label))
 
 #define ASM_LSL_REG(as, reg) asm_x86_shl_r32_cl((as), (reg))
@@ -198,17 +202,27 @@ void asm_x86_call_ind(asm_x86_t *as, size_t fun_id, mp_uint_t n_args, int temp_r
 #define ASM_SUB_REG_REG(as, reg_dest, reg_src) asm_x86_sub_r32_r32((as), (reg_dest), (reg_src))
 #define ASM_MUL_REG_REG(as, reg_dest, reg_src) asm_x86_mul_r32_r32((as), (reg_dest), (reg_src))
 
-#define ASM_LOAD_REG_REG(as, reg_dest, reg_base) asm_x86_mov_mem32_to_r32((as), (reg_base), 0, (reg_dest))
-#define ASM_LOAD_REG_REG_OFFSET(as, reg_dest, reg_base, word_offset) asm_x86_mov_mem32_to_r32((as), (reg_base), 4 * (word_offset), (reg_dest))
-#define ASM_LOAD8_REG_REG(as, reg_dest, reg_base) asm_x86_mov_mem8_to_r32zx((as), (reg_base), 0, (reg_dest))
-#define ASM_LOAD16_REG_REG(as, reg_dest, reg_base) asm_x86_mov_mem16_to_r32zx((as), (reg_base), 0, (reg_dest))
-#define ASM_LOAD32_REG_REG(as, reg_dest, reg_base) asm_x86_mov_mem32_to_r32((as), (reg_base), 0, (reg_dest))
+#define ASM_LOAD_REG_REG(as, reg_dest, reg_base)                                                   \
+	asm_x86_mov_mem32_to_r32((as), (reg_base), 0, (reg_dest))
+#define ASM_LOAD_REG_REG_OFFSET(as, reg_dest, reg_base, word_offset)                               \
+	asm_x86_mov_mem32_to_r32((as), (reg_base), 4 * (word_offset), (reg_dest))
+#define ASM_LOAD8_REG_REG(as, reg_dest, reg_base)                                                  \
+	asm_x86_mov_mem8_to_r32zx((as), (reg_base), 0, (reg_dest))
+#define ASM_LOAD16_REG_REG(as, reg_dest, reg_base)                                                 \
+	asm_x86_mov_mem16_to_r32zx((as), (reg_base), 0, (reg_dest))
+#define ASM_LOAD32_REG_REG(as, reg_dest, reg_base)                                                 \
+	asm_x86_mov_mem32_to_r32((as), (reg_base), 0, (reg_dest))
 
-#define ASM_STORE_REG_REG(as, reg_src, reg_base) asm_x86_mov_r32_to_mem32((as), (reg_src), (reg_base), 0)
-#define ASM_STORE_REG_REG_OFFSET(as, reg_src, reg_base, word_offset) asm_x86_mov_r32_to_mem32((as), (reg_src), (reg_base), 4 * (word_offset))
-#define ASM_STORE8_REG_REG(as, reg_src, reg_base) asm_x86_mov_r8_to_mem8((as), (reg_src), (reg_base), 0)
-#define ASM_STORE16_REG_REG(as, reg_src, reg_base) asm_x86_mov_r16_to_mem16((as), (reg_src), (reg_base), 0)
-#define ASM_STORE32_REG_REG(as, reg_src, reg_base) asm_x86_mov_r32_to_mem32((as), (reg_src), (reg_base), 0)
+#define ASM_STORE_REG_REG(as, reg_src, reg_base)                                                   \
+	asm_x86_mov_r32_to_mem32((as), (reg_src), (reg_base), 0)
+#define ASM_STORE_REG_REG_OFFSET(as, reg_src, reg_base, word_offset)                               \
+	asm_x86_mov_r32_to_mem32((as), (reg_src), (reg_base), 4 * (word_offset))
+#define ASM_STORE8_REG_REG(as, reg_src, reg_base)                                                  \
+	asm_x86_mov_r8_to_mem8((as), (reg_src), (reg_base), 0)
+#define ASM_STORE16_REG_REG(as, reg_src, reg_base)                                                 \
+	asm_x86_mov_r16_to_mem16((as), (reg_src), (reg_base), 0)
+#define ASM_STORE32_REG_REG(as, reg_src, reg_base)                                                 \
+	asm_x86_mov_r32_to_mem32((as), (reg_src), (reg_base), 0)
 
 #endif // GENERIC_ASM_API
 

@@ -88,28 +88,27 @@
 
 /* Tasks should start with interrupts enabled and in Supervisor mode, therefore
 PSW is set with U and I set, and PM and IPL clear. */
-#define portINITIAL_PSW     ( ( StackType_t ) 0x00030000 )
+#define portINITIAL_PSW ((StackType_t)0x00030000)
 
 /* The peripheral clock is divided by this value before being supplying the
 CMT. */
-#if ( configUSE_TICKLESS_IDLE == 0 )
-	/* If tickless idle is not used then the divisor can be fixed. */
-	#define portCLOCK_DIVISOR	8UL
-#elif ( configPERIPHERAL_CLOCK_HZ >= 12000000 )
-	#define portCLOCK_DIVISOR	512UL
-#elif ( configPERIPHERAL_CLOCK_HZ >= 6000000 )
-	#define portCLOCK_DIVISOR	128UL
-#elif ( configPERIPHERAL_CLOCK_HZ >= 1000000 )
-	#define portCLOCK_DIVISOR	32UL
+#if (configUSE_TICKLESS_IDLE == 0)
+/* If tickless idle is not used then the divisor can be fixed. */
+#define portCLOCK_DIVISOR 8UL
+#elif (configPERIPHERAL_CLOCK_HZ >= 12000000)
+#define portCLOCK_DIVISOR 512UL
+#elif (configPERIPHERAL_CLOCK_HZ >= 6000000)
+#define portCLOCK_DIVISOR 128UL
+#elif (configPERIPHERAL_CLOCK_HZ >= 1000000)
+#define portCLOCK_DIVISOR 32UL
 #else
-	#define portCLOCK_DIVISOR	8UL
+#define portCLOCK_DIVISOR 8UL
 #endif
-
 
 /* Keys required to lock and unlock access to certain system registers
 respectively. */
-#define portUNLOCK_KEY		0xA50B
-#define portLOCK_KEY		0xA500
+#define portUNLOCK_KEY 0xA50B
+#define portLOCK_KEY 0xA500
 
 /*-----------------------------------------------------------*/
 
@@ -117,7 +116,7 @@ respectively. */
  and therefore installed in the vector table, when the FreeRTOS code is built
 as a library. */
 extern BaseType_t vSoftwareInterruptEntry;
-const BaseType_t * p_vSoftwareInterruptEntry = &vSoftwareInterruptEntry;
+const BaseType_t *p_vSoftwareInterruptEntry = &vSoftwareInterruptEntry;
 
 /*-----------------------------------------------------------*/
 
@@ -125,14 +124,14 @@ const BaseType_t * p_vSoftwareInterruptEntry = &vSoftwareInterruptEntry;
  * Function to start the first task executing - written in asm code as direct
  * access to registers is required.
  */
-static void prvStartFirstTask( void );
+static void prvStartFirstTask(void);
 
 /*
  * Software interrupt handler.  Performs the actual context switch (saving and
  * restoring of registers).  Written in asm code as direct register access is
  * required.
  */
-static void prvYieldHandler( void );
+static void prvYieldHandler(void);
 
 /*
  * The entry point for the software interrupt handler.  This is the function
@@ -140,7 +139,7 @@ static void prvYieldHandler( void );
  * the vector table, but the code that installs it is in prvYieldHandler rather
  * than using a #pragma.
  */
-void vSoftwareInterruptISR( void );
+void vSoftwareInterruptISR(void);
 
 /*
  * Sets up the periodic ISR used for the RTOS tick using the CMT.
@@ -148,11 +147,11 @@ void vSoftwareInterruptISR( void );
  * FreeRTOSConfig.h) such that their own tick interrupt configuration is used
  * in place of prvSetupTimerInterrupt().
  */
-static void prvSetupTimerInterrupt( void );
+static void prvSetupTimerInterrupt(void);
 #ifndef configSETUP_TICK_INTERRUPT
-	/* The user has not provided their own tick interrupt configuration so use
+/* The user has not provided their own tick interrupt configuration so use
     the definition in this file (which uses the interval timer). */
-	#define configSETUP_TICK_INTERRUPT() prvSetupTimerInterrupt()
+#define configSETUP_TICK_INTERRUPT() prvSetupTimerInterrupt()
 #endif /* configSETUP_TICK_INTERRUPT */
 
 /*
@@ -161,40 +160,43 @@ static void prvSetupTimerInterrupt( void );
  * instruction.
  */
 #if configUSE_TICKLESS_IDLE == 1
-	static void prvSleep( TickType_t xExpectedIdleTime );
+static void prvSleep(TickType_t xExpectedIdleTime);
 #endif /* configUSE_TICKLESS_IDLE */
 
 /*-----------------------------------------------------------*/
 
 /* These is accessed by the inline assembler functions. */
 extern void *pxCurrentTCB;
-extern void vTaskSwitchContext( void );
+extern void vTaskSwitchContext(void);
 
 /*-----------------------------------------------------------*/
 
 /* Calculate how many clock increments make up a single tick period. */
-static const uint32_t ulMatchValueForOneTick = ( ( configPERIPHERAL_CLOCK_HZ / portCLOCK_DIVISOR ) / configTICK_RATE_HZ );
+static const uint32_t ulMatchValueForOneTick =
+	((configPERIPHERAL_CLOCK_HZ / portCLOCK_DIVISOR) / configTICK_RATE_HZ);
 
 #if configUSE_TICKLESS_IDLE == 1
 
-	/* Holds the maximum number of ticks that can be suppressed - which is
+/* Holds the maximum number of ticks that can be suppressed - which is
 	basically how far into the future an interrupt can be generated. Set
 	during initialisation.  This is the maximum possible value that the
 	compare match register can hold divided by ulMatchValueForOneTick. */
-	static const TickType_t xMaximumPossibleSuppressedTicks = USHRT_MAX / ( ( configPERIPHERAL_CLOCK_HZ / portCLOCK_DIVISOR ) / configTICK_RATE_HZ );
+static const TickType_t xMaximumPossibleSuppressedTicks =
+	USHRT_MAX / ((configPERIPHERAL_CLOCK_HZ / portCLOCK_DIVISOR) / configTICK_RATE_HZ);
 
-	/* Flag set from the tick interrupt to allow the sleep processing to know if
+/* Flag set from the tick interrupt to allow the sleep processing to know if
 	sleep mode was exited because of a tick interrupt, or an interrupt
 	generated by something else. */
-	static volatile uint32_t ulTickFlag = pdFALSE;
+static volatile uint32_t ulTickFlag = pdFALSE;
 
-	/* The CMT counter is stopped temporarily each time it is re-programmed.
+/* The CMT counter is stopped temporarily each time it is re-programmed.
 	The following constant offsets the CMT counter match value by the number of
 	CMT	counts that would typically be missed while the counter was stopped to
 	compensate for the lost time.  The large difference between the divided CMT
 	clock and the CPU clock means it is likely ulStoppedTimerCompensation will
 	equal zero - and be optimised away. */
-	static const uint32_t ulStoppedTimerCompensation = 100UL / ( configCPU_CLOCK_HZ / ( configPERIPHERAL_CLOCK_HZ / portCLOCK_DIVISOR ) );
+static const uint32_t ulStoppedTimerCompensation =
+	100UL / (configCPU_CLOCK_HZ / (configPERIPHERAL_CLOCK_HZ / portCLOCK_DIVISOR));
 
 #endif
 
@@ -203,7 +205,8 @@ static const uint32_t ulMatchValueForOneTick = ( ( configPERIPHERAL_CLOCK_HZ / p
 /*
  * See header file for description.
  */
-StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
+StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, TaskFunction_t pxCode,
+				   void *pvParameters)
 {
 	/* Offset to end up on 8 byte boundary. */
 	pxTopOfStack--;
@@ -211,19 +214,19 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	/* R0 is not included as it is the stack pointer. */
 	*pxTopOfStack = 0x00;
 	pxTopOfStack--;
-    *pxTopOfStack = 0x00;
+	*pxTopOfStack = 0x00;
 	pxTopOfStack--;
- 	*pxTopOfStack = portINITIAL_PSW;
+	*pxTopOfStack = portINITIAL_PSW;
 	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) pxCode;
+	*pxTopOfStack = (StackType_t)pxCode;
 
-	/* When debugging it can be useful if every register is set to a known
+/* When debugging it can be useful if every register is set to a known
 	value.  Otherwise code space can be saved by just setting the registers
 	that need to be set. */
-	#ifdef USE_FULL_REGISTER_INITIALISATION
+#ifdef USE_FULL_REGISTER_INITIALISATION
 	{
 		pxTopOfStack--;
-		*pxTopOfStack = 0x12345678;	/* r15. */
+		*pxTopOfStack = 0x12345678; /* r15. */
 		pxTopOfStack--;
 		*pxTopOfStack = 0xaaaabbbb;
 		pxTopOfStack--;
@@ -252,15 +255,15 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 		*pxTopOfStack = 0x22222222;
 		pxTopOfStack--;
 	}
-	#else
+#else
 	{
 		/* Leave space for the registers that will get popped from the stack
 		when the task first starts executing. */
 		pxTopOfStack -= 15;
 	}
-	#endif
+#endif
 
-	*pxTopOfStack = ( StackType_t ) pvParameters; /* R1 */
+	*pxTopOfStack = (StackType_t)pvParameters; /* R1 */
 	pxTopOfStack--;
 	*pxTopOfStack = 0x12345678; /* Accumulator. */
 	pxTopOfStack--;
@@ -270,11 +273,10 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 }
 /*-----------------------------------------------------------*/
 
-BaseType_t xPortStartScheduler( void )
+BaseType_t xPortStartScheduler(void)
 {
 	/* Use pxCurrentTCB just so it does not get optimised away. */
-	if( pxCurrentTCB != NULL )
-	{
+	if (pxCurrentTCB != NULL) {
 		/* Call an application function to set up the timer that will generate
 		the tick interrupt.  This way the application can decide which
 		peripheral to use.  If tickless mode is used then the default
@@ -283,13 +285,13 @@ BaseType_t xPortStartScheduler( void )
 		configSETUP_TICK_INTERRUPT();
 
 		/* Enable the software interrupt. */
-		_IEN( _ICU_SWINT ) = 1;
+		_IEN(_ICU_SWINT) = 1;
 
 		/* Ensure the software interrupt is clear. */
-		_IR( _ICU_SWINT ) = 0;
+		_IR(_ICU_SWINT) = 0;
 
 		/* Ensure the software interrupt is set to the kernel priority. */
-		_IPR( _ICU_SWINT ) = configKERNEL_INTERRUPT_PRIORITY;
+		_IPR(_ICU_SWINT) = configKERNEL_INTERRUPT_PRIORITY;
 
 		/* Start the first task. */
 		prvStartFirstTask();
@@ -304,7 +306,7 @@ BaseType_t xPortStartScheduler( void )
 	prvSetupTimerInterrupt();
 
 	/* Just to make sure the function is not optimised away. */
-	( void ) vSoftwareInterruptISR();
+	(void)vSoftwareInterruptISR();
 
 	/* Should not get here. */
 	return pdFAIL;
@@ -312,158 +314,154 @@ BaseType_t xPortStartScheduler( void )
 /*-----------------------------------------------------------*/
 
 #pragma inline_asm prvStartFirstTask
-static void prvStartFirstTask( void )
+static void prvStartFirstTask(void)
 {
 	/* When starting the scheduler there is nothing that needs moving to the
 	interrupt stack because the function is not called from an interrupt.
 	Just ensure the current stack is the user stack. */
-	SETPSW	U
+	SETPSW U
 
-	/* Obtain the location of the stack associated with which ever task
+		/* Obtain the location of the stack associated with which ever task
 	pxCurrentTCB is currently pointing to. */
-	MOV.L	#_pxCurrentTCB, R15
-	MOV.L	[R15], R15
-	MOV.L	[R15], R0
+		MOV.L#_pxCurrentTCB,
+		R15 MOV.L[R15], R15 MOV.L[R15],
+		R0
 
-	/* Restore the registers from the stack of the task pointed to by
+				/* Restore the registers from the stack of the task pointed to by
 	pxCurrentTCB. */
-    POP		R15
-    MVTACLO	R15 		/* Accumulator low 32 bits. */
-    POP		R15
-    MVTACHI	R15 		/* Accumulator high 32 bits. */
-    POPM	R1-R15 		/* R1 to R15 - R0 is not included as it is the SP. */
-    RTE					/* This pops the remaining registers. */
-    NOP
-    NOP
+				POP R15 MVTACLO R15 /* Accumulator low 32 bits. */
+					POP R15 MVTACHI R15 /* Accumulator high 32 bits. */
+						POPM R1 -
+			R15 /* R1 to R15 - R0 is not included as it is the SP. */
+				RTE /* This pops the remaining registers. */
+					NOP NOP
 }
 /*-----------------------------------------------------------*/
 
-#pragma interrupt ( prvTickISR( vect = configTICK_VECTOR, enable ) )
-void prvTickISR( void )
+#pragma interrupt(prvTickISR(vect = configTICK_VECTOR, enable))
+void prvTickISR(void)
 {
 	/* Increment the tick, and perform any processing the new tick value
 	necessitates. */
-	set_ipl( configMAX_SYSCALL_INTERRUPT_PRIORITY );
+	set_ipl(configMAX_SYSCALL_INTERRUPT_PRIORITY);
 	{
-		if( xTaskIncrementTick() != pdFALSE )
-		{
+		if (xTaskIncrementTick() != pdFALSE) {
 			taskYIELD();
 		}
 	}
-	set_ipl( configKERNEL_INTERRUPT_PRIORITY );
+	set_ipl(configKERNEL_INTERRUPT_PRIORITY);
 
-	#if configUSE_TICKLESS_IDLE == 1
+#if configUSE_TICKLESS_IDLE == 1
 	{
 		/* The CPU woke because of a tick. */
 		ulTickFlag = pdTRUE;
 
 		/* If this is the first tick since exiting tickless mode then the CMT
 		compare match value needs resetting. */
-		CMT0.CMCOR = ( uint16_t ) ulMatchValueForOneTick;
+		CMT0.CMCOR = (uint16_t)ulMatchValueForOneTick;
 	}
-	#endif
+#endif
 }
 /*-----------------------------------------------------------*/
 
-void vSoftwareInterruptISR( void )
+void vSoftwareInterruptISR(void)
 {
 	prvYieldHandler();
 }
 /*-----------------------------------------------------------*/
 
 #pragma inline_asm prvYieldHandler
-static void prvYieldHandler( void )
+static void prvYieldHandler(void)
 {
 	/* Re-enable interrupts. */
-	SETPSW	I
+	SETPSW I
 
-	/* Move the data that was automatically pushed onto the interrupt stack
+		/* Move the data that was automatically pushed onto the interrupt stack
 	when the interrupt occurred from the interrupt stack to the user stack.
 
 	R15 is saved before it is clobbered. */
-	PUSH.L	R15
+		PUSH.L R15
 
-	/* Read the user stack pointer. */
-	MVFC	USP, R15
+			/* Read the user stack pointer. */
+			MVFC USP,
+		R15
 
-	/* Move the address down to the data being moved. */
-	SUB		#12, R15
-	MVTC	R15, USP
+			/* Move the address down to the data being moved. */
+			SUB #12,
+		R15 MVTC R15,
+		USP
 
-	/* Copy the data across. */
-	MOV.L	[ R0 ], [ R15 ] ; R15
-	MOV.L 	4[ R0 ], 4[ R15 ]  ; PC
-	MOV.L	8[ R0 ], 8[ R15 ]  ; PSW
+			/* Copy the data across. */
+			MOV.L[R0],
+		[R15];
+	R15 MOV.L 4 [R0], 4 [R15];
+	PC MOV.L 8 [R0], 8 [R15];
+	PSW
 
-	/* Move the interrupt stack pointer to its new correct position. */
-	ADD	#12, R0
+		/* Move the interrupt stack pointer to its new correct position. */
+		ADD #12,
+		R0
 
-	/* All the rest of the registers are saved directly to the user stack. */
-	SETPSW	U
+				/* All the rest of the registers are saved directly to the user stack. */
+				SETPSW U
 
-	/* Save the rest of the general registers (R15 has been saved already). */
-	PUSHM	R1-R14
+					/* Save the rest of the general registers (R15 has been saved already). */
+					PUSHM R1 -
+			R14
 
-	/* Save the accumulator. */
-	MVFACHI	R15
-	PUSH.L	R15
-	MVFACMI	R15	; Middle order word.
-	SHLL	#16, R15 ; Shifted left as it is restored to the low order word.
-	PUSH.L	R15
+				/* Save the accumulator. */
+				MVFACHI R15 PUSH.L R15 MVFACMI R15;
+	Middle order word.SHLL #16, R15;
+	Shifted left as it is restored to the low order word.PUSH
+		.L R15
 
-	/* Save the stack pointer to the TCB. */
-	MOV.L	#_pxCurrentTCB, R15
-	MOV.L	[ R15 ], R15
-	MOV.L	R0, [ R15 ]
+			/* Save the stack pointer to the TCB. */
+			MOV.L#_pxCurrentTCB,
+		R15 MOV.L[R15], R15 MOV.L R0,
+		[R15]
 
-	/* Ensure the interrupt mask is set to the syscall priority while the
+		/* Ensure the interrupt mask is set to the syscall priority while the
 	kernel structures are being accessed. */
-	MVTIPL	#configMAX_SYSCALL_INTERRUPT_PRIORITY
+		MVTIPL #configMAX_SYSCALL_INTERRUPT_PRIORITY
 
-	/* Select the next task to run. */
-	BSR.A	_vTaskSwitchContext
+		/* Select the next task to run. */
+		BSR.A _vTaskSwitchContext
 
-	/* Reset the interrupt mask as no more data structure access is
+			/* Reset the interrupt mask as no more data structure access is
 	required. */
-	MVTIPL	#configKERNEL_INTERRUPT_PRIORITY
+			MVTIPL #configKERNEL_INTERRUPT_PRIORITY
 
-	/* Load the stack pointer of the task that is now selected as the Running
+		/* Load the stack pointer of the task that is now selected as the Running
 	state task from its TCB. */
-	MOV.L	#_pxCurrentTCB,R15
-	MOV.L	[ R15 ], R15
-	MOV.L	[ R15 ], R0
+		MOV.L#_pxCurrentTCB,
+		R15 MOV.L[R15], R15 MOV.L[R15],
+		R0
 
-	/* Restore the context of the new task.  The PSW (Program Status Word) and
+				/* Restore the context of the new task.  The PSW (Program Status Word) and
 	PC will be popped by the RTE instruction. */
-	POP		R15
-	MVTACLO	R15
-	POP		R15
-	MVTACHI	R15
-	POPM	R1-R15
-	RTE
-	NOP
-	NOP
+				POP R15 MVTACLO R15 POP R15 MVTACHI R15 POPM R1 -
+			R15 RTE NOP NOP
 }
 /*-----------------------------------------------------------*/
 
-void vPortEndScheduler( void )
+void vPortEndScheduler(void)
 {
 	/* Not implemented in ports where there is nothing to return to.
 	Artificially force an assert. */
-	configASSERT( pxCurrentTCB == NULL );
+	configASSERT(pxCurrentTCB == NULL);
 
 	/* The following line is just to prevent the symbol getting optimised away. */
-	( void ) vTaskSwitchContext();
+	(void)vTaskSwitchContext();
 }
 /*-----------------------------------------------------------*/
 
-static void prvSetupTimerInterrupt( void )
+static void prvSetupTimerInterrupt(void)
 {
 	/* Unlock. */
 	SYSTEM.PRCR.WORD = portUNLOCK_KEY;
 
 	/* Enable CMT0. */
-	MSTP( CMT0 ) = 0;
+	MSTP(CMT0) = 0;
 
 	/* Lock again. */
 	SYSTEM.PRCR.WORD = portLOCK_KEY;
@@ -472,37 +470,36 @@ static void prvSetupTimerInterrupt( void )
 	CMT0.CMCR.BIT.CMIE = 1;
 
 	/* Set the compare match value. */
-	CMT0.CMCOR = ( uint16_t ) ulMatchValueForOneTick;
+	CMT0.CMCOR = (uint16_t)ulMatchValueForOneTick;
 
-	/* Divide the PCLK. */
-	#if portCLOCK_DIVISOR == 512
+/* Divide the PCLK. */
+#if portCLOCK_DIVISOR == 512
 	{
 		CMT0.CMCR.BIT.CKS = 3;
 	}
-	#elif portCLOCK_DIVISOR == 128
+#elif portCLOCK_DIVISOR == 128
 	{
 		CMT0.CMCR.BIT.CKS = 2;
 	}
-	#elif portCLOCK_DIVISOR == 32
+#elif portCLOCK_DIVISOR == 32
 	{
 		CMT0.CMCR.BIT.CKS = 1;
 	}
-	#elif portCLOCK_DIVISOR == 8
+#elif portCLOCK_DIVISOR == 8
 	{
 		CMT0.CMCR.BIT.CKS = 0;
 	}
-	#else
+#else
 	{
-		#error Invalid portCLOCK_DIVISOR setting
+#error Invalid portCLOCK_DIVISOR setting
 	}
-	#endif
-
+#endif
 
 	/* Enable the interrupt... */
-	_IEN( _CMT0_CMI0 ) = 1;
+	_IEN(_CMT0_CMI0) = 1;
 
 	/* ...and set its priority to the application defined kernel priority. */
-	_IPR( _CMT0_CMI0 ) = configKERNEL_INTERRUPT_PRIORITY;
+	_IPR(_CMT0_CMI0) = configKERNEL_INTERRUPT_PRIORITY;
 
 	/* Start the timer. */
 	CMT.CMSTR0.BIT.STR0 = 1;
@@ -511,178 +508,165 @@ static void prvSetupTimerInterrupt( void )
 
 #if configUSE_TICKLESS_IDLE == 1
 
-	static void prvSleep( TickType_t xExpectedIdleTime )
-	{
-		/* Allow the application to define some pre-sleep processing. */
-		configPRE_SLEEP_PROCESSING( xExpectedIdleTime );
+static void prvSleep(TickType_t xExpectedIdleTime)
+{
+	/* Allow the application to define some pre-sleep processing. */
+	configPRE_SLEEP_PROCESSING(xExpectedIdleTime);
 
-		/* xExpectedIdleTime being set to 0 by configPRE_SLEEP_PROCESSING()
+	/* xExpectedIdleTime being set to 0 by configPRE_SLEEP_PROCESSING()
 		means the application defined code has already executed the WAIT
 		instruction. */
-		if( xExpectedIdleTime > 0 )
-		{
-			wait();
-		}
-
-		/* Allow the application to define some post sleep processing. */
-		configPOST_SLEEP_PROCESSING( xExpectedIdleTime );
+	if (xExpectedIdleTime > 0) {
+		wait();
 	}
+
+	/* Allow the application to define some post sleep processing. */
+	configPOST_SLEEP_PROCESSING(xExpectedIdleTime);
+}
 
 #endif /* configUSE_TICKLESS_IDLE */
 /*-----------------------------------------------------------*/
 
 #if configUSE_TICKLESS_IDLE == 1
 
-	void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime )
-	{
+void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
+{
 	uint32_t ulMatchValue, ulCompleteTickPeriods, ulCurrentCount;
 	eSleepModeStatus eSleepAction;
 
-		/* THIS FUNCTION IS CALLED WITH THE SCHEDULER SUSPENDED. */
+	/* THIS FUNCTION IS CALLED WITH THE SCHEDULER SUSPENDED. */
 
-		/* Make sure the CMT reload value does not overflow the counter. */
-		if( xExpectedIdleTime > xMaximumPossibleSuppressedTicks )
-		{
-			xExpectedIdleTime = xMaximumPossibleSuppressedTicks;
-		}
+	/* Make sure the CMT reload value does not overflow the counter. */
+	if (xExpectedIdleTime > xMaximumPossibleSuppressedTicks) {
+		xExpectedIdleTime = xMaximumPossibleSuppressedTicks;
+	}
 
-		/* Calculate the reload value required to wait xExpectedIdleTime tick
+	/* Calculate the reload value required to wait xExpectedIdleTime tick
 		periods. */
-		ulMatchValue = ulMatchValueForOneTick * xExpectedIdleTime;
-		if( ulMatchValue > ulStoppedTimerCompensation )
-		{
-			/* Compensate for the fact that the CMT is going to be stopped
+	ulMatchValue = ulMatchValueForOneTick * xExpectedIdleTime;
+	if (ulMatchValue > ulStoppedTimerCompensation) {
+		/* Compensate for the fact that the CMT is going to be stopped
 			momentarily. */
-			ulMatchValue -= ulStoppedTimerCompensation;
-		}
+		ulMatchValue -= ulStoppedTimerCompensation;
+	}
 
-		/* Stop the CMT momentarily.  The time the CMT is stopped for is
+	/* Stop the CMT momentarily.  The time the CMT is stopped for is
 		accounted for as best it can be, but using the tickless mode will
 		inevitably result in some tiny drift of the time maintained by the
 		kernel with respect to calendar time. */
-		CMT.CMSTR0.BIT.STR0 = 0;
-		while( CMT.CMSTR0.BIT.STR0 == 1 )
-		{
-			/* Nothing to do here. */
-		}
+	CMT.CMSTR0.BIT.STR0 = 0;
+	while (CMT.CMSTR0.BIT.STR0 == 1) {
+		/* Nothing to do here. */
+	}
 
-		/* Critical section using the global interrupt bit as the i bit is
+	/* Critical section using the global interrupt bit as the i bit is
 		automatically reset by the WAIT instruction. */
-		clrpsw_i();
+	clrpsw_i();
 
-		/* The tick flag is set to false before sleeping.  If it is true when
+	/* The tick flag is set to false before sleeping.  If it is true when
 		sleep mode is exited then sleep mode was probably exited because the
 		tick was suppressed for the entire xExpectedIdleTime period. */
-		ulTickFlag = pdFALSE;
+	ulTickFlag = pdFALSE;
 
-		/* If a context switch is pending then abandon the low power entry as
+	/* If a context switch is pending then abandon the low power entry as
 		the context switch might have been pended by an external interrupt that
 		requires processing. */
-		eSleepAction = eTaskConfirmSleepModeStatus();
-		if( eSleepAction == eAbortSleep )
-		{
-			/* Restart tick. */
-			CMT.CMSTR0.BIT.STR0 = 1;
-			setpsw_i();
-		}
-		else if( eSleepAction == eNoTasksWaitingTimeout )
-		{
-		    /* Protection off. */
-		    SYSTEM.PRCR.WORD = portUNLOCK_KEY;
+	eSleepAction = eTaskConfirmSleepModeStatus();
+	if (eSleepAction == eAbortSleep) {
+		/* Restart tick. */
+		CMT.CMSTR0.BIT.STR0 = 1;
+		setpsw_i();
+	} else if (eSleepAction == eNoTasksWaitingTimeout) {
+		/* Protection off. */
+		SYSTEM.PRCR.WORD = portUNLOCK_KEY;
 
-		    /* Ready for software standby with all clocks stopped. */
-			SYSTEM.SBYCR.BIT.SSBY = 1;
+		/* Ready for software standby with all clocks stopped. */
+		SYSTEM.SBYCR.BIT.SSBY = 1;
 
-		    /* Protection on. */
-		    SYSTEM.PRCR.WORD = portLOCK_KEY;
+		/* Protection on. */
+		SYSTEM.PRCR.WORD = portLOCK_KEY;
 
-			/* Sleep until something happens.  Calling prvSleep() will
+		/* Sleep until something happens.  Calling prvSleep() will
 			automatically reset the i bit in the PSW. */
-			prvSleep( xExpectedIdleTime );
+		prvSleep(xExpectedIdleTime);
 
-			/* Restart the CMT. */
-			CMT.CMSTR0.BIT.STR0 = 1;
-		}
-		else
-		{
-		    /* Protection off. */
-		    SYSTEM.PRCR.WORD = portUNLOCK_KEY;
+		/* Restart the CMT. */
+		CMT.CMSTR0.BIT.STR0 = 1;
+	} else {
+		/* Protection off. */
+		SYSTEM.PRCR.WORD = portUNLOCK_KEY;
 
-		    /* Ready for deep sleep mode. */
-			SYSTEM.MSTPCRC.BIT.DSLPE = 1;
-			SYSTEM.MSTPCRA.BIT.MSTPA28 = 1;
-			SYSTEM.SBYCR.BIT.SSBY = 0;
+		/* Ready for deep sleep mode. */
+		SYSTEM.MSTPCRC.BIT.DSLPE = 1;
+		SYSTEM.MSTPCRA.BIT.MSTPA28 = 1;
+		SYSTEM.SBYCR.BIT.SSBY = 0;
 
-		    /* Protection on. */
-		    SYSTEM.PRCR.WORD = portLOCK_KEY;
+		/* Protection on. */
+		SYSTEM.PRCR.WORD = portLOCK_KEY;
 
-		    /* Adjust the match value to take into account that the current
+		/* Adjust the match value to take into account that the current
 			time slice is already partially complete. */
-			ulMatchValue -= ( uint32_t ) CMT0.CMCNT;
-			CMT0.CMCOR = ( uint16_t ) ulMatchValue;
+		ulMatchValue -= (uint32_t)CMT0.CMCNT;
+		CMT0.CMCOR = (uint16_t)ulMatchValue;
 
-			/* Restart the CMT to count up to the new match value. */
-			CMT0.CMCNT = 0;
-			CMT.CMSTR0.BIT.STR0 = 1;
+		/* Restart the CMT to count up to the new match value. */
+		CMT0.CMCNT = 0;
+		CMT.CMSTR0.BIT.STR0 = 1;
 
-			/* Sleep until something happens.  Calling prvSleep() will
+		/* Sleep until something happens.  Calling prvSleep() will
 			automatically reset the i bit in the PSW. */
-			prvSleep( xExpectedIdleTime );
+		prvSleep(xExpectedIdleTime);
 
-			/* Stop CMT.  Again, the time the SysTick is stopped for is
+		/* Stop CMT.  Again, the time the SysTick is stopped for is
 			accounted for as best it can be, but using the tickless mode will
 			inevitably result in some tiny drift of the time maintained by the
 			kernel with	respect to calendar time. */
-			CMT.CMSTR0.BIT.STR0 = 0;
-			while( CMT.CMSTR0.BIT.STR0 == 1 )
-			{
-				/* Nothing to do here. */
-			}
+		CMT.CMSTR0.BIT.STR0 = 0;
+		while (CMT.CMSTR0.BIT.STR0 == 1) {
+			/* Nothing to do here. */
+		}
 
-			ulCurrentCount = ( uint32_t ) CMT0.CMCNT;
+		ulCurrentCount = (uint32_t)CMT0.CMCNT;
 
-			if( ulTickFlag != pdFALSE )
-			{
-				/* The tick interrupt has already executed, although because
+		if (ulTickFlag != pdFALSE) {
+			/* The tick interrupt has already executed, although because
 				this function is called with the scheduler suspended the actual
 				tick processing will not occur until after this function has
 				exited.  Reset the match value with whatever remains of this
 				tick period. */
-				ulMatchValue = ulMatchValueForOneTick - ulCurrentCount;
-				CMT0.CMCOR = ( uint16_t ) ulMatchValue;
+			ulMatchValue = ulMatchValueForOneTick - ulCurrentCount;
+			CMT0.CMCOR = (uint16_t)ulMatchValue;
 
-				/* The tick interrupt handler will already have pended the tick
+			/* The tick interrupt handler will already have pended the tick
 				processing in the kernel.  As the pending tick will be
 				processed as soon as this function exits, the tick value
 				maintained by the tick is stepped forward by one less than the
 				time spent sleeping.  The actual stepping of the tick appears
 				later in this function. */
-				ulCompleteTickPeriods = xExpectedIdleTime - 1UL;
-			}
-			else
-			{
-				/* Something other than the tick interrupt ended the sleep.
+			ulCompleteTickPeriods = xExpectedIdleTime - 1UL;
+		} else {
+			/* Something other than the tick interrupt ended the sleep.
 				How	many complete tick periods passed while the processor was
 				sleeping? */
-				ulCompleteTickPeriods = ulCurrentCount / ulMatchValueForOneTick;
+			ulCompleteTickPeriods = ulCurrentCount / ulMatchValueForOneTick;
 
-				/* The match value is set to whatever fraction of a single tick
+			/* The match value is set to whatever fraction of a single tick
 				period remains. */
-				ulMatchValue = ulCurrentCount - ( ulCompleteTickPeriods * ulMatchValueForOneTick );
-				CMT0.CMCOR = ( uint16_t ) ulMatchValue;
-			}
+			ulMatchValue =
+				ulCurrentCount - (ulCompleteTickPeriods * ulMatchValueForOneTick);
+			CMT0.CMCOR = (uint16_t)ulMatchValue;
+		}
 
-			/* Restart the CMT so it runs up to the match value.  The match value
+		/* Restart the CMT so it runs up to the match value.  The match value
 			will get set to the value required to generate exactly one tick period
 			the next time the CMT interrupt executes. */
-			CMT0.CMCNT = 0;
-			CMT.CMSTR0.BIT.STR0 = 1;
+		CMT0.CMCNT = 0;
+		CMT.CMSTR0.BIT.STR0 = 1;
 
-			/* Wind the tick forward by the number of tick periods that the CPU
+		/* Wind the tick forward by the number of tick periods that the CPU
 			remained in a low power state. */
-			vTaskStepTick( ulCompleteTickPeriods );
-		}
+		vTaskStepTick(ulCompleteTickPeriods);
 	}
+}
 
 #endif /* configUSE_TICKLESS_IDLE */
-

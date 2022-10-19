@@ -42,23 +42,26 @@
 /*
  * init the shift register
  */
-void l74hc595_init(struct l74hc595 *self, serial_dev_t spi, pio_dev_t gpio, gpio_pin_t ce_pin, gpio_pin_t stc_pin) {
+void l74hc595_init(struct l74hc595 *self, serial_dev_t spi, pio_dev_t gpio, gpio_pin_t ce_pin,
+		   gpio_pin_t stc_pin)
+{
 	self->spi = spi;
-	self->gpio = gpio; 
+	self->gpio = gpio;
 	self->stc_pin = stc_pin;
-	self->ce_pin = ce_pin; 
-	
-	pio_configure_pin(gpio, ce_pin, GP_OUTPUT); 
-	pio_configure_pin(gpio, stc_pin, GP_OUTPUT); 
-	
-	L74HC595_STCLo;  
+	self->ce_pin = ce_pin;
+
+	pio_configure_pin(gpio, ce_pin, GP_OUTPUT);
+	pio_configure_pin(gpio, stc_pin, GP_OUTPUT);
+
+	L74HC595_STCLo;
 }
 
-void l74hc595_write(struct l74hc595 *self, uint8_t data) {
-	L74HC595_CEHi; 
-		spi_writereadbyte(data); 
-		L74HC595_STCHi; 
-		delay_us(1); // not needed but still for safety (16ns is minimum high period)
-		L74HC595_STCLo;
-	L74HC595_CELo; 
+void l74hc595_write(struct l74hc595 *self, uint8_t data)
+{
+	L74HC595_CEHi;
+	spi_writereadbyte(data);
+	L74HC595_STCHi;
+	delay_us(1); // not needed but still for safety (16ns is minimum high period)
+	L74HC595_STCLo;
+	L74HC595_CELo;
 }

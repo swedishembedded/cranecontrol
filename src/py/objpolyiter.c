@@ -35,19 +35,20 @@
 
 // Any instance should have these 2 fields at the beginning
 typedef struct _mp_obj_polymorph_iter_t {
-    mp_obj_base_t base;
-    mp_fun_1_t iternext;
+	mp_obj_base_t base;
+	mp_fun_1_t iternext;
 } mp_obj_polymorph_iter_t;
 
-STATIC mp_obj_t polymorph_it_iternext(mp_obj_t self_in) {
-    mp_obj_polymorph_iter_t *self = MP_OBJ_TO_PTR(self_in);
-    // Redirect call to object instance's iternext method
-    return self->iternext(self_in);
+STATIC mp_obj_t polymorph_it_iternext(mp_obj_t self_in)
+{
+	mp_obj_polymorph_iter_t *self = MP_OBJ_TO_PTR(self_in);
+	// Redirect call to object instance's iternext method
+	return self->iternext(self_in);
 }
 
 const mp_obj_type_t mp_type_polymorph_iter = {
-    { &mp_type_type },
-    .name = MP_QSTR_iterator,
-    .getiter = mp_identity_getiter,
-    .iternext = polymorph_it_iternext,
+	{ &mp_type_type },
+	.name = MP_QSTR_iterator,
+	.getiter = mp_identity_getiter,
+	.iternext = polymorph_it_iternext,
 };

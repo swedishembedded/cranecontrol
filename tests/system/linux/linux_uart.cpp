@@ -11,13 +11,14 @@ extern "C" {
 }
 
 class LinuxUartTest : public ::testing::Test {
-protected:
-    virtual void SetUp() {
-
-    }
+    protected:
+	virtual void SetUp()
+	{
+	}
 };
 
-TEST_F(LinuxUartTest, init){
+TEST_F(LinuxUartTest, init)
+{
 	struct linux_uart *self = linux_uart_new();
 	EXPECT_NE(self, nullptr);
 	printf("uart pts: %s\n", linux_uart_get_ptsname(self));
@@ -36,7 +37,8 @@ TEST_F(LinuxUartTest, init){
 	EXPECT_EQ(val1, val2);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();
 }

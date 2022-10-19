@@ -25,7 +25,6 @@
   ******************************************************************************
   */
 
-
 /* Includes ------------------------------------------------------------------*/
 #include "usb_lib.h"
 #include "usb_desc.h"
@@ -37,7 +36,7 @@
 /* Private define ------------------------------------------------------------*/
 
 /* Interval between sending IN packets in frame number (1 frame = 1ms) */
-#define VCOMPORT_IN_FRAME_INTERVAL             5
+#define VCOMPORT_IN_FRAME_INTERVAL 5
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 volatile uint32_t packet_sent;
@@ -55,17 +54,29 @@ uint16_t Receive_length;
 * Return         : None.
 *******************************************************************************/
 
-void EP1_IN_Callback (void)
+void EP1_IN_Callback(void)
 {
-    packet_sent = 1;
+	packet_sent = 1;
 }
 
-void EP2_IN_Callback (void){}
-void EP3_IN_Callback (void){}
-void EP4_IN_Callback (void){}
-void EP5_IN_Callback (void){}
-void EP6_IN_Callback (void){}
-void EP7_IN_Callback (void){}
+void EP2_IN_Callback(void)
+{
+}
+void EP3_IN_Callback(void)
+{
+}
+void EP4_IN_Callback(void)
+{
+}
+void EP5_IN_Callback(void)
+{
+}
+void EP6_IN_Callback(void)
+{
+}
+void EP7_IN_Callback(void)
+{
+}
 
 /*******************************************************************************
 * Function Name  : EP3_OUT_Callback
@@ -74,17 +85,29 @@ void EP7_IN_Callback (void){}
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void EP1_OUT_Callback(void){}
-void EP2_OUT_Callback(void){}
+void EP1_OUT_Callback(void)
+{
+}
+void EP2_OUT_Callback(void)
+{
+}
 void EP3_OUT_Callback(void)
 {
-    packet_receive = 1;
-    Receive_length = GetEPRxCount(ENDP3);
-    PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_RXADDR, Receive_length);
+	packet_receive = 1;
+	Receive_length = GetEPRxCount(ENDP3);
+	PMAToUserBufferCopy((unsigned char *)Receive_Buffer, ENDP3_RXADDR, Receive_length);
 }
-void EP4_OUT_Callback(void){}
-void EP5_OUT_Callback(void){}
-void EP6_OUT_Callback(void){}
-void EP7_OUT_Callback(void){}
+void EP4_OUT_Callback(void)
+{
+}
+void EP5_OUT_Callback(void)
+{
+}
+void EP6_OUT_Callback(void)
+{
+}
+void EP7_OUT_Callback(void)
+{
+}
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

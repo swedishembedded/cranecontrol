@@ -16,16 +16,17 @@ struct stm32_can_hw {
 	struct semaphore tx_sem;
 };
 
-static struct stm32_can_hw can1 = {{0},{0}};
+static struct stm32_can_hw can1 = { { 0 }, { 0 } };
 
-static int _stm32_can_write(struct stm32_can *self, const struct can_message *in, uint32_t timeout){
+static int _stm32_can_write(struct stm32_can *self, const struct can_message *in, uint32_t timeout)
+{
 	(void)self;
 	static CanTxMsg msg;
 
 	memset(&msg, 0, sizeof(msg));
 	msg.ExtId = in->id;
-	msg.RTR=CAN_RTR_DATA;
-	msg.IDE=CAN_ID_EXT;
+	msg.RTR = CAN_RTR_DATA;
+	msg.IDE = CAN_ID_EXT;
 	msg.DLC = in->len;
 
 	memcpy(msg.Data, in->data, sizeof(msg.Data));
@@ -33,15 +34,15 @@ static int _stm32_can_write(struct stm32_can *self, const struct can_message *in
 	uint8_t mb = 0;
 	CAN_ITConfig(CAN1, CAN_IT_TME, ENABLE);
 
-	if((mb = CAN_Transmit(CAN1, &msg)) == CAN_NO_MB) {
+	if ((mb = CAN_Transmit(CAN1, &msg)) == CAN_NO_MB) {
 		return -1;
 	}
 
-	if(CAN_TransmitStatus(CAN1, mb) == CAN_TxStatus_Failed)
+	if (CAN_TransmitStatus(CAN1, mb) == CAN_TxStatus_Failed)
 		return -1;
 
 	// wait until transmission is ready
-	if(thread_sem_take_wait(&can1.tx_sem, timeout) < 0)
+	if (thread_sem_take_wait(&can1.tx_sem, timeout) < 0)
 		return -1;
 
 	//while(CAN_TransmitStatus(CAN1, mb) == CAN_TxStatus_Pending);
@@ -49,7 +50,8 @@ static int _stm32_can_write(struct stm32_can *self, const struct can_message *in
 	return 1;
 }
 
-static int _can_send(can_port_t port, const struct can_message *msg, uint32_t timeout_ms){
+static int _can_send(can_port_t port, const struct can_message *msg, uint32_t timeout_ms)
+{
 	struct stm32_can *self = container_of(port, struct stm32_can, can_ops);
 	thread_mutex_lock(&self->lock);
 	int r = _stm32_can_write(self, msg, timeout_ms);
@@ -57,18 +59,17 @@ static int _can_send(can_port_t port, const struct can_message *msg, uint32_t ti
 	return r;
 }
 
-static int _can_recv(can_port_t port, struct can_message *msg, uint32_t timeout_ms){
-	if(thread_queue_recv(&can1.rx_queue, msg, timeout_ms) < 0)
+static int _can_recv(can_port_t port, struct can_message *msg, uint32_t timeout_ms)
+{
+	if (thread_queue_recv(&can1.rx_queue, msg, timeout_ms) < 0)
 		return -1;
 	return 1;
 }
 
-static const struct can_ops _can_ops = {
-	.send = _can_send,
-	.recv = _can_recv
-};
+static const struct can_ops _can_ops = { .send = _can_send, .recv = _can_recv };
 
-void stm32_can_init(struct stm32_can *self, uint32_t baud){
+void stm32_can_init(struct stm32_can *self, uint32_t baud)
+{
 	memset(self, 0, sizeof(*self));
 
 	thread_mutex_init(&self->lock);
@@ -81,7 +82,7 @@ void stm32_can_init(struct stm32_can *self, uint32_t baud){
 	RCC_ClocksTypeDef clocks;
 	RCC_GetClocksFreq(&clocks);
 
-	GPIO_InitTypeDef  gpio;
+	GPIO_InitTypeDef gpio;
 
 	/* GPIO clock enable */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
@@ -122,7 +123,10 @@ void stm32_can_init(struct stm32_can *self, uint32_t baud){
 	can.CAN_SJW = CAN_SJW_3tq; // 2
 	can.CAN_BS1 = CAN_BS1_12tq; // 11
 	can.CAN_BS2 = CAN_BS2_5tq; // 4
-	can.CAN_Prescaler = (uint16_t)(clocks.PCLK1_Frequency / (uint32_t)((uint32_t)(can.CAN_BS1 + can.CAN_BS2 + can.CAN_SJW + 1) * baud));
+	can.CAN_Prescaler =
+		(uint16_t)(clocks.PCLK1_Frequency /
+			   (uint32_t)((uint32_t)(can.CAN_BS1 + can.CAN_BS2 + can.CAN_SJW + 1) *
+				      baud));
 
 	CAN_Init(CAN1, &can);
 
@@ -151,32 +155,34 @@ void stm32_can_init(struct stm32_can *self, uint32_t baud){
 	CAN_ITConfig(CAN1, CAN_IT_FMP0 | CAN_IT_TME, ENABLE);
 }
 
-void USB_HP_CAN1_TX_IRQHandler(void){
-	if(CAN1->TSR & CAN_TSR_RQCP0){
+void USB_HP_CAN1_TX_IRQHandler(void)
+{
+	if (CAN1->TSR & CAN_TSR_RQCP0) {
 		CAN1->TSR |= CAN_TSR_RQCP0;
 		CAN1->IER &= ~CAN_IER_TMEIE;
 		thread_sem_give_from_isr(&can1.tx_sem);
 	}
-	if(CAN1->TSR & CAN_TSR_RQCP1){
+	if (CAN1->TSR & CAN_TSR_RQCP1) {
 		CAN1->TSR |= CAN_TSR_RQCP1;
 		CAN1->IER &= ~CAN_IER_TMEIE;
 		thread_sem_give_from_isr(&can1.tx_sem);
 	}
-	if(CAN1->TSR & CAN_TSR_RQCP2){
+	if (CAN1->TSR & CAN_TSR_RQCP2) {
 		CAN1->TSR |= CAN_TSR_RQCP2;
 		CAN1->IER &= ~CAN_IER_TMEIE;
 		thread_sem_give_from_isr(&can1.tx_sem);
 	}
 }
 
-void USB_LP_CAN1_RX0_IRQHandler(void){
+void USB_LP_CAN1_RX0_IRQHandler(void)
+{
 	CanRxMsg msg;
 	int32_t wake = 0;
-	if(CAN_GetITStatus(CAN1, CAN_IT_FMP0) != RESET){
+	if (CAN_GetITStatus(CAN1, CAN_IT_FMP0) != RESET) {
 		CAN_ClearITPendingBit(CAN1, CAN_IT_FMP0);
 		CAN_Receive(CAN1, CAN_FIFO0, &msg);
 		struct can_message cm;
-		if(msg.IDE == CAN_ID_STD){
+		if (msg.IDE == CAN_ID_STD) {
 			cm.id = msg.StdId;
 		} else {
 			cm.id = msg.ExtId;
@@ -188,7 +194,8 @@ void USB_LP_CAN1_RX0_IRQHandler(void){
 	thread_yield_from_isr(wake);
 }
 
-can_port_t stm32_can_get_interface(struct stm32_can *self){
+can_port_t stm32_can_get_interface(struct stm32_can *self)
+{
 	return &self->can_ops;
 }
 #endif

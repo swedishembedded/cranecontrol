@@ -36,10 +36,11 @@ struct stm32_enc_out {
 #define PIN_SET(pin) (uint32_t)(1 << (pin))
 #define PIN_RESET(pin) (uint32_t)(1 << (pin + 16))
 
-static void _stm32_enc_out_write(struct stm32_enc_out *self, int32_t counts){
-	if(counts == 0) {
+static void _stm32_enc_out_write(struct stm32_enc_out *self, int32_t counts)
+{
+	if (counts == 0) {
 		self->hw->ARR = 0;
-	} else if(counts < 0) {
+	} else if (counts < 0) {
 		self->hw->ARR = (uint16_t)(1000000 / -counts / 2);
 		DMA_Cmd(self->dma, DISABLE);
 		self->dma->M0AR = (uint32_t)self->pattern_neg;
@@ -52,9 +53,11 @@ static void _stm32_enc_out_write(struct stm32_enc_out *self, int32_t counts){
 	}
 }
 
-static int _serial_write(serial_port_t serial, const void *data, size_t size, uint32_t timeout) {
+static int _serial_write(serial_port_t serial, const void *data, size_t size, uint32_t timeout)
+{
 	struct stm32_enc_out *self = container_of(serial, struct stm32_enc_out, dev.ops);
-	if(size != 4) return -1;
+	if (size != 4)
+		return -1;
 
 	int32_t counts = 0;
 	memcpy(&counts, data, sizeof(counts));
@@ -64,39 +67,39 @@ static int _serial_write(serial_port_t serial, const void *data, size_t size, ui
 	return 4;
 }
 
-static int _serial_read(serial_port_t serial, void *data, size_t size, uint32_t timeout) {
+static int _serial_read(serial_port_t serial, void *data, size_t size, uint32_t timeout)
+{
 	return -1;
 }
 
-static const struct serial_device_ops _serial_ops = {
-	.read = _serial_read,
-	.write = _serial_write
-};
+static const struct serial_device_ops _serial_ops = { .read = _serial_read,
+						      .write = _serial_write };
 
-static int _stm32_encoder_out_cmd(console_device_t con, void *ptr, int argc, char **argv){
-	struct stm32_enc_out *self = (struct stm32_enc_out*)ptr;
-	if(argc == 2){
+static int _stm32_encoder_out_cmd(console_device_t con, void *ptr, int argc, char **argv)
+{
+	struct stm32_enc_out *self = (struct stm32_enc_out *)ptr;
+	if (argc == 2) {
 		int val = 0;
 		sscanf(argv[1], "%d", &val);
 		_stm32_enc_out_write(self, (int32_t)val);
 	} else {
-
 	}
 	return 0;
 }
 
-static int _stm32_encoder_out_probe(void *fdt, int fdt_node) {
-	TIM_TypeDef *hw = (TIM_TypeDef*)fdt_get_int_or_default(fdt, (int)fdt_node, "timer", 0);
-	GPIO_TypeDef *gpio = (GPIO_TypeDef*)fdt_get_int_or_default(fdt, (int)fdt_node, "gpio", 0);
+static int _stm32_encoder_out_probe(void *fdt, int fdt_node)
+{
+	TIM_TypeDef *hw = (TIM_TypeDef *)fdt_get_int_or_default(fdt, (int)fdt_node, "timer", 0);
+	GPIO_TypeDef *gpio = (GPIO_TypeDef *)fdt_get_int_or_default(fdt, (int)fdt_node, "gpio", 0);
 	int pin_a = fdt_get_int_or_default(fdt, (int)fdt_node, "pin_a", 0);
 	int pin_b = fdt_get_int_or_default(fdt, (int)fdt_node, "pin_b", 1);
 	console_device_t console = console_find_by_ref(fdt, fdt_node, "console");
 
-	if(!hw){
+	if (!hw) {
 		printk(PRINT_ERROR "stm32_enc_out: timer missing\n");
 		return -EINVAL;
 	}
-	if(!gpio){
+	if (!gpio) {
 		printk(PRINT_ERROR "stm32_enc_out: gpio missing\n");
 		return -EINVAL;
 	}
@@ -109,35 +112,35 @@ static int _stm32_encoder_out_probe(void *fdt, int fdt_node) {
 
 	uint32_t timebase = 0;
 
-	if(hw == TIM1) {
+	if (hw == TIM1) {
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
 		channel = DMA_Channel_6;
 		stream = DMA2_Stream5;
 		timebase = clocks.PCLK2_Frequency;
 		printk("enc_out: TIM1, DMA2, Stream5, Channel6\n");
-	} else if(hw == TIM2) {
+	} else if (hw == TIM2) {
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
 		channel = DMA_Channel_3;
 		stream = DMA1_Stream1;
 		timebase = clocks.PCLK1_Frequency;
 		printk("enc_out: TIM2, DMA1 Stream7 Channel3\n");
-	} else if(hw == TIM3) {
+	} else if (hw == TIM3) {
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
 		channel = DMA_Channel_5;
 		stream = DMA1_Stream2;
 		timebase = clocks.PCLK1_Frequency;
 		printk("enc_out: TIM3, DMA1 Stream2 Channel5\n");
-	} else if(hw == TIM4) {
+	} else if (hw == TIM4) {
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
 		channel = DMA_Channel_2;
 		stream = DMA1_Stream6;
 		timebase = clocks.PCLK1_Frequency;
 		printk("enc_out: TIM4, DMA1 Stream6 Channel2\n");
-	} else if(hw == TIM5) {
+	} else if (hw == TIM5) {
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
 		channel = DMA_Channel_6;
@@ -179,7 +182,8 @@ static int _stm32_encoder_out_probe(void *fdt, int fdt_node) {
 	TIM_DMACmd(hw, TIM_DMA_Update, ENABLE);
 
 	DMA_Cmd(stream, DISABLE);
-	while(DMA_GetCmdStatus(stream) == ENABLE);
+	while (DMA_GetCmdStatus(stream) == ENABLE)
+		;
 
 	DMA_DeInit(stream);
 
@@ -206,8 +210,9 @@ static int _stm32_encoder_out_probe(void *fdt, int fdt_node) {
 
 	TIM_Cmd(hw, ENABLE);
 
-	if(console){
-		console_add_command(console, self, fdt_get_name(fdt, fdt_node, NULL), "Encoder output control", "", _stm32_encoder_out_cmd);
+	if (console) {
+		console_add_command(console, self, fdt_get_name(fdt, fdt_node, NULL),
+				    "Encoder output control", "", _stm32_encoder_out_cmd);
 	}
 
 	serial_device_init(&self->dev, fdt, fdt_node, &_serial_ops);
@@ -218,8 +223,10 @@ static int _stm32_encoder_out_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_encoder_out_remove(void *fdt, int fdt_node) {
+static int _stm32_encoder_out_remove(void *fdt, int fdt_node)
+{
 	return 0;
 }
 
-DEVICE_DRIVER(stm32_enc_out, "st,stm32_enc_out", _stm32_encoder_out_probe, _stm32_encoder_out_remove)
+DEVICE_DRIVER(stm32_enc_out, "st,stm32_enc_out", _stm32_encoder_out_probe,
+	      _stm32_encoder_out_remove)

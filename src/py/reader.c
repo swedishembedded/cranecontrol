@@ -33,38 +33,41 @@
 #include "py/reader.h"
 
 typedef struct _mp_reader_mem_t {
-    size_t free_len; // if >0 mem is freed on close by: m_free(beg, free_len)
-    const byte *beg;
-    const byte *cur;
-    const byte *end;
+	size_t free_len; // if >0 mem is freed on close by: m_free(beg, free_len)
+	const byte *beg;
+	const byte *cur;
+	const byte *end;
 } mp_reader_mem_t;
 
-STATIC mp_uint_t mp_reader_mem_readbyte(void *data) {
-    mp_reader_mem_t *reader = (mp_reader_mem_t *)data;
-    if (reader->cur < reader->end) {
-        return *reader->cur++;
-    } else {
-        return MP_READER_EOF;
-    }
+STATIC mp_uint_t mp_reader_mem_readbyte(void *data)
+{
+	mp_reader_mem_t *reader = (mp_reader_mem_t *)data;
+	if (reader->cur < reader->end) {
+		return *reader->cur++;
+	} else {
+		return MP_READER_EOF;
+	}
 }
 
-STATIC void mp_reader_mem_close(void *data) {
-    mp_reader_mem_t *reader = (mp_reader_mem_t *)data;
-    if (reader->free_len > 0) {
-        m_del(char, (char *)reader->beg, reader->free_len);
-    }
-    m_del_obj(mp_reader_mem_t, reader);
+STATIC void mp_reader_mem_close(void *data)
+{
+	mp_reader_mem_t *reader = (mp_reader_mem_t *)data;
+	if (reader->free_len > 0) {
+		m_del(char, (char *)reader->beg, reader->free_len);
+	}
+	m_del_obj(mp_reader_mem_t, reader);
 }
 
-void mp_reader_new_mem(mp_reader_t *reader, const byte *buf, size_t len, size_t free_len) {
-    mp_reader_mem_t *rm = m_new_obj(mp_reader_mem_t);
-    rm->free_len = free_len;
-    rm->beg = buf;
-    rm->cur = buf;
-    rm->end = buf + len;
-    reader->data = rm;
-    reader->readbyte = mp_reader_mem_readbyte;
-    reader->close = mp_reader_mem_close;
+void mp_reader_new_mem(mp_reader_t *reader, const byte *buf, size_t len, size_t free_len)
+{
+	mp_reader_mem_t *rm = m_new_obj(mp_reader_mem_t);
+	rm->free_len = free_len;
+	rm->beg = buf;
+	rm->cur = buf;
+	rm->end = buf + len;
+	reader->data = rm;
+	reader->readbyte = mp_reader_mem_readbyte;
+	reader->close = mp_reader_mem_close;
 }
 
 #if MICROPY_READER_POSIX
@@ -74,74 +77,78 @@ void mp_reader_new_mem(mp_reader_t *reader, const byte *buf, size_t len, size_t 
 #include <unistd.h>
 
 typedef struct _mp_reader_posix_t {
-    bool close_fd;
-    int fd;
-    size_t len;
-    size_t pos;
-    byte buf[20];
+	bool close_fd;
+	int fd;
+	size_t len;
+	size_t pos;
+	byte buf[20];
 } mp_reader_posix_t;
 
-STATIC mp_uint_t mp_reader_posix_readbyte(void *data) {
-    mp_reader_posix_t *reader = (mp_reader_posix_t *)data;
-    if (reader->pos >= reader->len) {
-        if (reader->len == 0) {
-            return MP_READER_EOF;
-        } else {
-            MP_THREAD_GIL_EXIT();
-            int n = read(reader->fd, reader->buf, sizeof(reader->buf));
-            MP_THREAD_GIL_ENTER();
-            if (n <= 0) {
-                reader->len = 0;
-                return MP_READER_EOF;
-            }
-            reader->len = n;
-            reader->pos = 0;
-        }
-    }
-    return reader->buf[reader->pos++];
+STATIC mp_uint_t mp_reader_posix_readbyte(void *data)
+{
+	mp_reader_posix_t *reader = (mp_reader_posix_t *)data;
+	if (reader->pos >= reader->len) {
+		if (reader->len == 0) {
+			return MP_READER_EOF;
+		} else {
+			MP_THREAD_GIL_EXIT();
+			int n = read(reader->fd, reader->buf, sizeof(reader->buf));
+			MP_THREAD_GIL_ENTER();
+			if (n <= 0) {
+				reader->len = 0;
+				return MP_READER_EOF;
+			}
+			reader->len = n;
+			reader->pos = 0;
+		}
+	}
+	return reader->buf[reader->pos++];
 }
 
-STATIC void mp_reader_posix_close(void *data) {
-    mp_reader_posix_t *reader = (mp_reader_posix_t *)data;
-    if (reader->close_fd) {
-        MP_THREAD_GIL_EXIT();
-        close(reader->fd);
-        MP_THREAD_GIL_ENTER();
-    }
-    m_del_obj(mp_reader_posix_t, reader);
+STATIC void mp_reader_posix_close(void *data)
+{
+	mp_reader_posix_t *reader = (mp_reader_posix_t *)data;
+	if (reader->close_fd) {
+		MP_THREAD_GIL_EXIT();
+		close(reader->fd);
+		MP_THREAD_GIL_ENTER();
+	}
+	m_del_obj(mp_reader_posix_t, reader);
 }
 
-void mp_reader_new_file_from_fd(mp_reader_t *reader, int fd, bool close_fd) {
-    mp_reader_posix_t *rp = m_new_obj(mp_reader_posix_t);
-    rp->close_fd = close_fd;
-    rp->fd = fd;
-    MP_THREAD_GIL_EXIT();
-    int n = read(rp->fd, rp->buf, sizeof(rp->buf));
-    if (n == -1) {
-        if (close_fd) {
-            close(fd);
-        }
-        MP_THREAD_GIL_ENTER();
-        mp_raise_OSError(errno);
-    }
-    MP_THREAD_GIL_ENTER();
-    rp->len = n;
-    rp->pos = 0;
-    reader->data = rp;
-    reader->readbyte = mp_reader_posix_readbyte;
-    reader->close = mp_reader_posix_close;
+void mp_reader_new_file_from_fd(mp_reader_t *reader, int fd, bool close_fd)
+{
+	mp_reader_posix_t *rp = m_new_obj(mp_reader_posix_t);
+	rp->close_fd = close_fd;
+	rp->fd = fd;
+	MP_THREAD_GIL_EXIT();
+	int n = read(rp->fd, rp->buf, sizeof(rp->buf));
+	if (n == -1) {
+		if (close_fd) {
+			close(fd);
+		}
+		MP_THREAD_GIL_ENTER();
+		mp_raise_OSError(errno);
+	}
+	MP_THREAD_GIL_ENTER();
+	rp->len = n;
+	rp->pos = 0;
+	reader->data = rp;
+	reader->readbyte = mp_reader_posix_readbyte;
+	reader->close = mp_reader_posix_close;
 }
 
 #if !MICROPY_VFS_POSIX
 // If MICROPY_VFS_POSIX is defined then this function is provided by the VFS layer
-void mp_reader_new_file(mp_reader_t *reader, const char *filename) {
-    MP_THREAD_GIL_EXIT();
-    int fd = open(filename, O_RDONLY, 0644);
-    MP_THREAD_GIL_ENTER();
-    if (fd < 0) {
-        mp_raise_OSError(errno);
-    }
-    mp_reader_new_file_from_fd(reader, fd, true);
+void mp_reader_new_file(mp_reader_t *reader, const char *filename)
+{
+	MP_THREAD_GIL_EXIT();
+	int fd = open(filename, O_RDONLY, 0644);
+	MP_THREAD_GIL_ENTER();
+	if (fd < 0) {
+		mp_raise_OSError(errno);
+	}
+	mp_reader_new_file_from_fd(reader, fd, true);
 }
 #endif
 

@@ -63,11 +63,11 @@ static int fdt_sw_check_header_(void *fdt)
 	return 0;
 }
 
-#define FDT_SW_CHECK_HEADER(fdt) \
-	{ \
-		int err; \
-		if ((err = fdt_sw_check_header_(fdt)) != 0) \
-			return err; \
+#define FDT_SW_CHECK_HEADER(fdt)                                                                   \
+	{                                                                                          \
+		int err;                                                                           \
+		if ((err = fdt_sw_check_header_(fdt)) != 0)                                        \
+			return err;                                                                \
 	}
 
 static void *fdt_grab_space_(void *fdt, int len)
@@ -75,8 +75,8 @@ static void *fdt_grab_space_(void *fdt, int len)
 	int offset = (int)fdt_size_dt_struct(fdt);
 	int spaceleft;
 
-	spaceleft = (int)fdt_totalsize(fdt) - (int)fdt_off_dt_struct(fdt)
-		- (int)fdt_size_dt_strings(fdt);
+	spaceleft = (int)fdt_totalsize(fdt) - (int)fdt_off_dt_struct(fdt) -
+		    (int)fdt_size_dt_strings(fdt);
 
 	if ((offset + len < offset) || (offset + len > spaceleft))
 		return NULL;
@@ -97,7 +97,7 @@ int fdt_create(void *buf, int bufsize)
 	fdt_set_magic(fdt, FDT_SW_MAGIC);
 	fdt_set_version(fdt, FDT_LAST_SUPPORTED_VERSION);
 	fdt_set_last_comp_version(fdt, FDT_FIRST_SUPPORTED_VERSION);
-	fdt_set_totalsize(fdt,  (uint32_t)bufsize);
+	fdt_set_totalsize(fdt, (uint32_t)bufsize);
 
 	fdt_set_off_mem_rsvmap(fdt, FDT_ALIGN(sizeof(struct fdt_header),
 					      sizeof(struct fdt_reserve_entry)));
@@ -175,7 +175,7 @@ int fdt_begin_node(void *fdt, const char *name)
 	FDT_SW_CHECK_HEADER(fdt);
 
 	nh = fdt_grab_space_(fdt, (int)sizeof(*nh) + FDT_TAGALIGN(namelen));
-	if (! nh)
+	if (!nh)
 		return -FDT_ERR_NOSPACE;
 
 	nh->tag = cpu_to_fdt32(FDT_BEGIN_NODE);
@@ -190,7 +190,7 @@ int fdt_end_node(void *fdt)
 	FDT_SW_CHECK_HEADER(fdt);
 
 	en = fdt_grab_space_(fdt, FDT_TAGSIZE);
-	if (! en)
+	if (!en)
 		return -FDT_ERR_NOSPACE;
 
 	*en = cpu_to_fdt32(FDT_END_NODE);
@@ -232,7 +232,7 @@ int fdt_property_placeholder(void *fdt, const char *name, int len, void **valp)
 		return -FDT_ERR_NOSPACE;
 
 	prop = fdt_grab_space_(fdt, (int)sizeof(*prop) + FDT_TAGALIGN(len));
-	if (! prop)
+	if (!prop)
 		return -FDT_ERR_NOSPACE;
 
 	prop->tag = cpu_to_fdt32(FDT_PROP);
@@ -266,7 +266,7 @@ int fdt_finish(void *fdt)
 
 	/* Add terminator */
 	end = fdt_grab_space_(fdt, sizeof(*end));
-	if (! end)
+	if (!end)
 		return -FDT_ERR_NOSPACE;
 	*end = cpu_to_fdt32(FDT_END);
 
@@ -280,8 +280,7 @@ int fdt_finish(void *fdt)
 	offset = 0;
 	while ((tag = fdt_next_tag(fdt, offset, &nextoffset)) != FDT_END) {
 		if (tag == FDT_PROP) {
-			struct fdt_property *prop =
-				fdt_offset_ptr_w_(fdt, offset);
+			struct fdt_property *prop = fdt_offset_ptr_w_(fdt, offset);
 			int nameoff;
 
 			nameoff = (int)fdt32_to_cpu(prop->nameoff);

@@ -58,35 +58,35 @@
 #endif
 
 //registers
-#define L3G4200D_WHO_AM_I      0x0F
+#define L3G4200D_WHO_AM_I 0x0F
 
-#define L3G4200D_CTRL_REG1     0x20
-#define L3G4200D_CTRL_REG2     0x21
-#define L3G4200D_CTRL_REG3     0x22
-#define L3G4200D_CTRL_REG4     0x23
-#define L3G4200D_CTRL_REG5     0x24
-#define L3G4200D_REFERENCE     0x25
-#define L3G4200D_OUT_TEMP      0x26
-#define L3G4200D_STATUS_REG    0x27
+#define L3G4200D_CTRL_REG1 0x20
+#define L3G4200D_CTRL_REG2 0x21
+#define L3G4200D_CTRL_REG3 0x22
+#define L3G4200D_CTRL_REG4 0x23
+#define L3G4200D_CTRL_REG5 0x24
+#define L3G4200D_REFERENCE 0x25
+#define L3G4200D_OUT_TEMP 0x26
+#define L3G4200D_STATUS_REG 0x27
 
-#define L3G4200D_OUT_X_L       0x28
-#define L3G4200D_OUT_X_H       0x29
-#define L3G4200D_OUT_Y_L       0x2A
-#define L3G4200D_OUT_Y_H       0x2B
-#define L3G4200D_OUT_Z_L       0x2C
-#define L3G4200D_OUT_Z_H       0x2D
+#define L3G4200D_OUT_X_L 0x28
+#define L3G4200D_OUT_X_H 0x29
+#define L3G4200D_OUT_Y_L 0x2A
+#define L3G4200D_OUT_Y_H 0x2B
+#define L3G4200D_OUT_Z_L 0x2C
+#define L3G4200D_OUT_Z_H 0x2D
 
 #define L3G4200D_FIFO_CTRL_REG 0x2E
-#define L3G4200D_FIFO_SRC_REG  0x2F
+#define L3G4200D_FIFO_SRC_REG 0x2F
 
-#define L3G4200D_INT1_CFG      0x30
-#define L3G4200D_INT1_SRC      0x31
-#define L3G4200D_INT1_THS_XH   0x32
-#define L3G4200D_INT1_THS_XL   0x33
-#define L3G4200D_INT1_THS_YH   0x34
-#define L3G4200D_INT1_THS_YL   0x35
-#define L3G4200D_INT1_THS_ZH   0x36
-#define L3G4200D_INT1_THS_ZL   0x37
+#define L3G4200D_INT1_CFG 0x30
+#define L3G4200D_INT1_SRC 0x31
+#define L3G4200D_INT1_THS_XH 0x32
+#define L3G4200D_INT1_THS_XL 0x33
+#define L3G4200D_INT1_THS_YH 0x34
+#define L3G4200D_INT1_THS_YL 0x35
+#define L3G4200D_INT1_THS_ZH 0x36
+#define L3G4200D_INT1_THS_ZL 0x37
 #define L3G4200D_INT1_DURATION 0x38
 
 //reference temperature
@@ -97,10 +97,11 @@ float l3g4200d_gtemp = 0; //temperature used for compensation
 /*
  * set reference temperature
  */
-void l3g4200d_settemperatureref(struct l3g4200d *self) {
-    uint8_t data = 0;
+void l3g4200d_settemperatureref(struct l3g4200d *self)
+{
+	uint8_t data = 0;
 	i2c_read_reg(self->i2c, self->addr, L3G4200D_OUT_TEMP, &data, 1);
-	self->temperatureref = (int8_t) data;
+	self->temperatureref = (int8_t)data;
 	//#if L3G4200D_CALIBRATED == 1 && L3G4200D_CALIBRATEDDOTEMPCOMP == 1
 	//l3g4200d_gtemp = (float)rawtemp;
 	//#endif
@@ -109,8 +110,9 @@ void l3g4200d_settemperatureref(struct l3g4200d *self) {
 /*
  * get temperature variation
  */
-int8_t l3g4200d_gettemperaturediff(struct l3g4200d *self) {
-    uint8_t data = 0;
+int8_t l3g4200d_gettemperaturediff(struct l3g4200d *self)
+{
+	uint8_t data = 0;
 	i2c_read_reg(self->i2c, self->addr, L3G4200D_OUT_TEMP, &data, 1);
 	return (int8_t)(self->temperatureref - (int8_t)data);
 }
@@ -118,7 +120,8 @@ int8_t l3g4200d_gettemperaturediff(struct l3g4200d *self) {
 /*
  * set offset variables
  */
-void l3g4200d_setoffset(struct l3g4200d *self, float offsetx, float offsety, float offsetz) {
+void l3g4200d_setoffset(struct l3g4200d *self, float offsetx, float offsety, float offsetz)
+{
 	self->offsetx = offsetx;
 	self->offsety = offsety;
 	self->offsetz = offsetz;
@@ -127,20 +130,21 @@ void l3g4200d_setoffset(struct l3g4200d *self, float offsetx, float offsety, flo
 /*
  * get raw data
  */
-void l3g4200d_read_raw(struct l3g4200d *self, int16_t *gxraw, int16_t *gyraw, int16_t *gzraw) {
+void l3g4200d_read_raw(struct l3g4200d *self, int16_t *gxraw, int16_t *gyraw, int16_t *gzraw)
+{
 	uint8_t buff[6];
-    i2c_read_reg(self->i2c, self->addr, L3G4200D_OUT_X_L, buff, 6);
+	i2c_read_reg(self->i2c, self->addr, L3G4200D_OUT_X_L, buff, 6);
 
 	*gxraw = (int16_t)((buff[1] << 8) | buff[0]);
 	*gyraw = (int16_t)((buff[3] << 8) | buff[2]);
 	*gzraw = (int16_t)((buff[5] << 8) | buff[4]);
 }
 
-
 /*
  * get converted data deg/sec
  */
-void l3g4200d_read_converted(struct l3g4200d *self, float* gx, float* gy, float* gz) {
+void l3g4200d_read_converted(struct l3g4200d *self, float *gx, float *gy, float *gz)
+{
 	int16_t gxraw = 0;
 	int16_t gyraw = 0;
 	int16_t gzraw = 0;
@@ -161,23 +165,24 @@ void l3g4200d_read_converted(struct l3g4200d *self, float* gx, float* gy, float*
 	*gz = (gzraw-(float)self->offsetz) * (float)L3G4200D_GAINZ;
 		#endif
 	#else*/
-	*gx = (gxraw-(float)self->offsetx) * (float)L3G4200D_GAIN;
-	*gy = (gyraw-(float)self->offsety) * (float)L3G4200D_GAIN;
-	*gz = (gzraw-(float)self->offsetz) * (float)L3G4200D_GAIN;
+	*gx = (gxraw - (float)self->offsetx) * (float)L3G4200D_GAIN;
+	*gy = (gyraw - (float)self->offsety) * (float)L3G4200D_GAIN;
+	*gz = (gzraw - (float)self->offsetz) * (float)L3G4200D_GAIN;
 	//#endif
 }
 
 /*
  * init L3G4200D_
  */
-void l3g4200d_init(struct l3g4200d *self, i2c_device_t i2c, uint8_t addr) {
-	self->i2c = i2c; 
-	self->addr = addr; 
-	
-    uint8_t data = 0x0f;
-    i2c_write_reg(self->i2c, self->addr, L3G4200D_CTRL_REG1, &data, 1);
-    data = L3G4200D_RANGE<<4;
-    i2c_write_reg(self->i2c, self->addr, L3G4200D_CTRL_REG4, &data, 1);
+void l3g4200d_init(struct l3g4200d *self, i2c_device_t i2c, uint8_t addr)
+{
+	self->i2c = i2c;
+	self->addr = addr;
+
+	uint8_t data = 0x0f;
+	i2c_write_reg(self->i2c, self->addr, L3G4200D_CTRL_REG1, &data, 1);
+	data = L3G4200D_RANGE << 4;
+	i2c_write_reg(self->i2c, self->addr, L3G4200D_CTRL_REG4, &data, 1);
 
 	l3g4200d_settemperatureref(self);
 }

@@ -72,7 +72,8 @@ static inline void release_msglist(struct thread_queue *self,struct msglist *nod
 	}
 }
 */
-int thread_queue_init(struct thread_queue *tq, size_t nelem, size_t elem_size){
+int thread_queue_init(struct thread_queue *tq, size_t nelem, size_t elem_size)
+{
 	int ret = 0;
 	if (!tq) {
 		return -EINVAL;
@@ -102,7 +103,8 @@ int thread_queue_init(struct thread_queue *tq, size_t nelem, size_t elem_size){
 	return 0;
 }
 
-static void _timespec_from_now_us(struct timespec *abstimeout, uint32_t tout_us){
+static void _timespec_from_now_us(struct timespec *abstimeout, uint32_t tout_us)
+{
 	struct timeval now;
 
 	unsigned long tv_sec = tout_us / 1000000;
@@ -119,10 +121,12 @@ static void _timespec_from_now_us(struct timespec *abstimeout, uint32_t tout_us)
 	}
 }
 
-static int _thread_queue_send(struct thread_queue *tq, const void *data, uint32_t tout_us, bool ovrwrt){
+static int _thread_queue_send(struct thread_queue *tq, const void *data, uint32_t tout_us,
+			      bool ovrwrt)
+{
 	struct msglist *newmsg;
 	int ret = 0;
-	struct linux_queue *self = (struct linux_queue*)tq->handle;
+	struct linux_queue *self = (struct linux_queue *)tq->handle;
 
 	struct timespec abstimeout;
 
@@ -131,7 +135,7 @@ static int _thread_queue_send(struct thread_queue *tq, const void *data, uint32_
 	pthread_mutex_lock(&self->mutex);
 
 	// if we want to overwrite and the queue has an element then just do it and return
-	if(ovrwrt && self->length != 0){
+	if (ovrwrt && self->length != 0) {
 		memcpy(self->first->msg.data, data, self->elem_size);
 		pthread_cond_broadcast(&self->cond);
 		pthread_mutex_unlock(&self->mutex);
@@ -139,22 +143,23 @@ static int _thread_queue_send(struct thread_queue *tq, const void *data, uint32_
 	}
 
 	// while the queue is full we wait until some element becomes available
-	while ((self->length == self->total_elems) && ret != ETIMEDOUT) {  //Need to loop to handle spurious wakeups
+	while ((self->length == self->total_elems) &&
+	       ret != ETIMEDOUT) { //Need to loop to handle spurious wakeups
 		if (tout_us != THREAD_WAIT_FOREVER) {
-			ret = pthread_cond_timedwait(&self->cond_not_full, &self->mutex, &abstimeout);
+			ret = pthread_cond_timedwait(&self->cond_not_full, &self->mutex,
+						     &abstimeout);
 		} else {
 			pthread_cond_wait(&self->cond_not_full, &self->mutex);
-
 		}
 	}
 
-	if(self->length == self->total_elems){
+	if (self->length == self->total_elems) {
 		pthread_mutex_unlock(&self->mutex);
 		return -1;
 	}
 
 	// TODO: for now we just use malloc. This is not very fast though..
-	newmsg = (struct msglist*)malloc(sizeof(struct msglist));
+	newmsg = (struct msglist *)malloc(sizeof(struct msglist));
 	if (newmsg == NULL) {
 		pthread_mutex_unlock(&self->mutex);
 		return ENOMEM;
@@ -171,7 +176,7 @@ static int _thread_queue_send(struct thread_queue *tq, const void *data, uint32_
 		self->last = newmsg;
 	}
 
-	if(self->length == 0)
+	if (self->length == 0)
 		pthread_cond_broadcast(&self->cond);
 
 	self->length++;
@@ -181,19 +186,23 @@ static int _thread_queue_send(struct thread_queue *tq, const void *data, uint32_
 	return 1;
 }
 
-int thread_queue_send(struct thread_queue *self, const void *data, uint32_t tout_us){
+int thread_queue_send(struct thread_queue *self, const void *data, uint32_t tout_us)
+{
 	return _thread_queue_send(self, data, tout_us, false);
 }
 
-int thread_queue_send_from_isr(struct thread_queue *self, const void *data, int32_t *wait){
+int thread_queue_send_from_isr(struct thread_queue *self, const void *data, int32_t *wait)
+{
 	return _thread_queue_send(self, data, 0, false);
 }
 
-int thread_queue_overwrite(struct thread_queue *self, void *data){
+int thread_queue_overwrite(struct thread_queue *self, void *data)
+{
 	return _thread_queue_send(self, data, 0, true);
 }
 
-static int _thread_queue_recv(struct thread_queue *tq, void *data, uint32_t tout_ms, bool remove){
+static int _thread_queue_recv(struct thread_queue *tq, void *data, uint32_t tout_ms, bool remove)
+{
 	struct msglist *firstrec;
 	int ret = 0;
 	struct timespec abstimeout;
@@ -201,14 +210,14 @@ static int _thread_queue_recv(struct thread_queue *tq, void *data, uint32_t tout
 	if (tq == NULL || data == NULL) {
 		return -EINVAL;
 	}
-	struct linux_queue *self = (struct linux_queue*)tq->handle;
+	struct linux_queue *self = (struct linux_queue *)tq->handle;
 
 	_timespec_from_now_us(&abstimeout, tout_ms);
 
 	pthread_mutex_lock(&self->mutex);
 
 	/* Will wait until awakened by a signal or broadcast */
-	while (self->first == NULL && ret != ETIMEDOUT) {  //Need to loop to handle spurious wakeups
+	while (self->first == NULL && ret != ETIMEDOUT) { //Need to loop to handle spurious wakeups
 		if (tout_ms != THREAD_WAIT_FOREVER) {
 			ret = pthread_cond_timedwait(&self->cond, &self->mutex, &abstimeout);
 		} else {
@@ -221,13 +230,13 @@ static int _thread_queue_recv(struct thread_queue *tq, void *data, uint32_t tout
 		return -ETIMEDOUT;
 	}
 
-	if(remove){
+	if (remove) {
 		firstrec = self->first;
 		self->first = self->first->next;
 		self->length--;
 
 		if (self->first == NULL) {
-			self->last = NULL;	 // we know this since we hold the lock
+			self->last = NULL; // we know this since we hold the lock
 			self->length = 0;
 		}
 
@@ -246,33 +255,36 @@ static int _thread_queue_recv(struct thread_queue *tq, void *data, uint32_t tout
 	return 1;
 }
 
-int thread_queue_recv(struct thread_queue *queue, void *data, uint32_t tout_ms){
+int thread_queue_recv(struct thread_queue *queue, void *data, uint32_t tout_ms)
+{
 	return _thread_queue_recv(queue, data, tout_ms, true);
 }
 
-int thread_queue_peek(struct thread_queue *queue, void *data, uint32_t tout_ms){
+int thread_queue_peek(struct thread_queue *queue, void *data, uint32_t tout_ms)
+{
 	return _thread_queue_recv(queue, data, tout_ms, false);
 }
 
 //maybe caller should supply a callback for cleaning the elements ?
-int thread_queue_cleanup(struct thread_queue *tq){
+int thread_queue_cleanup(struct thread_queue *tq)
+{
 	struct msglist *rec;
 	struct msglist *next;
 	struct msglist *recs[2];
-	int ret,i;
+	int ret, i;
 	if (tq == NULL) {
 		return EINVAL;
 	}
-	struct linux_queue *self = (struct linux_queue*)tq->handle;
+	struct linux_queue *self = (struct linux_queue *)tq->handle;
 	pthread_mutex_lock(&self->mutex);
 	recs[0] = self->first;
 	recs[1] = self->msgpool;
-	for(i = 0; i < 2 ; i++) {
+	for (i = 0; i < 2; i++) {
 		rec = recs[i];
 		while (rec) {
 			next = rec->next;
 			//if (freedata) {
-				free(rec->msg.data);
+			free(rec->msg.data);
 			//}
 			free(rec);
 			rec = next;
@@ -284,12 +296,12 @@ int thread_queue_cleanup(struct thread_queue *tq){
 	pthread_cond_destroy(&self->cond);
 
 	return ret;
-
 }
 
-long thread_queue_length(struct thread_queue *tq){
+long thread_queue_length(struct thread_queue *tq)
+{
 	long counter;
-	struct linux_queue *self = (struct linux_queue*)tq->handle;
+	struct linux_queue *self = (struct linux_queue *)tq->handle;
 	// get the length properly
 	pthread_mutex_lock(&self->mutex);
 	counter = (long)self->length;

@@ -1,49 +1,49 @@
-bin_PROGRAMS = rtpython
+bin_PROGRAMS = cranecontrol
 
-rtpython_SOURCES=main.c devicetree.c
-rtpython_LDFLAGS=-Wl,--no-undefined -Wl,-Map,rtpython.map
-rtpython_LDADD=$(LDADD) $(WITH_LIBS) \
+cranecontrol_SOURCES=main.c devicetree.c
+cranecontrol_LDFLAGS=-Wl,--no-undefined -Wl,-Map,cranecontrol.map
+cranecontrol_LDADD=$(LDADD) $(WITH_LIBS) \
 			 $(top_builddir)/src/driver/libdriver.a\
 			 $(top_builddir)/src/system/libfirmware.a\
 			 -lm
 
-#rtpython_LDADD+=$(top_builddir)/src/py/libpy.a
+#cranecontrol_LDADD+=$(top_builddir)/src/py/libpy.a
 
 if WITH_TARGET_LINUX
-rtpython_LDADD+=-lrt -lpthread
-rtpython_LDFLAGS+=-Wl,-u,linux_uart_ko,-u,linux_leds_ko
+cranecontrol_LDADD+=-lrt -lpthread
+cranecontrol_LDFLAGS+=-Wl,-u,linux_uart_ko,-u,linux_leds_ko
 else
-rtpython_LDFLAGS+=-Wl,-u,stm32_uart_ko,-u,stm32_leds_ko,-u,stm32_gpio_ko,-u,stm32_cpu_ko
+cranecontrol_LDFLAGS+=-Wl,-u,stm32_uart_ko,-u,stm32_leds_ko,-u,stm32_gpio_ko,-u,stm32_cpu_ko
 endif
 
 if WITH_TARGET_STM32F429ZET6
-rtpython_SOURCES+=target/stm32f4xx/startup_stm32f429_439xx.s
-rtpython_LDFLAGS+=-Wl,-T$(srcdir)/target/stm32f4xx/stm32f429zet6.ld
+cranecontrol_SOURCES+=target/stm32f4xx/startup_stm32f429_439xx.s
+cranecontrol_LDFLAGS+=-Wl,-T$(srcdir)/target/stm32f4xx/stm32f429zet6.ld
 endif
 
 if WITH_TARGET_STM32F407VGT6
-rtpython_SOURCES+=target/stm32f4xx/startup_stm32f40_41xxx.s
-rtpython_LDFLAGS+=-T$(srcdir)/target/stm32f4xx/stm32f407vgt6.ld
+cranecontrol_SOURCES+=target/stm32f4xx/startup_stm32f40_41xxx.s
+cranecontrol_LDFLAGS+=-T$(srcdir)/target/stm32f4xx/stm32f407vgt6.ld
 endif
 
 if WITH_TARGET_STM32F10X
-rtpython_SOURCES+=target/stm32f10x/startup_stm32f10x.s
-rtpython_LDFLAGS+=-T$(srcdir)/target/stm32f10x/stm32f10x_128k.ld
+cranecontrol_SOURCES+=target/stm32f10x/startup_stm32f10x.s
+cranecontrol_LDFLAGS+=-T$(srcdir)/target/stm32f10x/stm32f10x_128k.ld
 endif
 
-rtpython_CFLAGS=-I$(top_srcdir)/include
-rtpython_LDFLAGS+=$(WITH_DRIVERS)
-rtpython_LDFLAGS+=-L$(top_builddir)/src/driver
-rtpython_LDFLAGS+=-L$(top_builddir)/src/system
+cranecontrol_CFLAGS=-I$(top_srcdir)/include
+cranecontrol_LDFLAGS+=$(WITH_DRIVERS)
+cranecontrol_LDFLAGS+=-L$(top_builddir)/src/driver
+cranecontrol_LDFLAGS+=-L$(top_builddir)/src/system
 
 devicetree.c: $(WITH_DEVICETREE) 
 	@echo "DTB: $(1)"
-	$(Q)$(CPP) $(CFLAGS) $(rtpython_CFLAGS) -nostdinc -undef -x assembler-with-cpp $^ > $@.dtspp && dtc -O dtb $@.dtspp -o $@.dtb
+	$(Q)$(CPP) $(CFLAGS) $(cranecontrol_CFLAGS) -nostdinc -undef -x assembler-with-cpp $^ > $@.dtspp && dtc -O dtb $@.dtspp -o $@.dtb
 	$(Q)echo "unsigned char _devicetree[] = { $$(cat $@.dtb | xxd -i) };" > $@
 
-.PHONY: rtpython
+.PHONY: cranecontrol
 
-rtpython_SOURCES += \
+cranecontrol_SOURCES += \
 	blinky.c\
 	fb.c\
 	fb_can.c\
@@ -59,11 +59,11 @@ rtpython_SOURCES += \
 	measured.c\
 	syscalls.c\
 	ui.c
-	
+
 #rust.c\
 #rust/rust.rs
 
-#rtpython_SOURCES += python.c modfb.c
+#cranecontrol_SOURCES += python.c modfb.c
 
 SUFFIXES = .rs
 
@@ -74,6 +74,6 @@ SUFFIXES = .rs
 #		-L /home/martin/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/thumbv7m-none-eabihf/lib/ -o $@ $<
 #
 
-SUBDIRS = system driver py
+SUBDIRS = system driver
 AUTOMAKE_OPTIONS = subdir-objects
 

@@ -1,6 +1,7 @@
 #include "linux_cpu.h"
 
-int _x86_cpu_probe(void *fdt, int fdt_node){
+int _x86_cpu_probe(void *fdt, int fdt_node)
+{
 	struct x86_cpu *self = kzmalloc(sizeof(struct x86_cpu));
 	//serial_set_printk_port(&self->dev.ops);
 	return 0;

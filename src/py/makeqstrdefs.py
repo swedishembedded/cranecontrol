@@ -105,7 +105,9 @@ def cat_together():
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:
-        print("usage: %s command mode input_filename output_dir output_file" % sys.argv[0])
+        print(
+            "usage: %s command mode input_filename output_dir output_file" % sys.argv[0]
+        )
         sys.exit(2)
 
     class Args:
@@ -116,7 +118,9 @@ if __name__ == "__main__":
     args.mode = sys.argv[2]
     args.input_filename = sys.argv[3]  # Unused for command=cat
     args.output_dir = sys.argv[4]
-    args.output_file = None if len(sys.argv) == 5 else sys.argv[5]  # Unused for command=split
+    args.output_file = (
+        None if len(sys.argv) == 5 else sys.argv[5]
+    )  # Unused for command=split
 
     if args.mode not in (_MODE_QSTR, _MODE_COMPRESS):
         print("error: mode %s unrecognised" % sys.argv[2])

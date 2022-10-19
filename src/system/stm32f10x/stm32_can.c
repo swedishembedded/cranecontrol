@@ -38,35 +38,36 @@ struct stm32_can {
 	//struct semaphore tx_sem;
 };
 
-static struct stm32_can *interface[1] = {0};
+static struct stm32_can *interface[1] = { 0 };
 
-int _stm32_can_write(struct stm32_can *self, const struct can_message *in, uint32_t timeout){
+int _stm32_can_write(struct stm32_can *self, const struct can_message *in, uint32_t timeout)
+{
 	(void)self;
 	CanTxMsg msg;
 
 	memset(&msg, 0, sizeof(msg));
 
-	if(in->id > 0x7ff){
+	if (in->id > 0x7ff) {
 		msg.ExtId = in->id;
-		msg.IDE=CAN_ID_EXT;
+		msg.IDE = CAN_ID_EXT;
 	} else {
 		msg.StdId = in->id;
-		msg.IDE=CAN_ID_STD;
+		msg.IDE = CAN_ID_STD;
 	}
 
-	msg.RTR=CAN_RTR_DATA;
+	msg.RTR = CAN_RTR_DATA;
 	msg.DLC = in->len;
 
 	memcpy(msg.Data, in->data, sizeof(msg.Data));
 
-	if(thread_queue_send(&self->tx_queue, &msg, timeout) < 0){
+	if (thread_queue_send(&self->tx_queue, &msg, timeout) < 0) {
 		atomic_inc(&self->counters.txto);
 	}
 
 	CAN_ITConfig(CAN1, CAN_IT_TME, ENABLE);
 
 	NVIC->STIR = USB_HP_CAN1_TX_IRQn;
-/*
+	/*
 	// wait for a mailbox
 	if(thread_sem_take_wait(&self->tx_sem, timeout) < 0)
 		return -1;
@@ -90,7 +91,8 @@ int _stm32_can_write(struct stm32_can *self, const struct can_message *in, uint3
 	return 1;
 }
 
-static int _can_send(can_device_t port, const struct can_message *msg, uint32_t timeout_ms){
+static int _can_send(can_device_t port, const struct can_message *msg, uint32_t timeout_ms)
+{
 	struct stm32_can *self = container_of(port, struct stm32_can, dev.ops);
 	thread_mutex_lock(&self->lock);
 	int r = _stm32_can_write(self, msg, timeout_ms);
@@ -98,7 +100,8 @@ static int _can_send(can_device_t port, const struct can_message *msg, uint32_t 
 	return r;
 }
 
-static int _can_subscribe(can_device_t can, struct can_listener *listener){
+static int _can_subscribe(can_device_t can, struct can_listener *listener)
+{
 	struct stm32_can *self = container_of(can, struct stm32_can, dev.ops);
 	thread_mutex_lock(&self->lock);
 	can_dispatcher_add_listener(&self->dispatcher, listener);
@@ -140,73 +143,76 @@ static const struct can_device_ops _can_ops = {
 };
 
 // subscribe to error interrupt and record error counts
-void CAN1_SCE_IRQHandler(void){
+void CAN1_SCE_IRQHandler(void)
+{
 	struct stm32_can *self = interface[0];
-	if(!self) return;
+	if (!self)
+		return;
 
-	if(CAN_GetITStatus(CAN1, CAN_IT_ERR) != RESET){
+	if (CAN_GetITStatus(CAN1, CAN_IT_ERR) != RESET) {
 		CAN_ClearITPendingBit(CAN1, CAN_IT_ERR);
 
 		// last error has been changed in last error code bits
-		if(CAN_GetITStatus(CAN1, CAN_IT_LEC) != RESET){
+		if (CAN_GetITStatus(CAN1, CAN_IT_LEC) != RESET) {
 			CAN_ClearITPendingBit(CAN1, CAN_IT_LEC);
 		}
 		// bus off event has occurred
-		if(CAN_GetITStatus(CAN1, CAN_IT_BOF) != RESET){
+		if (CAN_GetITStatus(CAN1, CAN_IT_BOF) != RESET) {
 			CAN_ClearITPendingBit(CAN1, CAN_IT_BOF);
 			atomic_inc(&self->counters.bof);
 		}
 		// error passive
-		if(CAN_GetITStatus(CAN1, CAN_IT_EPV) != RESET){
+		if (CAN_GetITStatus(CAN1, CAN_IT_EPV) != RESET) {
 			CAN_ClearITPendingBit(CAN1, CAN_IT_EPV);
 			atomic_inc(&self->counters.epv);
 		}
 		// error warning
-		if(CAN_GetITStatus(CAN1, CAN_IT_EWG) != RESET){
+		if (CAN_GetITStatus(CAN1, CAN_IT_EWG) != RESET) {
 			CAN_ClearITPendingBit(CAN1, CAN_IT_EWG);
 			atomic_inc(&self->counters.ewg);
 		}
 		// fifo 1 overrun
-		if(CAN_GetITStatus(CAN1, CAN_IT_FOV1) != RESET){
+		if (CAN_GetITStatus(CAN1, CAN_IT_FOV1) != RESET) {
 			CAN_ClearITPendingBit(CAN1, CAN_IT_FOV1);
 			atomic_inc(&self->counters.fov);
 		}
-		if(CAN_GetITStatus(CAN1, CAN_IT_FOV0) != RESET){
+		if (CAN_GetITStatus(CAN1, CAN_IT_FOV0) != RESET) {
 			CAN_ClearITPendingBit(CAN1, CAN_IT_FOV0);
 			atomic_inc(&self->counters.fov);
 		}
 	}
 }
 
-void CAN1_TX_IRQHandler(void){
+void CAN1_TX_IRQHandler(void)
+{
 	struct stm32_can *self = interface[0];
 	BUG_ON(!self);
 
 	//if(CAN_GetITStatus(CAN1, CAN_IT_TME) != RESET){
 	//	CAN_ClearITPendingBit(CAN1, CAN_IT_TME);
-		// if any mailboxes are empty then we send a message
-		if(CAN1->TSR & (CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2)){
-			atomic_inc(&self->counters.tme);
-			CanTxMsg msg;
-			int32_t wake = 0;
-			if(thread_queue_recv_from_isr(&self->tx_queue, &msg, &wake) <= 0){
-				// disable interrupt if we don't have any other messages
-				CAN_ITConfig(CAN1, CAN_IT_TME, DISABLE);
-				goto done;
-			}
-
-			if(CAN_Transmit(CAN1, &msg) == CAN_NO_MB){
-				atomic_inc(&self->counters.txdrop);
-				// Log error?
-				goto done;
-			}
-		} else {
+	// if any mailboxes are empty then we send a message
+	if (CAN1->TSR & (CAN_TSR_TME0 | CAN_TSR_TME1 | CAN_TSR_TME2)) {
+		atomic_inc(&self->counters.tme);
+		CanTxMsg msg;
+		int32_t wake = 0;
+		if (thread_queue_recv_from_isr(&self->tx_queue, &msg, &wake) <= 0) {
+			// disable interrupt if we don't have any other messages
+			CAN_ITConfig(CAN1, CAN_IT_TME, DISABLE);
+			goto done;
 		}
+
+		if (CAN_Transmit(CAN1, &msg) == CAN_NO_MB) {
+			atomic_inc(&self->counters.txdrop);
+			// Log error?
+			goto done;
+		}
+	} else {
+	}
 	//}
 	//CAN_ITConfig(CAN1, CAN_IT_TME, DISABLE);
 done:
 	return;
-/*
+	/*
 	if(CAN1->TSR & CAN_TSR_RQCP0){
 		CAN1->TSR |= CAN_TSR_RQCP0;
 		goto give;
@@ -227,25 +233,27 @@ give:
 	*/
 }
 
-static int _can_next_message(can_device_t dev, struct can_message *msg){
+static int _can_next_message(can_device_t dev, struct can_message *msg)
+{
 	struct stm32_can *self = container_of(dev, struct stm32_can, dev.ops);
 	int r = thread_queue_recv(&self->rx_queue, msg, STM32_CAN_RX_WAKE_INTERVAL_MS);
-	if(r > 0)
+	if (r > 0)
 		atomic_inc(&self->counters.rxp);
 	return r;
 }
 
-static void _can1_process_message_isr(struct stm32_can *self, CanRxMsg *msg, int32_t *wake){
+static void _can1_process_message_isr(struct stm32_can *self, CanRxMsg *msg, int32_t *wake)
+{
 	struct can_message cm;
-	if(msg->IDE == CAN_ID_STD){
+	if (msg->IDE == CAN_ID_STD) {
 		cm.id = msg->StdId;
 	} else {
 		cm.id = msg->ExtId;
 	}
 	cm.len = msg->DLC;
 	memcpy(cm.data, msg->Data, sizeof(cm.data));
-	if(interface[0]){
-		if(thread_queue_send_from_isr(&interface[0]->rx_queue, &cm, wake) < 0){
+	if (interface[0]) {
+		if (thread_queue_send_from_isr(&interface[0]->rx_queue, &cm, wake) < 0) {
 			atomic_inc(&self->counters.rxdrop);
 		} else {
 			//queue_work_from_isr(&interface[0]->bh, 1, wake);
@@ -253,16 +261,17 @@ static void _can1_process_message_isr(struct stm32_can *self, CanRxMsg *msg, int
 	}
 }
 
-void CAN1_RX0_IRQHandler(void){
+void CAN1_RX0_IRQHandler(void)
+{
 	struct stm32_can *self = interface[0];
 	BUG_ON(!self);
 
 	CanRxMsg msg;
 	int32_t wake = 0;
 
-	if(CAN_GetITStatus(CAN1, CAN_IT_FMP0) != RESET){
+	if (CAN_GetITStatus(CAN1, CAN_IT_FMP0) != RESET) {
 		CAN_ClearITPendingBit(CAN1, CAN_IT_FMP0);
-		while(CAN_GetFlagStatus(CAN1, CAN_FLAG_FMP0) != RESET){
+		while (CAN_GetFlagStatus(CAN1, CAN_FLAG_FMP0) != RESET) {
 			CAN_Receive(CAN1, CAN_FIFO0, &msg);
 
 			atomic_inc(&self->counters.fmp0);
@@ -274,16 +283,17 @@ void CAN1_RX0_IRQHandler(void){
 	//thread_yield_from_isr(wake);
 }
 
-void CAN1_RX1_IRQHandler(void){
+void CAN1_RX1_IRQHandler(void)
+{
 	struct stm32_can *self = interface[0];
 	BUG_ON(!self);
 
 	CanRxMsg msg;
 	int32_t wake = 0;
 
-	if(CAN_GetITStatus(CAN1, CAN_IT_FMP1) != RESET){
+	if (CAN_GetITStatus(CAN1, CAN_IT_FMP1) != RESET) {
 		CAN_ClearITPendingBit(CAN1, CAN_IT_FMP1);
-		while(CAN_GetFlagStatus(CAN1, CAN_FLAG_FMP1) != RESET){
+		while (CAN_GetFlagStatus(CAN1, CAN_FLAG_FMP1) != RESET) {
 			CAN_Receive(CAN1, CAN_FIFO1, &msg);
 
 			atomic_inc(&self->counters.fmp1);
@@ -293,7 +303,8 @@ void CAN1_RX1_IRQHandler(void){
 	}
 }
 
-static int _stm32_can_probe(void *fdt, int fdt_node){
+static int _stm32_can_probe(void *fdt, int fdt_node)
+{
 	//int baud = fdt_get_int_or_default(fdt, (int)fdt_node, "baud", 1000000);
 	int sjw = fdt_get_int_or_default(fdt, (int)fdt_node, "sjw", 1);
 	int bs1 = fdt_get_int_or_default(fdt, (int)fdt_node, "bs1", 6);
@@ -306,7 +317,7 @@ static int _stm32_can_probe(void *fdt, int fdt_node){
 	int irq_sub_prio = fdt_get_int_or_default(fdt, (int)fdt_node, "irq_sub_prio", 1);
 
 	// we currently only support one interface
-	if(reg > 0 || interface[reg]){
+	if (reg > 0 || interface[reg]) {
 		return -1;
 	}
 
@@ -315,7 +326,8 @@ static int _stm32_can_probe(void *fdt, int fdt_node){
 	bs2 = constrain_i32(bs2 - 1, CAN_BS2_1tq, CAN_BS2_8tq);
 
 	struct stm32_can *self = kzmalloc(sizeof(struct stm32_can));
-	if(!self) return -1;
+	if (!self)
+		return -1;
 
 	thread_queue_init(&self->tx_queue, (size_t)tx_queue, sizeof(CanTxMsg));
 	thread_queue_init(&self->rx_queue, (size_t)rx_queue, sizeof(struct can_message));
@@ -353,7 +365,8 @@ static int _stm32_can_probe(void *fdt, int fdt_node){
 	can.CAN_SJW = (uint8_t)sjw;
 	can.CAN_BS1 = (uint8_t)bs1;
 	can.CAN_BS2 = (uint8_t)bs2;
-	can.CAN_Prescaler = (uint8_t)prescaler; //(uint16_t)(clocks.PCLK1_Frequency / (uint32_t)((uint32_t)(can.CAN_BS1 + can.CAN_BS2 + can.CAN_SJW + 1) * (uint32_t)baud));
+	can.CAN_Prescaler = (uint8_t)
+		prescaler; //(uint16_t)(clocks.PCLK1_Frequency / (uint32_t)((uint32_t)(can.CAN_BS1 + can.CAN_BS2 + can.CAN_SJW + 1) * (uint32_t)baud));
 
 	CAN_Init(CAN1, &can);
 
@@ -383,15 +396,10 @@ static int _stm32_can_probe(void *fdt, int fdt_node){
 	//nvic.NVIC_IRQChannel = USB_HP_CAN1_SCE_IRQn;
 	//NVIC_Init(&nvic);
 
-	CAN_ITConfig(CAN1, CAN_IT_FMP0 | CAN_IT_FMP1 | CAN_IT_TME |
-		CAN_IT_ERR |
-		CAN_IT_LEC |
-		CAN_IT_BOF |
-		CAN_IT_EPV |
-		CAN_IT_EWG |
-		CAN_IT_FOV1 |
-		CAN_IT_FOV0,
-	ENABLE);
+	CAN_ITConfig(CAN1,
+		     CAN_IT_FMP0 | CAN_IT_FMP1 | CAN_IT_TME | CAN_IT_ERR | CAN_IT_LEC | CAN_IT_BOF |
+			     CAN_IT_EPV | CAN_IT_EWG | CAN_IT_FOV1 | CAN_IT_FOV0,
+		     ENABLE);
 
 	can_device_init(&self->dev, fdt, fdt_node, &_can_ops);
 	can_device_register(&self->dev);
@@ -399,9 +407,10 @@ static int _stm32_can_probe(void *fdt, int fdt_node){
 	return 0;
 }
 
-static int _stm32_can_remove(void *fdt, int fdt_node){
+static int _stm32_can_remove(void *fdt, int fdt_node)
+{
 	// TODO
-    return -1;
+	return -1;
 }
 
 DEVICE_DRIVER(stm32_can, "st,stm32_can", _stm32_can_probe, _stm32_can_remove)

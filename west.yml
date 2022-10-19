@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+
+manifest:
+  self:
+    path: cranecontrol
+
+  remotes:
+    - name: swedishembedded
+      url-base: https://github.com/swedishembedded
+  projects:
+    - name: sdk
+      remote: swedishembedded
+      revision: v0.36.0
+      import: true

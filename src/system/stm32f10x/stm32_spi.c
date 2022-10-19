@@ -99,30 +99,30 @@ static void _dma_set_data(DMA_Stream_TypeDef *dma, uint32_t addr, size_t size){
 
 #define SPI_TRANSFER_TIMEOUT 20000
 
-int _stm32_spi_transfer(spi_device_t dev, gpio_device_t gpio, uint32_t cs_pin,
-                        const void *tx_data, void *rx_data, size_t size,
-                        msec_t timeout) {
+int _stm32_spi_transfer(spi_device_t dev, gpio_device_t gpio, uint32_t cs_pin, const void *tx_data,
+			void *rx_data, size_t size, msec_t timeout)
+{
 	struct stm32_spi *self = container_of(dev, struct stm32_spi, dev.ops);
-	if(!self->hw)
+	if (!self->hw)
 		return -1;
 
 	// SPI_Cmd(self->hw, ENABLE);
 
 	// gpio_reset(self->gpio, cs);
 	gpio_reset(gpio, cs_pin);
-	for(size_t c = 0; c < size; c++) {
+	for (size_t c = 0; c < size; c++) {
 		SPI_I2S_SendData(self->hw, ((const uint8_t *)tx_data)[c]);
 		int tout = SPI_TRANSFER_TIMEOUT;
-		while(SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_TXE) == RESET && --tout)
+		while (SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_TXE) == RESET && --tout)
 			asm volatile("nop");
-		if(tout == 0) {
+		if (tout == 0) {
 			dbg_printk("spi: etxe\n");
 			goto timedout;
 		}
 		tout = SPI_TRANSFER_TIMEOUT;
-		while(SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_RXNE) == RESET && --tout)
+		while (SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_RXNE) == RESET && --tout)
 			asm volatile("nop");
-		if(tout == 0) {
+		if (tout == 0) {
 			dbg_printk("spi: erxne\n");
 			goto timedout;
 		}
@@ -130,9 +130,9 @@ int _stm32_spi_transfer(spi_device_t dev, gpio_device_t gpio, uint32_t cs_pin,
 		((uint8_t *)rx_data)[c] = (uint8_t)SPI_I2S_ReceiveData(self->hw);
 
 		tout = SPI_TRANSFER_TIMEOUT;
-		while(SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_BSY) == SET && --tout)
+		while (SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_BSY) == SET && --tout)
 			asm volatile("nop");
-		if(tout == 0) {
+		if (tout == 0) {
 			dbg_printk("spi: ebsy\n");
 			goto timedout;
 		}
@@ -181,17 +181,17 @@ timedout:
 	return 0;
 }
 
-const struct spi_device_ops _ops = {.transfer = _stm32_spi_transfer};
+const struct spi_device_ops _ops = { .transfer = _stm32_spi_transfer };
 
-static int _stm32_spi_probe(void *fdt, int fdt_node) {
-	SPI_TypeDef *SPIx =
-	    (SPI_TypeDef *)fdt_get_int_or_default(fdt, (int)fdt_node, "reg", 0);
+static int _stm32_spi_probe(void *fdt, int fdt_node)
+{
+	SPI_TypeDef *SPIx = (SPI_TypeDef *)fdt_get_int_or_default(fdt, (int)fdt_node, "reg", 0);
 
 	int idx = 0;
-	if(SPIx == SPI1) {
+	if (SPIx == SPI1) {
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 		idx = 0;
-	} else if(SPIx == SPI2) {
+	} else if (SPIx == SPI2) {
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
 		idx = 1;
 	} else {
@@ -369,7 +369,8 @@ static int _stm32_spi_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_spi_remove(void *fdt, int fdt_node) {
+static int _stm32_spi_remove(void *fdt, int fdt_node)
+{
 	return 0;
 }
 

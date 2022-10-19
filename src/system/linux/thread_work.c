@@ -18,21 +18,25 @@ struct work_priv {
 	bool queued; // specifies if work has already been queued
 };
 
-static void _run_work(union sigval sigval){
-	struct work *self = (struct work*)sigval.sival_ptr;
-	if(!self) return;
+static void _run_work(union sigval sigval)
+{
+	struct work *self = (struct work *)sigval.sival_ptr;
+	if (!self)
+		return;
 
-	if(self->priv){
-		struct work_priv *priv = (struct work_priv*)self->priv;
+	if (self->priv) {
+		struct work_priv *priv = (struct work_priv *)self->priv;
 		pthread_mutex_lock(&priv->mx);
 		priv->queued = false;
 		pthread_mutex_unlock(&priv->mx);
 
-		if(self->handler) self->handler(self);
+		if (self->handler)
+			self->handler(self);
 	}
 }
 
-void work_init(struct work *self, void (*handler)(struct work *)){
+void work_init(struct work *self, void (*handler)(struct work *))
+{
 	memset(self, 0, sizeof(*self));
 	self->handler = handler;
 
@@ -49,7 +53,7 @@ void work_init(struct work *self, void (*handler)(struct work *)){
 	sev.sigev_notify_function = _run_work;
 	sev.sigev_notify_attributes = NULL;
 
-	if(timer_create(CLOCK_MONOTONIC, &sev, &priv->timer) < 0){
+	if (timer_create(CLOCK_MONOTONIC, &sev, &priv->timer) < 0) {
 		printf("Could not create work queue timer!\n");
 		goto cleanup;
 	} else {
@@ -61,8 +65,9 @@ cleanup:
 	self->priv = 0;
 }
 
-void work_destroy(struct work *self){
-	struct work_priv *priv = (struct work_priv*)self->priv;
+void work_destroy(struct work *self)
+{
+	struct work_priv *priv = (struct work_priv *)self->priv;
 	// disarm timer
 	struct itimerspec ts;
 	memset(&ts, 0, sizeof(ts));
@@ -73,7 +78,7 @@ void work_destroy(struct work *self){
 	pthread_mutex_lock(&priv->mx);
 	pthread_mutex_unlock(&priv->mx);
 
-	if(priv){
+	if (priv) {
 		timer_delete(priv->timer);
 		pthread_mutex_destroy(&priv->mx);
 		kfree(priv);
@@ -81,14 +86,17 @@ void work_destroy(struct work *self){
 	}
 }
 
-int reschedule_work(struct work *self, uint32_t delay_ms){
-    return queue_work(self, delay_ms);
+int reschedule_work(struct work *self, uint32_t delay_ms)
+{
+	return queue_work(self, delay_ms);
 }
 
-int queue_work(struct work *self, uint32_t delay_ms){
-	if(delay_ms < 1) delay_ms = 1;
-	struct work_priv *priv = (struct work_priv*)self->priv;
-	if(!priv){
+int queue_work(struct work *self, uint32_t delay_ms)
+{
+	if (delay_ms < 1)
+		delay_ms = 1;
+	struct work_priv *priv = (struct work_priv *)self->priv;
+	if (!priv) {
 		printf("Warning: work item has not been properly initialized!\n");
 		fflush(stdout);
 		return -1;
@@ -97,13 +105,13 @@ int queue_work(struct work *self, uint32_t delay_ms){
 	// work will then run ahead of time though.
 	// perhaps we should add semantics that call the work again later? An array of timers perhaps?
 	pthread_mutex_lock(&priv->mx);
-	if(!priv->queued){
+	if (!priv->queued) {
 		priv->queued = true;
 		struct itimerspec ts;
 		memset(&ts, 0, sizeof(ts));
 		ts.it_value.tv_sec = (time_t)(delay_ms / 1000);
 		ts.it_value.tv_nsec = (suseconds_t)((delay_ms * 1000000) % 1000000000);
-		if(timer_settime(priv->timer, 0, &ts, 0) < 0){
+		if (timer_settime(priv->timer, 0, &ts, 0) < 0) {
 			printf("error queuing work!\n");
 			pthread_mutex_unlock(&priv->mx);
 			return -1;
@@ -112,4 +120,3 @@ int queue_work(struct work *self, uint32_t delay_ms){
 	pthread_mutex_unlock(&priv->mx);
 	return 0;
 }
-

@@ -90,7 +90,7 @@
   * limitations under the License.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f30x_opamp.h"
@@ -102,13 +102,13 @@
 /** @defgroup OPAMP 
   * @brief OPAMP driver modules
   * @{
-  */ 
+  */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define OPAMP_CSR_DEFAULT_MASK                    ((uint32_t)0xFFFFFF93)
-#define OPAMP_CSR_TIMERMUX_MASK                   ((uint32_t)0xFFFFF8FF)
-#define OPAMP_CSR_TRIMMING_MASK                   ((uint32_t)0x0000001F)
+#define OPAMP_CSR_DEFAULT_MASK ((uint32_t)0xFFFFFF93)
+#define OPAMP_CSR_TIMERMUX_MASK ((uint32_t)0xFFFFF8FF)
+#define OPAMP_CSR_TRIMMING_MASK ((uint32_t)0x0000001F)
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -130,7 +130,7 @@
 @endverbatim
   * @{
   */
-   
+
 /**
   * @brief  Deinitializes OPAMP peripheral registers to their default reset values.
   * @note   Deinitialization can't be performed if the OPAMP configuration is locked.
@@ -143,8 +143,8 @@
   */
 void OPAMP_DeInit(uint32_t OPAMP_Selection)
 {
-  /*!< Set OPAMP_CSR register to reset value */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) = ((uint32_t)0x00000000);
+	/*!< Set OPAMP_CSR register to reset value */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) = ((uint32_t)0x00000000);
 }
 
 /**
@@ -161,26 +161,27 @@ void OPAMP_DeInit(uint32_t OPAMP_Selection)
   *           - OPAMP_NonInvertingInput specifies the non inverting input of OPAMP
   * @retval None
   */
-void OPAMP_Init(uint32_t OPAMP_Selection, OPAMP_InitTypeDef* OPAMP_InitStruct)
+void OPAMP_Init(uint32_t OPAMP_Selection, OPAMP_InitTypeDef *OPAMP_InitStruct)
 {
-  uint32_t tmpreg = 0;
+	uint32_t tmpreg = 0;
 
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_OPAMP_INVERTING_INPUT(OPAMP_InitStruct->OPAMP_InvertingInput));
-  assert_param(IS_OPAMP_NONINVERTING_INPUT(OPAMP_InitStruct->OPAMP_NonInvertingInput));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_OPAMP_INVERTING_INPUT(OPAMP_InitStruct->OPAMP_InvertingInput));
+	assert_param(IS_OPAMP_NONINVERTING_INPUT(OPAMP_InitStruct->OPAMP_NonInvertingInput));
 
-  /*!< Get the OPAMPx_CSR register value */
-  tmpreg = *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection);
+	/*!< Get the OPAMPx_CSR register value */
+	tmpreg = *(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection);
 
-  /*!< Clear the inverting and non inverting bits selection bits */
-  tmpreg &= (uint32_t) (OPAMP_CSR_DEFAULT_MASK);
+	/*!< Clear the inverting and non inverting bits selection bits */
+	tmpreg &= (uint32_t)(OPAMP_CSR_DEFAULT_MASK);
 
-  /*!< Configure OPAMP: inverting and non inverting inputs */
-  tmpreg |= (uint32_t)(OPAMP_InitStruct->OPAMP_InvertingInput | OPAMP_InitStruct->OPAMP_NonInvertingInput);
+	/*!< Configure OPAMP: inverting and non inverting inputs */
+	tmpreg |= (uint32_t)(OPAMP_InitStruct->OPAMP_InvertingInput |
+			     OPAMP_InitStruct->OPAMP_NonInvertingInput);
 
-  /*!< Write to OPAMPx_CSR register */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) = tmpreg;
+	/*!< Write to OPAMPx_CSR register */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) = tmpreg;
 }
 
 /**
@@ -189,10 +190,10 @@ void OPAMP_Init(uint32_t OPAMP_Selection, OPAMP_InitTypeDef* OPAMP_InitStruct)
   *         be initialized.
   * @retval None
   */
-void OPAMP_StructInit(OPAMP_InitTypeDef* OPAMP_InitStruct)
+void OPAMP_StructInit(OPAMP_InitTypeDef *OPAMP_InitStruct)
 {
-  OPAMP_InitStruct->OPAMP_NonInvertingInput = OPAMP_NonInvertingInput_IO1;
-  OPAMP_InitStruct->OPAMP_InvertingInput = OPAMP_InvertingInput_IO1;
+	OPAMP_InitStruct->OPAMP_NonInvertingInput = OPAMP_NonInvertingInput_IO1;
+	OPAMP_InitStruct->OPAMP_InvertingInput = OPAMP_InvertingInput_IO1;
 }
 
 /**
@@ -208,16 +209,17 @@ void OPAMP_StructInit(OPAMP_InitTypeDef* OPAMP_InitStruct)
   */
 void OPAMP_PGAConfig(uint32_t OPAMP_Selection, uint32_t OPAMP_PGAGain, uint32_t OPAMP_PGAConnect)
 {
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_OPAMP_PGAGAIN(OPAMP_PGAGain));
-  assert_param(IS_OPAMP_PGACONNECT(OPAMP_PGAConnect));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_OPAMP_PGAGAIN(OPAMP_PGAGain));
+	assert_param(IS_OPAMP_PGACONNECT(OPAMP_PGAConnect));
 
-  /* Reset the configuration bits */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_PGGAIN);
+	/* Reset the configuration bits */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_PGGAIN);
 
-  /* Set the new configuration */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) |= (uint32_t) (OPAMP_PGAGain | OPAMP_PGAConnect);
+	/* Set the new configuration */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) |=
+		(uint32_t)(OPAMP_PGAGain | OPAMP_PGAConnect);
 }
 
 /**
@@ -238,23 +240,23 @@ void OPAMP_PGAConfig(uint32_t OPAMP_Selection, uint32_t OPAMP_PGAGain, uint32_t 
   */
 void OPAMP_VrefConfig(uint32_t OPAMP_Selection, uint32_t OPAMP_Vref)
 {
-  uint32_t tmpreg = 0;
+	uint32_t tmpreg = 0;
 
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_OPAMP_VREF(OPAMP_Vref));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_OPAMP_VREF(OPAMP_Vref));
 
-  /*!< Get the OPAMPx_CSR register value */
-  tmpreg = *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection);
+	/*!< Get the OPAMPx_CSR register value */
+	tmpreg = *(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection);
 
-  /*!< Clear the CALSEL bits */
-  tmpreg &= (uint32_t) (~OPAMP_CSR_CALSEL);
+	/*!< Clear the CALSEL bits */
+	tmpreg &= (uint32_t)(~OPAMP_CSR_CALSEL);
 
-  /*!< Configure OPAMP reference */
-  tmpreg |= (uint32_t)(OPAMP_Vref);
+	/*!< Configure OPAMP reference */
+	tmpreg |= (uint32_t)(OPAMP_Vref);
 
-  /*!< Write to OPAMPx_CSR register */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) = tmpreg;
+	/*!< Write to OPAMPx_CSR register */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) = tmpreg;
 }
 
 /**
@@ -270,20 +272,17 @@ void OPAMP_VrefConfig(uint32_t OPAMP_Selection, uint32_t OPAMP_Vref)
   */
 void OPAMP_VrefConnectNonInvertingInput(uint32_t OPAMP_Selection, FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  if (NewState != DISABLE)
-  {
-    /* Connnect the internal reference to the OPAMP's non inverting input */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) |= (uint32_t) (OPAMP_CSR_FORCEVP);
-  }
-  else
-  {
-    /* Disconnnect the internal reference to the OPAMP's non inverting input */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_FORCEVP);
-  }
+	if (NewState != DISABLE) {
+		/* Connnect the internal reference to the OPAMP's non inverting input */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) |= (uint32_t)(OPAMP_CSR_FORCEVP);
+	} else {
+		/* Disconnnect the internal reference to the OPAMP's non inverting input */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_FORCEVP);
+	}
 }
 
 /**
@@ -296,20 +295,17 @@ void OPAMP_VrefConnectNonInvertingInput(uint32_t OPAMP_Selection, FunctionalStat
   */
 void OPAMP_VrefConnectADCCmd(uint32_t OPAMP_Selection, FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  if (NewState != DISABLE)
-  {
-    /* Enable output internal reference */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) |= (uint32_t) (OPAMP_CSR_TSTREF);
-  }
-  else
-  {
-    /* Disable output internal reference */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_TSTREF);
-  }
+	if (NewState != DISABLE) {
+		/* Enable output internal reference */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) |= (uint32_t)(OPAMP_CSR_TSTREF);
+	} else {
+		/* Disable output internal reference */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_TSTREF);
+	}
 }
 
 /**
@@ -328,26 +324,27 @@ void OPAMP_VrefConnectADCCmd(uint32_t OPAMP_Selection, FunctionalState NewState)
   * @note   PGA and Vout can't be selected as seconadry inverting input.
   * @retval None
   */
-void OPAMP_TimerControlledMuxConfig(uint32_t OPAMP_Selection, OPAMP_InitTypeDef* OPAMP_InitStruct)
+void OPAMP_TimerControlledMuxConfig(uint32_t OPAMP_Selection, OPAMP_InitTypeDef *OPAMP_InitStruct)
 {
-  uint32_t tmpreg = 0;
+	uint32_t tmpreg = 0;
 
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_OPAMP_SECONDARY_INVINPUT(OPAMP_InitStruct->OPAMP_InvertingInput));
-  assert_param(IS_OPAMP_NONINVERTING_INPUT(OPAMP_InitStruct->OPAMP_NonInvertingInput));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_OPAMP_SECONDARY_INVINPUT(OPAMP_InitStruct->OPAMP_InvertingInput));
+	assert_param(IS_OPAMP_NONINVERTING_INPUT(OPAMP_InitStruct->OPAMP_NonInvertingInput));
 
-  /*!< Get the OPAMPx_CSR register value */
-  tmpreg = *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection);
+	/*!< Get the OPAMPx_CSR register value */
+	tmpreg = *(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection);
 
-  /*!< Clear the secondary inverting bit, secondary non inverting bit and TCMEN bits */
-  tmpreg &= (uint32_t) (OPAMP_CSR_TIMERMUX_MASK);
+	/*!< Clear the secondary inverting bit, secondary non inverting bit and TCMEN bits */
+	tmpreg &= (uint32_t)(OPAMP_CSR_TIMERMUX_MASK);
 
-  /*!< Configure OPAMP: secondary inverting and non inverting inputs */
-  tmpreg |= (uint32_t)((uint32_t)(OPAMP_InitStruct->OPAMP_InvertingInput<<3) | (uint32_t)(OPAMP_InitStruct->OPAMP_NonInvertingInput<<7));
+	/*!< Configure OPAMP: secondary inverting and non inverting inputs */
+	tmpreg |= (uint32_t)((uint32_t)(OPAMP_InitStruct->OPAMP_InvertingInput << 3) |
+			     (uint32_t)(OPAMP_InitStruct->OPAMP_NonInvertingInput << 7));
 
-  /*!< Write to OPAMPx_CSR register */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) = tmpreg;
+	/*!< Write to OPAMPx_CSR register */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) = tmpreg;
 }
 
 /**
@@ -363,20 +360,17 @@ void OPAMP_TimerControlledMuxConfig(uint32_t OPAMP_Selection, OPAMP_InitTypeDef*
   */
 void OPAMP_TimerControlledMuxCmd(uint32_t OPAMP_Selection, FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  if (NewState != DISABLE)
-  {
-    /* Enable the timer-controlled Mux mode */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) |= (uint32_t) (OPAMP_CSR_TCMEN);
-  }
-  else
-  {
-    /* Disable the timer-controlled Mux mode */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_TCMEN);
-  }
+	if (NewState != DISABLE) {
+		/* Enable the timer-controlled Mux mode */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) |= (uint32_t)(OPAMP_CSR_TCMEN);
+	} else {
+		/* Disable the timer-controlled Mux mode */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_TCMEN);
+	}
 }
 
 /**
@@ -392,20 +386,17 @@ void OPAMP_TimerControlledMuxCmd(uint32_t OPAMP_Selection, FunctionalState NewSt
   */
 void OPAMP_Cmd(uint32_t OPAMP_Selection, FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  if (NewState != DISABLE)
-  {
-    /* Enable the selected OPAMPx peripheral */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) |= (uint32_t) (OPAMP_CSR_OPAMPxEN);
-  }
-  else
-  {
-    /* Disable the selected OPAMPx peripheral */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_OPAMPxEN);
-  }
+	if (NewState != DISABLE) {
+		/* Enable the selected OPAMPx peripheral */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) |= (uint32_t)(OPAMP_CSR_OPAMPxEN);
+	} else {
+		/* Disable the selected OPAMPx peripheral */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_OPAMPxEN);
+	}
 }
 
 /**
@@ -423,23 +414,20 @@ void OPAMP_Cmd(uint32_t OPAMP_Selection, FunctionalState NewState)
   */
 uint32_t OPAMP_GetOutputLevel(uint32_t OPAMP_Selection)
 {
-  uint32_t opampout = 0x0;
+	uint32_t opampout = 0x0;
 
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
 
-  /* Check if selected OPAMP output is high */
-  if ((*(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) & (OPAMP_CSR_OUTCAL)) != 0)
-  {
-    opampout = OPAMP_OutputLevel_High;
-  }
-  else
-  {
-    opampout = OPAMP_OutputLevel_Low;
-  }
+	/* Check if selected OPAMP output is high */
+	if ((*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) & (OPAMP_CSR_OUTCAL)) != 0) {
+		opampout = OPAMP_OutputLevel_High;
+	} else {
+		opampout = OPAMP_OutputLevel_Low;
+	}
 
-  /* Return the OPAMP output level */
-  return (uint32_t)(opampout);
+	/* Return the OPAMP output level */
+	return (uint32_t)(opampout);
 }
 
 /**
@@ -457,15 +445,15 @@ uint32_t OPAMP_GetOutputLevel(uint32_t OPAMP_Selection)
   */
 void OPAMP_OffsetTrimModeSelect(uint32_t OPAMP_Selection, uint32_t OPAMP_Trimming)
 {
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_OPAMP_TRIMMING(OPAMP_Trimming));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_OPAMP_TRIMMING(OPAMP_Trimming));
 
-  /* Reset USERTRIM bit */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) &= (~(uint32_t) (OPAMP_CSR_USERTRIM));
+	/* Reset USERTRIM bit */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) &= (~(uint32_t)(OPAMP_CSR_USERTRIM));
 
-  /* Select trimming mode */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) |= OPAMP_Trimming;
+	/* Select trimming mode */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) |= OPAMP_Trimming;
 }
 
 /**
@@ -481,26 +469,27 @@ void OPAMP_OffsetTrimModeSelect(uint32_t OPAMP_Selection, uint32_t OPAMP_Trimmin
   *         or equal to 0x0000001F. 
   * @retval None
   */
-void OPAMP_OffsetTrimConfig(uint32_t OPAMP_Selection, uint32_t OPAMP_Input, uint32_t OPAMP_TrimValue)
+void OPAMP_OffsetTrimConfig(uint32_t OPAMP_Selection, uint32_t OPAMP_Input,
+			    uint32_t OPAMP_TrimValue)
 {
-  uint32_t tmpreg = 0;
+	uint32_t tmpreg = 0;
 
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_OPAMP_INPUT(OPAMP_Input));
-  assert_param(IS_OPAMP_TRIMMINGVALUE(OPAMP_TrimValue));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_OPAMP_INPUT(OPAMP_Input));
+	assert_param(IS_OPAMP_TRIMMINGVALUE(OPAMP_TrimValue));
 
-  /*!< Get the OPAMPx_CSR register value */
-  tmpreg = *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection);
+	/*!< Get the OPAMPx_CSR register value */
+	tmpreg = *(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection);
 
-  /*!< Clear the trimming bits */
-  tmpreg &= ((uint32_t)~(OPAMP_CSR_TRIMMING_MASK<<OPAMP_Input));
+	/*!< Clear the trimming bits */
+	tmpreg &= ((uint32_t) ~(OPAMP_CSR_TRIMMING_MASK << OPAMP_Input));
 
-  /*!< Configure the new trimming value */
-  tmpreg |= (uint32_t)(OPAMP_TrimValue<<OPAMP_Input);
+	/*!< Configure the new trimming value */
+	tmpreg |= (uint32_t)(OPAMP_TrimValue << OPAMP_Input);
 
-  /*!< Write to OPAMPx_CSR register */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) = tmpreg;
+	/*!< Write to OPAMPx_CSR register */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) = tmpreg;
 }
 
 /**
@@ -516,20 +505,17 @@ void OPAMP_OffsetTrimConfig(uint32_t OPAMP_Selection, uint32_t OPAMP_Input, uint
   */
 void OPAMP_StartCalibration(uint32_t OPAMP_Selection, FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  if (NewState != DISABLE)
-  {
-    /* Start the OPAMPx calibration */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) |= (uint32_t) (OPAMP_CSR_CALON);
-  }
-  else
-  {
-    /* Stop the OPAMPx calibration */
-    *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_CALON);
-  }
+	if (NewState != DISABLE) {
+		/* Start the OPAMPx calibration */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) |= (uint32_t)(OPAMP_CSR_CALON);
+	} else {
+		/* Stop the OPAMPx calibration */
+		*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) &= (uint32_t)(~OPAMP_CSR_CALON);
+	}
 }
 
 /**
@@ -561,11 +547,11 @@ void OPAMP_StartCalibration(uint32_t OPAMP_Selection, FunctionalState NewState)
   */
 void OPAMP_LockConfig(uint32_t OPAMP_Selection)
 {
-  /* Check the parameter */
-  assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
+	/* Check the parameter */
+	assert_param(IS_OPAMP_ALL_PERIPH(OPAMP_Selection));
 
-  /* Set the lock bit corresponding to selected OPAMP */
-  *(__IO uint32_t *) (OPAMP_BASE + OPAMP_Selection) |= (uint32_t) (OPAMP_CSR_LOCK);
+	/* Set the lock bit corresponding to selected OPAMP */
+	*(__IO uint32_t *)(OPAMP_BASE + OPAMP_Selection) |= (uint32_t)(OPAMP_CSR_LOCK);
 }
 
 /**

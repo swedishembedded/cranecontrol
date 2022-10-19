@@ -29,11 +29,13 @@
 
 #include <libfdt/libfdt.h>
 
-static int _744051_probe(void *fdt, int fdt_node){
+static int _744051_probe(void *fdt, int fdt_node)
+{
 	return 0;
 }
 
-static int _744051_remove(void *fdt, int fdt_node){
+static int _744051_remove(void *fdt, int fdt_node)
+{
 	return 0;
 }
 

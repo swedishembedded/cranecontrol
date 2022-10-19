@@ -13,11 +13,13 @@ import os
 import argparse
 
 
-pattern = re.compile(r"[\n;]\s*MP_REGISTER_MODULE\((.*?),\s*(.*?),\s*(.*?)\);", flags=re.DOTALL)
+pattern = re.compile(
+    r"[\n;]\s*MP_REGISTER_MODULE\((.*?),\s*(.*?),\s*(.*?)\);", flags=re.DOTALL
+)
 
 
 def find_c_file(obj_file, vpath):
-    """ Search vpaths for the c file that matches the provided object_file.
+    """Search vpaths for the c file that matches the provided object_file.
 
     :param str obj_file: object file to find the matching c file for
     :param List[str] vpath: List of base paths, similar to gcc vpath
@@ -36,7 +38,7 @@ def find_c_file(obj_file, vpath):
 
 
 def find_module_registrations(c_file):
-    """ Find any MP_REGISTER_MODULE definitions in the provided c file.
+    """Find any MP_REGISTER_MODULE definitions in the provided c file.
 
     :param str c_file: path to c file to check
     :return: List[(module_name, obj_module, enabled_define)]
@@ -52,7 +54,7 @@ def find_module_registrations(c_file):
 
 
 def generate_module_table_header(modules):
-    """ Generate header with module table entries for builtin modules.
+    """Generate header with module table entries for builtin modules.
 
     :param List[(module_name, obj_module, enabled_define)] modules: module defs
     :return: None
@@ -91,7 +93,9 @@ def generate_module_table_header(modules):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--vpath", default=".", help="comma separated list of folders to search for c files in"
+        "--vpath",
+        default=".",
+        help="comma separated list of folders to search for c files in",
     )
     parser.add_argument("files", nargs="*", help="list of c files to search")
     args = parser.parse_args()

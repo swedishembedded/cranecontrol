@@ -69,33 +69,40 @@ struct console {
 	struct mutex lock;
 };
 
-static int strtokenize(char *buf, size_t len, char *tokens[], uint8_t ntokens){
-	if(!buf || (len <= 0) || !tokens || !ntokens) return -1;
+static int strtokenize(char *buf, size_t len, char *tokens[], uint8_t ntokens)
+{
+	if (!buf || (len <= 0) || !tokens || !ntokens)
+		return -1;
 
 	memset(tokens, 0, ntokens * sizeof(*tokens[0]));
 
 	uint8_t tok = 0;
 	size_t c = 0;
-	while(c < len){
+	while (c < len) {
 		// skip leading spaces and special chars
-		while((buf[c] == ' ' || buf[c] < 0x0f) && c < len) {
-			if(buf[c] == 0) break;
+		while ((buf[c] == ' ' || buf[c] < 0x0f) && c < len) {
+			if (buf[c] == 0)
+				break;
 			buf[c] = 0;
 			c++;
 		}
 		// if reached end of string or end of buffer then break
-		if(buf[c] == 0 || c >= len) break;
+		if (buf[c] == 0 || c >= len)
+			break;
 		// store current position in the string and increase token counter
 		tokens[tok++] = buf + c;
 		// break if we are out of tokens
-		if(tok == ntokens) break;
+		if (tok == ntokens)
+			break;
 		// skip the word until next space or end of string
-		while(buf[c] != ' ' && buf[c] > 0x0f && c < len) c++;
+		while (buf[c] != ' ' && buf[c] > 0x0f && c < len)
+			c++;
 	}
 	return tok;
 }
 
-int _console_printf(console_device_t dev, const char *fmt, ...){
+int _console_printf(console_device_t dev, const char *fmt, ...)
+{
 	struct console *self = container_of(dev, struct console, dev.ops);
 
 	// lock printf buffer
@@ -110,11 +117,13 @@ int _console_printf(console_device_t dev, const char *fmt, ...){
 
 	//thread_mutex_unlock(&self->lock);
 
-	if(rr < 0) return rr;
+	if (rr < 0)
+		return rr;
 	return r;
 }
 
-static int _console_read(console_device_t dev, char *data, size_t size, uint32_t timeout){
+static int _console_read(console_device_t dev, char *data, size_t size, uint32_t timeout)
+{
 	struct console *self = container_of(dev, struct console, dev.ops);
 	return serial_read(self->serial, data, size, timeout);
 }
@@ -133,44 +142,43 @@ static int _compare_tasks(const void *a, const void *b){
 #endif
 #endif
 
-typedef enum {
-	HEX_8,
-	HEX_32
-} hex_format_t;
+typedef enum { HEX_8, HEX_32 } hex_format_t;
 
-static void _dump_hex(console_device_t con, void *addr, hex_format_t format){
+static void _dump_hex(console_device_t con, void *addr, hex_format_t format)
+{
 	console_printf(con, "0x%08x: ", addr);
-	switch(format){
-		case HEX_8:
-			for(int c = 0;c < 16; c++){
-				console_printf(con, "%02x ", *((uint8_t*)addr + c));
-			}
-			break;
-		case HEX_32:
-			for(int c = 0;c < 4; c++){
-				console_printf(con, "%08x ", *((uint32_t*)addr + c));
-			}
-			break;
+	switch (format) {
+	case HEX_8:
+		for (int c = 0; c < 16; c++) {
+			console_printf(con, "%02x ", *((uint8_t *)addr + c));
+		}
+		break;
+	case HEX_32:
+		for (int c = 0; c < 4; c++) {
+			console_printf(con, "%08x ", *((uint32_t *)addr + c));
+		}
+		break;
 	}
 	console_printf(con, "\n");
 }
 
-static int _cmd_md(console_device_t con, void *ptr, int argc, char **argv){
+static int _cmd_md(console_device_t con, void *ptr, int argc, char **argv)
+{
 	hex_format_t format = HEX_8;
-	void* addr = 0;
-	if(argc == 2){
+	void *addr = 0;
+	if (argc == 2) {
 		int r = sscanf(argv[1], "%p", &addr);
-		if(r != 1){
+		if (r != 1) {
 			goto usage;
 		}
-	} else if(argc == 3){
+	} else if (argc == 3) {
 		int r = sscanf(argv[2], "%p", &addr);
-		if(r != 1){
+		if (r != 1) {
 			goto usage;
 		}
-		if(strcmp(argv[1], "x8") == 0){
+		if (strcmp(argv[1], "x8") == 0) {
 			format = HEX_8;
-		} else if(strcmp(argv[1], "x32") == 0){
+		} else if (strcmp(argv[1], "x32") == 0) {
 			format = HEX_32;
 		}
 	}
@@ -181,7 +189,8 @@ usage:
 	return -1;
 }
 
-static int _cmd_ps(console_device_t con, void *ptr, int argc, char **argv){
+static int _cmd_ps(console_device_t con, void *ptr, int argc, char **argv)
+{
 	(void)con;
 	(void)argc;
 	(void)argv;
@@ -242,13 +251,14 @@ static int _cmd_ps(console_device_t con, void *ptr, int argc, char **argv){
 	return 0;
 }
 
-static int _cmd_set(struct console *con, int argc, char **argv){
-	if(!con->vardir){
+static int _cmd_set(struct console *con, int argc, char **argv)
+{
+	if (!con->vardir) {
 		_console_printf(&con->dev.ops, PRINT_ERROR "no vardir\n");
 		return -EIO;
 	}
 
-	if(argc != 3) {
+	if (argc != 3) {
 		_console_printf(&con->dev.ops, PRINT_ERROR "set <name> <value>\n");
 		return -1;
 	}
@@ -256,13 +266,14 @@ static int _cmd_set(struct console *con, int argc, char **argv){
 	return vardir_set(con->vardir, 0, argv[1], VAR_STRING, argv[2]);
 }
 
-static int _cmd_get(struct console *con, int argc, char **argv){
-	if(!con->vardir){
+static int _cmd_get(struct console *con, int argc, char **argv)
+{
+	if (!con->vardir) {
 		_console_printf(&con->dev.ops, PRINT_ERROR "no vardir\n");
 		return -EIO;
 	}
 
-	if(argc != 2) {
+	if (argc != 2) {
 		_console_printf(&con->dev.ops, PRINT_ERROR "get <name>\n");
 		return -1;
 	}
@@ -270,7 +281,7 @@ static int _cmd_get(struct console *con, int argc, char **argv){
 	char buf[16];
 
 	int ret = 0;
-	if((ret = vardir_get(con->vardir, 0, argv[1], VAR_STRING, buf, sizeof(buf))) >= 0){
+	if ((ret = vardir_get(con->vardir, 0, argv[1], VAR_STRING, buf, sizeof(buf))) >= 0) {
 		_console_printf(&con->dev.ops, "%s=%s\n", argv[1], buf);
 	} else {
 		_console_printf(&con->dev.ops, PRINT_ERROR "ERROR: variable not found\n");
@@ -292,14 +303,19 @@ static int _cmd_save(struct console *self, int argc, char **argv){
 }
 
 #endif
-static int _cmd_help(struct console *self, int argc, char **argv){
-	(void)argc; (void)argv;
+static int _cmd_help(struct console *self, int argc, char **argv)
+{
+	(void)argc;
+	(void)argv;
 	struct console_command *cmd;
-	list_for_each_entry(cmd, &self->commands, list){
+	list_for_each_entry(cmd, &self->commands, list)
+	{
 		_console_printf(&self->dev.ops, "%s", cmd->name);
-		if(cmd->options) _console_printf(&self->dev.ops, " %s", cmd->options);
+		if (cmd->options)
+			_console_printf(&self->dev.ops, " %s", cmd->options);
 		_console_printf(&self->dev.ops, "\n");
-		if(cmd->description) _console_printf(&self->dev.ops, "\t%s\n", cmd->description);
+		if (cmd->description)
+			_console_printf(&self->dev.ops, "\t%s\n", cmd->description);
 	}
 #if CONFIG_CMD_PS == 1
 	_console_printf(&self->dev.ops, "ps\n");
@@ -310,62 +326,69 @@ static int _cmd_help(struct console *self, int argc, char **argv){
 	return 0;
 }
 
-static int con_readline(struct console *self, char *line, size_t size){
+static int con_readline(struct console *self, char *line, size_t size)
+{
 	// buffer must be at least 1 char to accomodate for a \0
 	int rd;
 	char ch;
 	int pos = 0;
-	while((rd = serial_read(self->serial, &ch, 1, THREAD_SLEEP_MAX_DELAY)) > 0){
+	while ((rd = serial_read(self->serial, &ch, 1, THREAD_SLEEP_MAX_DELAY)) > 0) {
 		// emulate backspace correctly
-		if(ch == 0x08 || ch == 0x7f){
+		if (ch == 0x08 || ch == 0x7f) {
 			//serial_write(self->serial, "\x1b[D \x1b[D", 7);
-			if(pos) {
-				if(self->echo)
-					serial_write(self->serial, "\x08 \x08", 3, CONSOLE_WRITE_TIMEOUT);
+			if (pos) {
+				if (self->echo)
+					serial_write(self->serial, "\x08 \x08", 3,
+						     CONSOLE_WRITE_TIMEOUT);
 				line[--pos] = 0;
 			}
 			continue;
-		} else if(ch == '\n'){
+		} else if (ch == '\n') {
 			// skip new lines (we expect carriage returns from now on)
 			continue;
-		} else if(ch == '\r') {
+		} else if (ch == '\r') {
 			// echo a new line
 			char nl = '\n';
-			if(self->echo) {
+			if (self->echo) {
 				serial_write(self->serial, &nl, 1, CONSOLE_WRITE_TIMEOUT);
 			}
 			break;
-		} else if(ch == CONSOLE_KEY_ARROW_UP){
+		} else if (ch == CONSOLE_KEY_ARROW_UP) {
 			char *p = strncpy(line, self->prev_line, size);
 			size_t len = (size_t)(p - line);
-			if(self->echo){
-				serial_write(self->serial, line, (size_t)len, CONSOLE_WRITE_TIMEOUT);
+			if (self->echo) {
+				serial_write(self->serial, line, (size_t)len,
+					     CONSOLE_WRITE_TIMEOUT);
 			}
 			pos = (int)len;
-		} else if(ch > 0xf && ch < 127){
-			if(self->echo){
+		} else if (ch > 0xf && ch < 127) {
+			if (self->echo) {
 				serial_write(self->serial, &ch, 1, CONSOLE_WRITE_TIMEOUT);
 			}
 			line[pos++] = ch;
 		} else {
-			if(self->echo){
+			if (self->echo) {
 				printk("%02x ", ch);
 			}
 		}
 
-		if(size > 0 && ((size_t)pos == (size - 1))) break;
+		if (size > 0 && ((size_t)pos == (size - 1)))
+			break;
 	}
 	line[pos] = 0;
-	if(rd == 0) return -ETIMEDOUT;
-	if(rd < 0) return rd;
+	if (rd == 0)
+		return -ETIMEDOUT;
+	if (rd < 0)
+		return rd;
 	return pos;
 }
 
-static void _console_device_task(void *ptr){
-	struct console *self = (struct console*)ptr;
+static void _console_device_task(void *ptr)
+{
+	struct console *self = (struct console *)ptr;
 
-	while(1){
-		if(self->echo){
+	while (1) {
+		if (self->echo) {
 			_console_printf(&self->dev.ops, "\x1b[0m# ");
 		}
 		int rd = 0;
@@ -373,16 +396,17 @@ static void _console_device_task(void *ptr){
 
 		rd = con_readline(self, self->line, sizeof(self->line));
 
-		if(rd < 0) {
-			_console_printf(&self->dev.ops, "console: error (%d): %s\n", rd, strerror(-rd));
-            thread_sleep_ms(100); // to avoid busy loop
+		if (rd < 0) {
+			_console_printf(&self->dev.ops, "console: error (%d): %s\n", rd,
+					strerror(-rd));
+			thread_sleep_ms(100); // to avoid busy loop
 			continue;
 		}
 
 		memset(self->argv, 0, sizeof(self->argv));
 		int argc = strtokenize(self->line, (size_t)rd, self->argv, 8);
 
-		if(argc <= 0)
+		if (argc <= 0)
 			continue;
 
 		// reset optind because getopt uses it for first parameter and we need to start from the begining for each command
@@ -398,8 +422,9 @@ static void _console_device_task(void *ptr){
 		int err = 0;
 		thread_mutex_lock(&self->lock);
 
-		list_for_each_entry(cmd, &self->commands, list){
-			if(strcmp(cmd->name, self->argv[0]) == 0 && cmd->proc){
+		list_for_each_entry(cmd, &self->commands, list)
+		{
+			if (strcmp(cmd->name, self->argv[0]) == 0 && cmd->proc) {
 				err = cmd->proc(&self->dev.ops, cmd->userptr, argc, self->argv);
 				handled = 1;
 				break;
@@ -408,14 +433,13 @@ static void _console_device_task(void *ptr){
 
 		thread_mutex_unlock(&self->lock);
 
-		if(handled && err < 0){
+		if (handled && err < 0) {
 			_console_printf(&self->dev.ops, "ERROR (%d): %s\n", -err, strerror(-err));
-		} else if(!handled){
-			if(0) {}
-			else if(strcmp("set", self->argv[0]) == 0){
+		} else if (!handled) {
+			if (0) {
+			} else if (strcmp("set", self->argv[0]) == 0) {
 				_cmd_set(self, argc, self->argv);
-			}
-			else if(strcmp("get", self->argv[0]) == 0){
+			} else if (strcmp("get", self->argv[0]) == 0) {
 				_cmd_get(self, argc, self->argv);
 			}
 #if 0
@@ -428,12 +452,13 @@ static void _console_device_task(void *ptr){
 			}
 		}
 
-        // send end of transmission
+		// send end of transmission
 		_console_printf(&self->dev.ops, "\x04");
 	}
 }
 
-static int _console_add_command(console_device_t dev, struct console_command *cmd){
+static int _console_add_command(console_device_t dev, struct console_command *cmd)
+{
 	struct console *self = container_of(dev, struct console, dev.ops);
 	thread_mutex_lock(&self->lock);
 	list_add_tail(&cmd->list, &self->commands);
@@ -441,25 +466,24 @@ static int _console_add_command(console_device_t dev, struct console_command *cm
 	return 0;
 }
 
-static const struct console_device_ops _console_ops = {
-	.add_command = _console_add_command,
-	.printf = _console_printf,
-	.read = _console_read
-};
+static const struct console_device_ops _console_ops = { .add_command = _console_add_command,
+							.printf = _console_printf,
+							.read = _console_read };
 
-int _console_probe(void *fdt, int fdt_node){
+int _console_probe(void *fdt, int fdt_node)
+{
 	struct console *self = kzmalloc(sizeof(struct console));
 	vardir_device_t vardir = vardir_find_by_ref(fdt, fdt_node, "vardir");
 	self->echo = (bool)fdt_get_int_or_default(fdt, fdt_node, "echo", 1);
 
 	int node = fdt_find_node_by_ref(fdt, fdt_node, "serial");
-	if(node < 0){
+	if (node < 0) {
 		printk("console: serial port missing\n");
 		return -EINVAL;
 	}
 
 	serial_port_t serial = serial_find_by_node(fdt, node);
-	if(!serial){
+	if (!serial) {
 		printk("console: invalid serial port\n");
 		return -EINVAL;
 	}
@@ -475,23 +499,17 @@ int _console_probe(void *fdt, int fdt_node){
 	console_add_command(&self->dev.ops, self, "ps", "Show list of processes", "", _cmd_ps);
 	console_add_command(&self->dev.ops, self, "md", "Dump raw memory location", "", _cmd_md);
 
-	if(thread_create(
-		  _console_device_task,
-		  "shell",
-		  820,
-		  self,
-		  1,
-		  NULL) < 0){
-        dbg_printk("con: fail!\n");
-        return -1;
-    } else {
-        printk("con: started!\n");
-    }
+	if (thread_create(_console_device_task, "shell", 820, self, 1, NULL) < 0) {
+		dbg_printk("con: fail!\n");
+		return -1;
+	} else {
+		printk("con: started!\n");
+	}
 	return 0;
 }
 
-int _console_remove(void *fdt, int fdt_node){
-
+int _console_remove(void *fdt, int fdt_node)
+{
 	return -1;
 }
 

@@ -12,16 +12,16 @@
 #define BMP280_DEFAULT_I2C_ADDRESS (0x76)
 #define BMP280_DEFAULT_CHIP_ID (0x58)
 
-#define BMP280_CHIP_ID_REG (0xD0)          /* Chip ID Register */
-#define BMP280_RST_REG (0xE0)              /* Softreset Register */
-#define BMP280_STAT_REG (0xF3)             /* Status Register */
-#define BMP280_CTRL_MEAS_REG (0xF4)        /* Ctrl Measure Register */
-#define BMP280_CONFIG_REG (0xF5)           /* Configuration Register */
-#define BMP280_PRESSURE_MSB_REG (0xF7)     /* Pressure MSB Register */
-#define BMP280_PRESSURE_LSB_REG (0xF8)     /* Pressure LSB Register */
-#define BMP280_PRESSURE_XLSB_REG (0xF9)    /* Pressure XLSB Register */
-#define BMP280_TEMPERATURE_MSB_REG (0xFA)  /* Temperature MSB Reg */
-#define BMP280_TEMPERATURE_LSB_REG (0xFB)  /* Temperature LSB Reg */
+#define BMP280_CHIP_ID_REG (0xD0) /* Chip ID Register */
+#define BMP280_RST_REG (0xE0) /* Softreset Register */
+#define BMP280_STAT_REG (0xF3) /* Status Register */
+#define BMP280_CTRL_MEAS_REG (0xF4) /* Ctrl Measure Register */
+#define BMP280_CONFIG_REG (0xF5) /* Configuration Register */
+#define BMP280_PRESSURE_MSB_REG (0xF7) /* Pressure MSB Register */
+#define BMP280_PRESSURE_LSB_REG (0xF8) /* Pressure LSB Register */
+#define BMP280_PRESSURE_XLSB_REG (0xF9) /* Pressure XLSB Register */
+#define BMP280_TEMPERATURE_MSB_REG (0xFA) /* Temperature MSB Reg */
+#define BMP280_TEMPERATURE_LSB_REG (0xFB) /* Temperature LSB Reg */
 #define BMP280_TEMPERATURE_XLSB_REG (0xFC) /* Temperature XLSB Reg */
 #define BMP280_FORCED_MODE (0x01)
 
@@ -39,8 +39,7 @@
 // configure pressure and temperature oversampling, forced sampling mode
 #define BMP280_PRESSURE_OSR (BMP280_OVERSAMP_8X)
 #define BMP280_TEMPERATURE_OSR (BMP280_OVERSAMP_1X)
-#define BMP280_MODE                                                                 \
-	(BMP280_PRESSURE_OSR << 2 | BMP280_TEMPERATURE_OSR << 5 | BMP280_FORCED_MODE)
+#define BMP280_MODE (BMP280_PRESSURE_OSR << 2 | BMP280_TEMPERATURE_OSR << 5 | BMP280_FORCED_MODE)
 
 #define T_INIT_MAX (20)
 // 20/16 = 1.25 ms
@@ -53,18 +52,18 @@
 
 struct bmp280_calib_data {
 	uint16_t dig_T1; /* calibration T1 data */
-	int16_t dig_T2;  /* calibration T2 data */
-	int16_t dig_T3;  /* calibration T3 data */
+	int16_t dig_T2; /* calibration T2 data */
+	int16_t dig_T3; /* calibration T3 data */
 	uint16_t dig_P1; /* calibration P1 data */
-	int16_t dig_P2;  /* calibration P2 data */
-	int16_t dig_P3;  /* calibration P3 data */
-	int16_t dig_P4;  /* calibration P4 data */
-	int16_t dig_P5;  /* calibration P5 data */
-	int16_t dig_P6;  /* calibration P6 data */
-	int16_t dig_P7;  /* calibration P7 data */
-	int16_t dig_P8;  /* calibration P8 data */
-	int16_t dig_P9;  /* calibration P9 data */
-	int32_t t_fine;  /* calibration t_fine data */
+	int16_t dig_P2; /* calibration P2 data */
+	int16_t dig_P3; /* calibration P3 data */
+	int16_t dig_P4; /* calibration P4 data */
+	int16_t dig_P5; /* calibration P5 data */
+	int16_t dig_P6; /* calibration P6 data */
+	int16_t dig_P7; /* calibration P7 data */
+	int16_t dig_P8; /* calibration P8 data */
+	int16_t dig_P9; /* calibration P9 data */
+	int32_t t_fine; /* calibration t_fine data */
 };
 
 struct bmp280 {
@@ -95,48 +94,49 @@ BMP280_DATA_FRAME_SIZE); int32_t up = (int32_t)((((uint32_t)(data[0])) << 12) |
 }
 */
 
-int _bmp280_read(baro_device_t dev, struct baro_reading *out) {
+int _bmp280_read(baro_device_t dev, struct baro_reading *out)
+{
 	struct bmp280 *self = container_of(dev, struct bmp280, dev.ops);
 
 	// start measurement
 	// set oversampling + power mode (forced), and start sampling
-	uint8_t dat[] = {BMP280_CTRL_MEAS_REG, BMP280_MODE};
-	if(i2c_transfer(self->i2c, self->address, dat, 2, NULL, 0, BMP280_TIMEOUT) < 0) {
+	uint8_t dat[] = { BMP280_CTRL_MEAS_REG, BMP280_MODE };
+	if (i2c_transfer(self->i2c, self->address, dat, 2, NULL, 0, BMP280_TIMEOUT) < 0) {
 		baro_debug("baro: errstart\n");
 		return -EIO;
 	}
 
 	uint32_t delay = ((T_INIT_MAX +
-	                   T_MEASURE_PER_OSRS_MAX * (((1 << BMP280_TEMPERATURE_OSR) >> 1) +
-	                                             ((1 << BMP280_PRESSURE_OSR) >> 1)) +
-	                   (BMP280_PRESSURE_OSR ? T_SETUP_PRESSURE_MAX : 0) + 15) /
-	                  16);
+			   T_MEASURE_PER_OSRS_MAX * (((1 << BMP280_TEMPERATURE_OSR) >> 1) +
+						     ((1 << BMP280_PRESSURE_OSR) >> 1)) +
+			   (BMP280_PRESSURE_OSR ? T_SETUP_PRESSURE_MAX : 0) + 15) /
+			  16);
 	baro_debug("baro: sleep %dms\n", delay);
 	thread_sleep_ms(delay);
 
 	// read data from sensor
 	uint8_t data[BMP280_DATA_FRAME_SIZE];
 	uint8_t reg = BMP280_PRESSURE_MSB_REG;
-	if(i2c_transfer(self->i2c, self->address, &reg, 1, data, BMP280_DATA_FRAME_SIZE,
-	                BMP280_TIMEOUT) < 0) {
+	if (i2c_transfer(self->i2c, self->address, &reg, 1, data, BMP280_DATA_FRAME_SIZE,
+			 BMP280_TIMEOUT) < 0) {
 		baro_debug("baro: noresult\n");
 		return -EIO;
 	}
-	int32_t up = (int32_t)((((uint32_t)(data[0])) << 12) |
-	                       (((uint32_t)(data[1])) << 4) | ((uint32_t)data[2] >> 4));
-	int32_t ut = (int32_t)((((uint32_t)(data[3])) << 12) |
-	                       (((uint32_t)(data[4])) << 4) | ((uint32_t)data[5] >> 4));
+	int32_t up = (int32_t)((((uint32_t)(data[0])) << 12) | (((uint32_t)(data[1])) << 4) |
+			       ((uint32_t)data[2] >> 4));
+	int32_t ut = (int32_t)((((uint32_t)(data[3])) << 12) | (((uint32_t)(data[4])) << 4) |
+			       ((uint32_t)data[5] >> 4));
 
 	// compensate temperature
 	{
 		int32_t var1, var2;
 		var1 = ((((ut >> 3) - ((int32_t)self->cal_data.dig_T1 << 1))) *
-		        ((int32_t)self->cal_data.dig_T2)) >>
+			((int32_t)self->cal_data.dig_T2)) >>
 		       11;
 		var2 = (((((ut >> 4) - ((int32_t)self->cal_data.dig_T1)) *
-		          ((ut >> 4) - ((int32_t)self->cal_data.dig_T1))) >>
-		         12) *
-		        ((int32_t)self->cal_data.dig_T3)) >>
+			  ((ut >> 4) - ((int32_t)self->cal_data.dig_T1))) >>
+			 12) *
+			((int32_t)self->cal_data.dig_T3)) >>
 		       14;
 		self->cal_data.t_fine = var1 + var2;
 		ut = (self->cal_data.t_fine * 5 + 128) >> 8;
@@ -152,7 +152,7 @@ int _bmp280_read(baro_device_t dev, struct baro_reading *out) {
 		var1 = ((var1 * var1 * (int64_t)self->cal_data.dig_P3) >> 8) +
 		       ((var1 * (int64_t)self->cal_data.dig_P2) << 12);
 		var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)self->cal_data.dig_P1) >> 33;
-		if(var1 == 0)
+		if (var1 == 0)
 			return 0;
 		p = 1048576 - up;
 		p = (((p << 31) - var2) * 3125) / var1;
@@ -168,34 +168,35 @@ int _bmp280_read(baro_device_t dev, struct baro_reading *out) {
 	return 0;
 }
 
-static const struct baro_device_ops _baro_ops = {.read = _bmp280_read};
+static const struct baro_device_ops _baro_ops = { .read = _bmp280_read };
 
-int _bmp280_probe(void *fdt, int fdt_node) {
+int _bmp280_probe(void *fdt, int fdt_node)
+{
 	// find the i2c device fdt node
 	int bus = fdt_find_node_by_ref(fdt, fdt_node, "bus");
-	if(bus < 0) {
+	if (bus < 0) {
 		dbg_printk("bmp280: nobus!\n");
 		return -EINVAL;
 	}
 
 	i2c_device_t i2c = i2c_find_by_node(fdt, bus);
-	if(!i2c) {
+	if (!i2c) {
 		dbg_printk("bmp280: noi2c!\n");
 		return -EINVAL;
 	}
 
 	uint8_t address = (uint8_t)fdt_get_int_or_default(fdt, (int)fdt_node, "address",
-	                                                  BMP280_DEFAULT_I2C_ADDRESS);
+							  BMP280_DEFAULT_I2C_ADDRESS);
 
 	// try to identify the chip
 	uint8_t chip_id = 0;
 	uint8_t reg = BMP280_CHIP_ID_REG;
-	if(i2c_transfer(i2c, address, &reg, 1, &chip_id, 1, BMP280_TIMEOUT) != 1) {
+	if (i2c_transfer(i2c, address, &reg, 1, &chip_id, 1, BMP280_TIMEOUT) != 1) {
 		dbg_printk("bmp280: errio!\n");
 		return -EIO;
 	}
 
-	if(chip_id != BMP280_DEFAULT_CHIP_ID) {
+	if (chip_id != BMP280_DEFAULT_CHIP_ID) {
 		dbg_printk("bmp280: noid (%02x)!\n", chip_id);
 		return -1;
 	}
@@ -208,8 +209,7 @@ int _bmp280_probe(void *fdt, int fdt_node) {
 
 	// read calibration
 	reg = BMP280_TEMPERATURE_CALIB_DIG_T1_LSB_REG;
-	i2c_transfer(self->i2c, self->address, &reg, 1, &self->cal_data, 24,
-	             BMP280_TIMEOUT);
+	i2c_transfer(self->i2c, self->address, &reg, 1, &self->cal_data, 24, BMP280_TIMEOUT);
 
 	// set oversampling + power mode (forced), and start sampling
 	// i2c_write_reg(self->i2c, self->address, BMP280_CTRL_MEAS_REG, BMP280_MODE);
@@ -233,7 +233,8 @@ int _bmp280_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-int _bmp280_remove(void *fdt, int fdt_node) {
+int _bmp280_remove(void *fdt, int fdt_node)
+{
 	return -1;
 }
 

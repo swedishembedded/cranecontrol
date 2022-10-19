@@ -36,11 +36,11 @@
 #include "dev/eeprom.h"
 
 struct filestate {
-  int flag;
+	int flag;
 #define FLAG_FILE_CLOSED 0
-#define FLAG_FILE_OPEN   1
-  eeprom_addr_t fileptr;
-  eeprom_addr_t filesize;
+#define FLAG_FILE_OPEN 1
+	eeprom_addr_t fileptr;
+	eeprom_addr_t filesize;
 };
 
 static struct filestate file;
@@ -52,89 +52,80 @@ static struct filestate file;
 #endif
 
 /*---------------------------------------------------------------------------*/
-int
-cfs_open(const char *n, int f)
+int cfs_open(const char *n, int f)
 {
-  if(file.flag == FLAG_FILE_CLOSED) {
-    file.flag = FLAG_FILE_OPEN;
-    if(f & CFS_READ) {
-      file.fileptr = 0;
-    }
-    if(f & CFS_WRITE){
-      if(f & CFS_APPEND) {
-	file.fileptr = file.filesize;
-      } else {
-	file.fileptr = 0;
-	file.filesize = 0;
-      }
-    }
-    return 1;
-  } else {
-    return -1;
-  }
+	if (file.flag == FLAG_FILE_CLOSED) {
+		file.flag = FLAG_FILE_OPEN;
+		if (f & CFS_READ) {
+			file.fileptr = 0;
+		}
+		if (f & CFS_WRITE) {
+			if (f & CFS_APPEND) {
+				file.fileptr = file.filesize;
+			} else {
+				file.fileptr = 0;
+				file.filesize = 0;
+			}
+		}
+		return 1;
+	} else {
+		return -1;
+	}
 }
 /*---------------------------------------------------------------------------*/
-void
-cfs_close(int f)
+void cfs_close(int f)
 {
-  file.flag = FLAG_FILE_CLOSED;
+	file.flag = FLAG_FILE_CLOSED;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_read(int f, void *buf, unsigned int len)
+int cfs_read(int f, void *buf, unsigned int len)
 {
-  if(f == 1) {
-    eeprom_read(CFS_EEPROM_OFFSET + file.fileptr, buf, len);
-    file.fileptr += len;
-    return len;
-  } else {
-    return -1;
-  }
+	if (f == 1) {
+		eeprom_read(CFS_EEPROM_OFFSET + file.fileptr, buf, len);
+		file.fileptr += len;
+		return len;
+	} else {
+		return -1;
+	}
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_write(int f, const void *buf, unsigned int len)
+int cfs_write(int f, const void *buf, unsigned int len)
 {
-  if(f == 1) {
-    eeprom_write(CFS_EEPROM_OFFSET + file.fileptr, (unsigned char *)buf, len);
-    file.fileptr += len;
-    return len;
-  } else {
-    return -1;
-  }
+	if (f == 1) {
+		eeprom_write(CFS_EEPROM_OFFSET + file.fileptr, (unsigned char *)buf, len);
+		file.fileptr += len;
+		return len;
+	} else {
+		return -1;
+	}
 }
 /*---------------------------------------------------------------------------*/
-cfs_offset_t
-cfs_seek(int f, cfs_offset_t o, int w)
+cfs_offset_t cfs_seek(int f, cfs_offset_t o, int w)
 {
-  if(w == CFS_SEEK_SET && f == 1) {
-    file.fileptr = o;
-    return o;
-  } else {
-    return -1;
-  }
+	if (w == CFS_SEEK_SET && f == 1) {
+		file.fileptr = o;
+		return o;
+	} else {
+		return -1;
+	}
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_remove(const char *name)
+int cfs_remove(const char *name)
 {
-  return -1;
+	return -1;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_opendir(struct cfs_dir *p, const char *n)
+int cfs_opendir(struct cfs_dir *p, const char *n)
 {
-  return -1;
+	return -1;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
+int cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
 {
-  return -1;
+	return -1;
 }
 /*---------------------------------------------------------------------------*/
-void
-cfs_closedir(struct cfs_dir *p)
+void cfs_closedir(struct cfs_dir *p)
 {
 }
 /*---------------------------------------------------------------------------*/

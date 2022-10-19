@@ -18,10 +18,7 @@ struct stm32_spi {
 	char *rd_addr;
 };
 
-typedef enum {
-	SPI_MODE_MASTER = 1,
-	SPI_MODE_SLAVE
-} spi_mode_t;
+typedef enum { SPI_MODE_MASTER = 1, SPI_MODE_SLAVE } spi_mode_t;
 
 int stm32_spi_init(struct stm32_spi *self, spi_mode_t mode, uint32_t speed);
 int stm32_spi_read(struct stm32_spi *self, void *buf, size_t size, uint32_t timeout_ms);

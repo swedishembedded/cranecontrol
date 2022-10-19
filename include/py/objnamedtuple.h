@@ -29,13 +29,13 @@
 #include "py/objtuple.h"
 
 typedef struct _mp_obj_namedtuple_type_t {
-    mp_obj_type_t base;
-    size_t n_fields;
-    qstr fields[];
+	mp_obj_type_t base;
+	size_t n_fields;
+	qstr fields[];
 } mp_obj_namedtuple_type_t;
 
 typedef struct _mp_obj_namedtuple_t {
-    mp_obj_tuple_t tuple;
+	mp_obj_tuple_t tuple;
 } mp_obj_namedtuple_t;
 
 size_t mp_obj_namedtuple_find_field(const mp_obj_namedtuple_type_t *type, qstr name);

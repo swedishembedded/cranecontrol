@@ -1,0 +1,44 @@
+image:
+    name: swedishembedded/build:v0.24.5
+    pull_policy: if-not-present
+
+default:
+  tags:
+    - docker
+
+stages:
+ - build
+ - deploy
+
+build:
+    stage: build
+    artifacts:
+        paths:
+            - build/src/cranecontrol
+            - report.html
+            - log.html
+        expire_in: 1 week
+        when: always
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    script:
+        - ./scripts/init
+        - ./scripts/check
+        - ./scripts/build
+        - ./scripts/test
+
+# This is a job that does the "long build"
+# where we start with a fresh ubuntu image
+build_from_scratch:
+    image: ubuntu:latest
+    stage: build
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "web"
+        - if: $CI_PIPELINE_SOURCE == "schedule"
+    before_script:
+        - bash -x ./scripts/install-sdk
+        - bash -x ./scripts/init
+    script:
+        - bash -x ./scripts/check
+        - bash -x ./scripts/build
+        - bash -x ./scripts/test

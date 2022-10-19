@@ -14,16 +14,20 @@
  **/
 #include "control/integrator.h"
 
-void integrator_init(struct integrator *self, float gain, float min, float max){
+void integrator_init(struct integrator *self, float gain, float min, float max)
+{
 	self->state = 0;
 	self->gain = gain;
 	self->min = min;
 	self->max = max;
 }
 
-float integrator_update(struct integrator *self, float input){
+float integrator_update(struct integrator *self, float input)
+{
 	self->state += self->gain * input;
-	if(self->state > self->max) self->state = self->max;
-	if(self->state < self->min) self->state = self->min;
+	if (self->state > self->max)
+		self->state = self->max;
+	if (self->state < self->min)
+		self->state = self->min;
 	return self->state;
 }

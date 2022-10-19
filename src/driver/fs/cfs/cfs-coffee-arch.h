@@ -45,9 +45,8 @@
 #ifndef CFS_COFFEE_ARCH_H
 #define CFS_COFFEE_ARCH_H
 
-
-#define CCIF 
-//typedef int coffee_page_t; 
+#define CCIF
+//typedef int coffee_page_t;
 #define COFFEE_ADDRESS 0
 
 /* 
@@ -56,70 +55,66 @@
  * unit is an aligned 16-bit half-word.
  */
 /* Byte page size, starting address on page boundary, and size of file system */
-#define FLASH_START               0
+#define FLASH_START 0
 /* Minimum erasable unit. */
-#define FLASH_PAGE_SIZE           256UL
+#define FLASH_PAGE_SIZE 256UL
 /* Last 3 pages reserved for NVM. */
-#define FLASH_PAGES               8192UL
+#define FLASH_PAGES 8192UL
 
 /* Minimum reservation unit for Coffee. It can be changed by the user.  */
-#define COFFEE_PAGE_SIZE          (FLASH_PAGE_SIZE/4)
+#define COFFEE_PAGE_SIZE (FLASH_PAGE_SIZE / 4)
 
 /*
  * If using IAR, COFFEE_ADDRESS reflects the static value in the linker script
  * iar-cfg-coffee.icf, so it can't be passed as a parameter for Make.
  */
 #ifdef __ICCARM__
-#define COFFEE_ADDRESS            0
+#define COFFEE_ADDRESS 0
 #endif
 #if (COFFEE_ADDRESS & 0x3FF) != 0
 #error "COFFEE_ADDRESS not aligned to a 1024-bytes page boundary."
 #endif
 
-#define COFFEE_PAGES              ((FLASH_PAGES*FLASH_PAGE_SIZE-               \
-                 (COFFEE_ADDRESS-FLASH_START))/COFFEE_PAGE_SIZE)
-#define COFFEE_START              (COFFEE_ADDRESS & ~(COFFEE_PAGE_SIZE-1))
-#define COFFEE_SIZE               (COFFEE_PAGES*COFFEE_PAGE_SIZE)
+#define COFFEE_PAGES                                                                               \
+	((FLASH_PAGES * FLASH_PAGE_SIZE - (COFFEE_ADDRESS - FLASH_START)) / COFFEE_PAGE_SIZE)
+#define COFFEE_START (COFFEE_ADDRESS & ~(COFFEE_PAGE_SIZE - 1))
+#define COFFEE_SIZE (COFFEE_PAGES * COFFEE_PAGE_SIZE)
 
 /* These must agree with the parameters passed to makefsdata */
-#define COFFEE_SECTOR_SIZE        FLASH_PAGE_SIZE
-#define COFFEE_NAME_LENGTH        20
+#define COFFEE_SECTOR_SIZE FLASH_PAGE_SIZE
+#define COFFEE_NAME_LENGTH 20
 
 /* These are used internally by the AVR flash read routines */
 /* Word reads are faster but take 130 bytes more PROGMEM */
- /* #define FLASH_WORD_READS          1 */
+/* #define FLASH_WORD_READS          1 */
 /*
  * 1 = Slower reads, but no page writes after erase and 18 bytes less PROGMEM. 
  * Best for dynamic file system
  */
- /* #define FLASH_COMPLEMENT_DATA     0 */
+/* #define FLASH_COMPLEMENT_DATA     0 */
 
 /* These are used internally by the coffee file system */
-#define COFFEE_MAX_OPEN_FILES     4UL
-#define COFFEE_FD_SET_SIZE        8UL
-#define COFFEE_DYN_SIZE           (COFFEE_PAGE_SIZE*1)
+#define COFFEE_MAX_OPEN_FILES 4UL
+#define COFFEE_FD_SET_SIZE 8UL
+#define COFFEE_DYN_SIZE (COFFEE_PAGE_SIZE * 1)
 /* Micro logs are not needed for single page sectors */
-#define COFFEE_MICRO_LOGS         1
-#define COFFEE_LOG_TABLE_LIMIT    16UL   /* It doesnt' matter as */
-#define COFFEE_LOG_SIZE           128UL   /* COFFEE_MICRO_LOGS is 0. */
+#define COFFEE_MICRO_LOGS 1
+#define COFFEE_LOG_TABLE_LIMIT 16UL /* It doesnt' matter as */
+#define COFFEE_LOG_SIZE 128UL /* COFFEE_MICRO_LOGS is 0. */
 
 #if COFFEE_PAGES <= 127
 #define coffee_page_t int8_t
 #elif COFFEE_PAGES <= 0x7FFFUL
 #define coffee_page_t int16_t
-#else 
+#else
 #define coffee_page_t int32_t
 #endif
 
-#define COFFEE_WRITE(buf, size, offset) \
-        stm32w_flash_write(COFFEE_START + offset, buf, size)
+#define COFFEE_WRITE(buf, size, offset) stm32w_flash_write(COFFEE_START + offset, buf, size)
 
-#define COFFEE_READ(buf, size, offset) \
-        stm32w_flash_read(COFFEE_START + offset, buf, size)
+#define COFFEE_READ(buf, size, offset) stm32w_flash_read(COFFEE_START + offset, buf, size)
 
-#define COFFEE_ERASE(sector) \
-        stm32w_flash_erase(sector)
-
+#define COFFEE_ERASE(sector) stm32w_flash_erase(sector)
 
 void stm32w_flash_read(uint32_t address, void *data, uint32_t length);
 

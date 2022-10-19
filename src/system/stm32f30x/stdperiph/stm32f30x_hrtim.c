@@ -120,7 +120,7 @@
   * limitations under the License.
   *
   ******************************************************************************  
-  */ 
+  */
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f30x_hrtim.h"
 
@@ -135,59 +135,42 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define HRTIM_FLTR_FLTxEN (HRTIM_FLTR_FLT1EN |\
-                           HRTIM_FLTR_FLT2EN |\
-                           HRTIM_FLTR_FLT3EN |\
-                           HRTIM_FLTR_FLT4EN | \
-                           HRTIM_FLTR_FLT5EN)
+#define HRTIM_FLTR_FLTxEN                                                                          \
+	(HRTIM_FLTR_FLT1EN | HRTIM_FLTR_FLT2EN | HRTIM_FLTR_FLT3EN | HRTIM_FLTR_FLT4EN |           \
+	 HRTIM_FLTR_FLT5EN)
 
-#define HRTIM_TIMCR_TIMUPDATETRIGGER (HRTIM_TIMUPDATETRIGGER_MASTER  |\
-                                      HRTIM_TIMUPDATETRIGGER_TIMER_A |\
-                                      HRTIM_TIMUPDATETRIGGER_TIMER_B |\
-                                      HRTIM_TIMUPDATETRIGGER_TIMER_C |\
-                                      HRTIM_TIMUPDATETRIGGER_TIMER_D |\
-                                      HRTIM_TIMUPDATETRIGGER_TIMER_E)
+#define HRTIM_TIMCR_TIMUPDATETRIGGER                                                               \
+	(HRTIM_TIMUPDATETRIGGER_MASTER | HRTIM_TIMUPDATETRIGGER_TIMER_A |                          \
+	 HRTIM_TIMUPDATETRIGGER_TIMER_B | HRTIM_TIMUPDATETRIGGER_TIMER_C |                         \
+	 HRTIM_TIMUPDATETRIGGER_TIMER_D | HRTIM_TIMUPDATETRIGGER_TIMER_E)
 
-#define HRTIM_TIM_OFFSET      (uint32_t)0x00000080
+#define HRTIM_TIM_OFFSET (uint32_t)0x00000080
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static uint32_t TimerIdxToTimerId[] = 
-{
-  HRTIM_TIMERID_TIMER_A,
-  HRTIM_TIMERID_TIMER_B,
-  HRTIM_TIMERID_TIMER_C,
-  HRTIM_TIMERID_TIMER_D,
-  HRTIM_TIMERID_TIMER_E,
-  HRTIM_TIMERID_MASTER,
+static uint32_t TimerIdxToTimerId[] = {
+	HRTIM_TIMERID_TIMER_A, HRTIM_TIMERID_TIMER_B, HRTIM_TIMERID_TIMER_C,
+	HRTIM_TIMERID_TIMER_D, HRTIM_TIMERID_TIMER_E, HRTIM_TIMERID_MASTER,
 };
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-static void HRTIM_MasterBase_Config(HRTIM_TypeDef* HRTIMx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruc);
-static void HRTIM_TimingUnitBase_Config(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct);
-static void HRTIM_MasterWaveform_Config(HRTIM_TypeDef * HRTIMx, HRTIM_TimerInitTypeDef * TimerInit);
-static void HRTIM_TimingUnitWaveform_Config(HRTIM_TypeDef * HRTIMx, 
-                                            uint32_t TimerIdx, 
-                                            HRTIM_TimerInitTypeDef * TimerInit);
-static void HRTIM_CompareUnitConfig(HRTIM_TypeDef * HRTIMx,
-                                    uint32_t TimerIdx,
-                                    uint32_t CompareUnit,
-                                    HRTIM_CompareCfgTypeDef * CompareCfg);
-static void HRTIM_CaptureUnitConfig(HRTIM_TypeDef * HRTIMx,
-                                    uint32_t TimerIdx,
-                                    uint32_t CaptureUnit,
-                                    uint32_t Event);
-static void HRTIM_OutputConfig(HRTIM_TypeDef * HRTIMx,
-                                uint32_t TimerIdx,
-                                uint32_t Output,
-                                HRTIM_OutputCfgTypeDef * OutputCfg);
-static void HRTIM_ExternalEventConfig(HRTIM_TypeDef * HRTIMx,
-                                      uint32_t Event,
-                                      HRTIM_EventCfgTypeDef * EventCfg);
-static void HRTIM_TIM_ResetConfig(HRTIM_TypeDef * HRTIMx,
-                                  uint32_t TimerIdx,
-                                  uint32_t Event);  
-  /** @defgroup HRTIM_Private_Functions
+static void HRTIM_MasterBase_Config(HRTIM_TypeDef *HRTIMx,
+				    HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruc);
+static void HRTIM_TimingUnitBase_Config(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+					HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct);
+static void HRTIM_MasterWaveform_Config(HRTIM_TypeDef *HRTIMx, HRTIM_TimerInitTypeDef *TimerInit);
+static void HRTIM_TimingUnitWaveform_Config(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+					    HRTIM_TimerInitTypeDef *TimerInit);
+static void HRTIM_CompareUnitConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CompareUnit,
+				    HRTIM_CompareCfgTypeDef *CompareCfg);
+static void HRTIM_CaptureUnitConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CaptureUnit,
+				    uint32_t Event);
+static void HRTIM_OutputConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Output,
+			       HRTIM_OutputCfgTypeDef *OutputCfg);
+static void HRTIM_ExternalEventConfig(HRTIM_TypeDef *HRTIMx, uint32_t Event,
+				      HRTIM_EventCfgTypeDef *EventCfg);
+static void HRTIM_TIM_ResetConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Event);
+/** @defgroup HRTIM_Private_Functions
   * @{
   */
 
@@ -225,22 +208,20 @@ static void HRTIM_TIM_ResetConfig(HRTIM_TypeDef * HRTIMx,
   *           The timer repetition counter.
   * @retval None
   */
-void HRTIM_SimpleBase_Init(HRTIM_TypeDef* HRTIMx, uint32_t TimerIdx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct)
+void HRTIM_SimpleBase_Init(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			   HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct)
 {
-  /* Check the parameters */
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
-   
-  if (TimerIdx == HRTIM_TIMERINDEX_MASTER)
-  {
-    /* Configure master timer */
-    HRTIM_MasterBase_Config(HRTIMx, HRTIM_BaseInitStruct);
-  }
-  else
-  {
-    /* Configure timing unit */
-    HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
-  }
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+	assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
+
+	if (TimerIdx == HRTIM_TIMERINDEX_MASTER) {
+		/* Configure master timer */
+		HRTIM_MasterBase_Config(HRTIMx, HRTIM_BaseInitStruct);
+	} else {
+		/* Configure timing unit */
+		HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
+	}
 }
 
 /**
@@ -249,17 +230,17 @@ void HRTIM_SimpleBase_Init(HRTIM_TypeDef* HRTIMx, uint32_t TimerIdx, HRTIM_BaseI
   * @retval None
   */
 #ifdef __GNUC__
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
-void HRTIM_DeInit(HRTIM_TypeDef* HRTIMx)
+void HRTIM_DeInit(HRTIM_TypeDef *HRTIMx)
 {
-  /* Check the parameters */
-    RCC_APB2PeriphResetCmd(RCC_APB2Periph_HRTIM1, ENABLE);
-    RCC_APB2PeriphResetCmd(RCC_APB2Periph_HRTIM1, DISABLE);  
- }
+	/* Check the parameters */
+	RCC_APB2PeriphResetCmd(RCC_APB2Periph_HRTIM1, ENABLE);
+	RCC_APB2PeriphResetCmd(RCC_APB2Periph_HRTIM1, DISABLE);
+}
 #ifdef __GNUC__
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
 /**
@@ -272,14 +253,15 @@ void HRTIM_DeInit(HRTIM_TypeDef* HRTIMx)
   *         operate in output compare mode
   * @retval None
   */
-void HRTIM_SimpleOC_Init(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct)
+void HRTIM_SimpleOC_Init(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			 HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct)
 {
-  /* Check the parameters */
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
-   
-  /* Configure timing unit */
-  HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+	assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
+
+	/* Configure timing unit */
+	HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
 }
 
 /**
@@ -292,14 +274,15 @@ void HRTIM_SimpleOC_Init(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_BaseIn
   *         operate in capture mode
   * @retval None
   */
-void HRTIM_SimplePWM_Init(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct)
+void HRTIM_SimplePWM_Init(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			  HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct)
 {
-  /* Check the parameters */
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
-  
-  /* Configure timing unit */
-  HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+	assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
+
+	/* Configure timing unit */
+	HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
 }
 
 /**
@@ -310,14 +293,15 @@ void HRTIM_SimplePWM_Init(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_BaseI
   *                   @arg 0x1 to 0x5 for timers A to E 
   * @retval None
   */
-void HRTIM_SimpleCapture_Init(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct)
+void HRTIM_SimpleCapture_Init(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			      HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct)
 {
-  /* Check the parameters */
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
-  
-  /* Configure timing unit */
-  HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+	assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
+
+	/* Configure timing unit */
+	HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
 }
 
 /**
@@ -331,14 +315,15 @@ void HRTIM_SimpleCapture_Init(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_B
   *         in single shot mode (retriggerable or not)
   * @retval None
   */
-void HRTIM_SimpleOnePulse_Init(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct)
+void HRTIM_SimpleOnePulse_Init(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			       HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct)
 {
-  /* Check the parameters */
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
-  
-  /* Configure timing unit */
-  HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+	assert_param(IS_HRTIM_MODE(HRTIM_BaseInitStruct->Mode));
+
+	/* Configure timing unit */
+	HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
 }
 
 /**
@@ -351,38 +336,34 @@ void HRTIM_SimpleOnePulse_Init(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_
   * @param  pTimerInit: pointer to the timer initialization data structure
   * @retval None
   */
-void HRTIM_Waveform_Init(HRTIM_TypeDef * HRTIMx,
-                                         uint32_t TimerIdx,
-                                         HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct,
-                                         HRTIM_TimerInitTypeDef* HRTIM_TimerInitStruct)
+void HRTIM_Waveform_Init(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			 HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct,
+			 HRTIM_TimerInitTypeDef *HRTIM_TimerInitStruct)
 {
-  /* Check the parameters */
-  assert_param(IS_HRTIM_HALFMODE(HRTIM_TimerInitStruct->HalfModeEnable));
-  assert_param(IS_HRTIM_SYNCSTART(HRTIM_TimerInitStruct->StartOnSync));
-  assert_param(IS_HRTIM_SYNCRESET(HRTIM_TimerInitStruct->ResetOnSync));
-  assert_param(IS_HRTIM_DACSYNC(HRTIM_TimerInitStruct->DACSynchro));
-  assert_param(IS_HRTIM_PRELOAD(HRTIM_TimerInitStruct->PreloadEnable));
-  assert_param(IS_HRTIM_TIMERBURSTMODE(HRTIM_TimerInitStruct->BurstMode));
-  assert_param(IS_HRTIM_UPDATEONREPETITION(HRTIM_TimerInitStruct->RepetitionUpdate));
- 
-  if (TimerIdx == HRTIM_TIMERINDEX_MASTER)
-  {
-    /* Check parameters */
-    assert_param(IS_HRTIM_UPDATEGATING_MASTER(HRTIM_TimerInitStruct->UpdateGating));  
-    
-    /* Configure master timer */
-    HRTIM_MasterBase_Config(HRTIMx, HRTIM_BaseInitStruct);
-    HRTIM_MasterWaveform_Config(HRTIMx, HRTIM_TimerInitStruct);
-  }
-  else
-  {
-    /* Check parameters */
-    assert_param(IS_HRTIM_UPDATEGATING_TIM(HRTIM_TimerInitStruct->UpdateGating));  
-    
-    /* Configure timing unit */
-    HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
-    HRTIM_TimingUnitWaveform_Config(HRTIMx, TimerIdx, HRTIM_TimerInitStruct);
-  }
+	/* Check the parameters */
+	assert_param(IS_HRTIM_HALFMODE(HRTIM_TimerInitStruct->HalfModeEnable));
+	assert_param(IS_HRTIM_SYNCSTART(HRTIM_TimerInitStruct->StartOnSync));
+	assert_param(IS_HRTIM_SYNCRESET(HRTIM_TimerInitStruct->ResetOnSync));
+	assert_param(IS_HRTIM_DACSYNC(HRTIM_TimerInitStruct->DACSynchro));
+	assert_param(IS_HRTIM_PRELOAD(HRTIM_TimerInitStruct->PreloadEnable));
+	assert_param(IS_HRTIM_TIMERBURSTMODE(HRTIM_TimerInitStruct->BurstMode));
+	assert_param(IS_HRTIM_UPDATEONREPETITION(HRTIM_TimerInitStruct->RepetitionUpdate));
+
+	if (TimerIdx == HRTIM_TIMERINDEX_MASTER) {
+		/* Check parameters */
+		assert_param(IS_HRTIM_UPDATEGATING_MASTER(HRTIM_TimerInitStruct->UpdateGating));
+
+		/* Configure master timer */
+		HRTIM_MasterBase_Config(HRTIMx, HRTIM_BaseInitStruct);
+		HRTIM_MasterWaveform_Config(HRTIMx, HRTIM_TimerInitStruct);
+	} else {
+		/* Check parameters */
+		assert_param(IS_HRTIM_UPDATEGATING_TIM(HRTIM_TimerInitStruct->UpdateGating));
+
+		/* Configure timing unit */
+		HRTIM_TimingUnitBase_Config(HRTIMx, TimerIdx, HRTIM_BaseInitStruct);
+		HRTIM_TimingUnitWaveform_Config(HRTIMx, TimerIdx, HRTIM_TimerInitStruct);
+	}
 }
 
 /**
@@ -421,32 +402,28 @@ void HRTIM_Waveform_Init(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_CALIBRATIONRATE_14: 14 us
   * @retval None
   */
-void HRTIM_DLLCalibrationStart(HRTIM_TypeDef * HRTIMx, uint32_t CalibrationRate)
+void HRTIM_DLLCalibrationStart(HRTIM_TypeDef *HRTIMx, uint32_t CalibrationRate)
 {
-  uint32_t HRTIM_dllcr;
-  
-   /* Check the parameters */
-  assert_param(IS_HRTIM_CALIBRATIONRATE(CalibrationRate));
+	uint32_t HRTIM_dllcr;
 
-  /* Configure DLL Calibration */
-  HRTIM_dllcr = (HRTIMx->HRTIM_COMMON).DLLCR;
-  
-  if (CalibrationRate == HRTIM_SINGLE_CALIBRATION)
-  {
-    /* One shot DLL calibration */
-    HRTIM_dllcr &= ~(HRTIM_DLLCR_CALEN);
-    HRTIM_dllcr |= HRTIM_DLLCR_CAL;    
-  }
-  else
-  {
-    /* Periodic DLL calibration */
-    HRTIM_dllcr &= ~(HRTIM_DLLCR_CALRTE | HRTIM_DLLCR_CAL);
-    HRTIM_dllcr |= (CalibrationRate | HRTIM_DLLCR_CALEN);
-  }
-               
-  /* Update HRTIMx register */
-  HRTIMx->HRTIM_COMMON.DLLCR = HRTIM_dllcr;
-  
+	/* Check the parameters */
+	assert_param(IS_HRTIM_CALIBRATIONRATE(CalibrationRate));
+
+	/* Configure DLL Calibration */
+	HRTIM_dllcr = (HRTIMx->HRTIM_COMMON).DLLCR;
+
+	if (CalibrationRate == HRTIM_SINGLE_CALIBRATION) {
+		/* One shot DLL calibration */
+		HRTIM_dllcr &= ~(HRTIM_DLLCR_CALEN);
+		HRTIM_dllcr |= HRTIM_DLLCR_CAL;
+	} else {
+		/* Periodic DLL calibration */
+		HRTIM_dllcr &= ~(HRTIM_DLLCR_CALRTE | HRTIM_DLLCR_CAL);
+		HRTIM_dllcr |= (CalibrationRate | HRTIM_DLLCR_CALEN);
+	}
+
+	/* Update HRTIMx register */
+	HRTIMx->HRTIM_COMMON.DLLCR = HRTIM_dllcr;
 }
 /**
   * @brief  Starts the counter of a timer operating in basic time base mode
@@ -457,13 +434,13 @@ void HRTIM_DLLCalibrationStart(HRTIM_TypeDef * HRTIMx, uint32_t CalibrationRate)
   *                   @arg 0x0 to 0x4 for timers A to E 
   * @retval None
   */
-void HRTIM_SimpleBaseStart(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx)
-{  
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  
-  /* Enable the timer counter */
-  __HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
+void HRTIM_SimpleBaseStart(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx)
+{
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+
+	/* Enable the timer counter */
+	__HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 
 /**
@@ -475,13 +452,13 @@ void HRTIM_SimpleBaseStart(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx)
   *                   @arg 0x0 to 0x4 for timers A to E 
   * @retval None
   */
-void HRTIM_SimpleBaseStop(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx)
+void HRTIM_SimpleBaseStop(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx)
 {
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx)); 
-  
-  /* Disable the timer counter */
-  __HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+
+	/* Disable the timer counter */
+	__HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 
 /**
@@ -504,19 +481,16 @@ void HRTIM_SimpleBaseStop(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx)
   *                    @arg HRTIM_OUTPUT_TE2: Timer E - Output 2
   * @retval None
   */
-void HRTIM_SimpleOCStart(HRTIM_TypeDef * HRTIMx,
-                                         uint32_t TimerIdx,
-                                         uint32_t OCChannel)
+void HRTIM_SimpleOCStart(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t OCChannel)
 {
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OCChannel));
-  
-  /* Enable the timer output */
-   (HRTIMx->HRTIM_COMMON).OENR |= OCChannel;
-       
-    /* Enable the timer counter */
-  __HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
-  
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OCChannel));
+
+	/* Enable the timer output */
+	(HRTIMx->HRTIM_COMMON).OENR |= OCChannel;
+
+	/* Enable the timer counter */
+	__HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 
 /**
@@ -539,18 +513,16 @@ void HRTIM_SimpleOCStart(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_OUTPUT_TE2: Timer E - Output 2
   * @retval None
   */
-void HRTIM_SimpleOCStop(HRTIM_TypeDef * HRTIMx,
-                                        uint32_t TimerIdx,
-                                        uint32_t OCChannel)
+void HRTIM_SimpleOCStop(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t OCChannel)
 {
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OCChannel));
-  
-  /* Disable the timer output */
-  HRTIMx->HRTIM_COMMON.DISR |= OCChannel;
-    
-  /* Disable the timer counter */
-   __HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OCChannel));
+
+	/* Disable the timer output */
+	HRTIMx->HRTIM_COMMON.DISR |= OCChannel;
+
+	/* Disable the timer counter */
+	__HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 
 /**
@@ -573,18 +545,16 @@ void HRTIM_SimpleOCStop(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_OUTPUT_TE2: Timer E - Output 2
   * @retval None
   */
-void HRTIM_SimplePWMStart(HRTIM_TypeDef * HRTIMx,
-                                          uint32_t TimerIdx,
-                                          uint32_t PWMChannel)
+void HRTIM_SimplePWMStart(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t PWMChannel)
 {
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, PWMChannel));
-  
-  /* Enable the timer output */
-  HRTIMx->HRTIM_COMMON.OENR |= PWMChannel;
-    
-  /* Enable the timer counter */
-  __HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, PWMChannel));
+
+	/* Enable the timer output */
+	HRTIMx->HRTIM_COMMON.OENR |= PWMChannel;
+
+	/* Enable the timer counter */
+	__HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 
 /**
@@ -607,18 +577,16 @@ void HRTIM_SimplePWMStart(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_OUTPUT_TE2: Timer E - Output 2
   * @retval None
   */
-void HRTIM_SimplePWMStop(HRTIM_TypeDef * HRTIMx,
-                                         uint32_t TimerIdx,
-                                         uint32_t PWMChannel)
+void HRTIM_SimplePWMStop(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t PWMChannel)
 {
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, PWMChannel));
- 
-  /* Disable the timer output */
-  HRTIMx->HRTIM_COMMON.DISR |= PWMChannel;
-    
-  /* Disable the timer counter */
-   __HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, PWMChannel));
+
+	/* Disable the timer output */
+	HRTIMx->HRTIM_COMMON.DISR |= PWMChannel;
+
+	/* Disable the timer counter */
+	__HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 
 /**
@@ -637,19 +605,16 @@ void HRTIM_SimplePWMStop(HRTIM_TypeDef * HRTIMx,
   *        unit counter is enabled.
   */
 #ifdef __GNUC__
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
-void HRTIM_SimpleCaptureStart(HRTIM_TypeDef * HRTIMx,
-                                              uint32_t TimerIdx,
-                                              uint32_t CaptureChannel)
+void HRTIM_SimpleCaptureStart(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CaptureChannel)
 {
-  /* Enable the timer counter */
-  __HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
-
+	/* Enable the timer counter */
+	__HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 #ifdef __GNUC__
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
 /**
@@ -664,38 +629,29 @@ void HRTIM_SimpleCaptureStart(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_CAPTUREUNIT_2: Capture unit 2
   * @retval None
   */
-void HRTIM_SimpleCaptureStop(HRTIM_TypeDef * HRTIMx,
-                                             uint32_t TimerIdx,
-                                             uint32_t CaptureChannel)
+void HRTIM_SimpleCaptureStop(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CaptureChannel)
 {
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
-  assert_param(IS_HRTIM_CAPTUREUNIT(CaptureChannel));
-    
-  /* Set the capture unit trigger */
-  switch (CaptureChannel)
-  {
-    case HRTIM_CAPTUREUNIT_1:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR = HRTIM_CAPTURETRIGGER_NONE;
-    }
-    break;
-    case HRTIM_CAPTUREUNIT_2:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR = HRTIM_CAPTURETRIGGER_NONE;
-    }
-    break;
-    default:
-    break;  
-  }
-  
-  /* Disable the timer counter */
-  if ((HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR == HRTIM_CAPTURETRIGGER_NONE) &&
-      (HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR == HRTIM_CAPTURETRIGGER_NONE))
-  {
-    __HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
-  }
-  
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	assert_param(IS_HRTIM_CAPTUREUNIT(CaptureChannel));
+
+	/* Set the capture unit trigger */
+	switch (CaptureChannel) {
+	case HRTIM_CAPTUREUNIT_1: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR = HRTIM_CAPTURETRIGGER_NONE;
+	} break;
+	case HRTIM_CAPTUREUNIT_2: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR = HRTIM_CAPTURETRIGGER_NONE;
+	} break;
+	default:
+		break;
+	}
+
+	/* Disable the timer counter */
+	if ((HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR == HRTIM_CAPTURETRIGGER_NONE) &&
+	    (HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR == HRTIM_CAPTURETRIGGER_NONE)) {
+		__HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
+	}
 }
 
 /**
@@ -718,18 +674,16 @@ void HRTIM_SimpleCaptureStop(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_OUTPUT_TE2: Timer E - Output 2
   * @retval None
   */
-void HRTIM_SimpleOnePulseStart(HRTIM_TypeDef * HRTIMx,
-                                                uint32_t TimerIdx,
-                                                uint32_t OnePulseChannel)
+void HRTIM_SimpleOnePulseStart(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t OnePulseChannel)
 {
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OnePulseChannel));
-  
-  /* Enable the timer output */
-  HRTIMx->HRTIM_COMMON.OENR |= OnePulseChannel;
-    
-  /* Enable the timer counter */
-  __HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OnePulseChannel));
+
+	/* Enable the timer output */
+	HRTIMx->HRTIM_COMMON.OENR |= OnePulseChannel;
+
+	/* Enable the timer counter */
+	__HRTIM_ENABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 
 /**
@@ -752,18 +706,16 @@ void HRTIM_SimpleOnePulseStart(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_OUTPUT_TE2: Timer E - Output 2
   * @retval None
   */
-void HRTIM_SimpleOnePulseStop(HRTIM_TypeDef * HRTIMx,
-                                              uint32_t TimerIdx,
-                                              uint32_t OnePulseChannel)
+void HRTIM_SimpleOnePulseStop(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t OnePulseChannel)
 {
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OnePulseChannel));
-   
-  /* Disable the timer output */
-  HRTIMx->HRTIM_COMMON.DISR |= OnePulseChannel;
-  
-  /* Disable the timer counter */
-  __HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OnePulseChannel));
+
+	/* Disable the timer output */
+	HRTIMx->HRTIM_COMMON.DISR |= OnePulseChannel;
+
+	/* Disable the timer counter */
+	__HRTIM_DISABLE(HRTIMx, TimerIdxToTimerId[TimerIdx]);
 }
 
 /**
@@ -780,11 +732,10 @@ void HRTIM_SimpleOnePulseStop(HRTIM_TypeDef * HRTIMx,
   *                   @arg HRTIM_TIMERID_TIMER_E 
   * @retval None
   */
-void HRTIM_WaveformCounterStart(HRTIM_TypeDef * HRTIMx,
-                                                 uint32_t TimersToStart)
-{ 
-   /* Enable timer(s) counter */
-   HRTIMx->HRTIM_MASTER.MCR |= TimersToStart;
+void HRTIM_WaveformCounterStart(HRTIM_TypeDef *HRTIMx, uint32_t TimersToStart)
+{
+	/* Enable timer(s) counter */
+	HRTIMx->HRTIM_MASTER.MCR |= TimersToStart;
 }
 
 /**
@@ -801,11 +752,10 @@ void HRTIM_WaveformCounterStart(HRTIM_TypeDef * HRTIMx,
   *                   @arg HRTIM_TIMERID_TIMER_E 
   * @retval None
   */
-void HRTIM_WaveformCounterStop(HRTIM_TypeDef * HRTIMx,
-                                                uint32_t TimersToStop)
+void HRTIM_WaveformCounterStop(HRTIM_TypeDef *HRTIMx, uint32_t TimersToStop)
 {
-  /* Disable timer(s) counter */
-  HRTIMx->HRTIM_MASTER.MCR &= ~TimersToStop;
+	/* Disable timer(s) counter */
+	HRTIMx->HRTIM_MASTER.MCR &= ~TimersToStop;
 }
 
 /**
@@ -826,11 +776,10 @@ void HRTIM_WaveformCounterStop(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_OUTPUT_TE2: Timer E - Output 2
   * @retval None
   */
-void HRTIM_WaveformOutputStart(HRTIM_TypeDef * HRTIMx,
-                                                uint32_t OutputsToStart)
+void HRTIM_WaveformOutputStart(HRTIM_TypeDef *HRTIMx, uint32_t OutputsToStart)
 {
-  /* Enable the HRTIM outputs */
-  HRTIMx->HRTIM_COMMON.OENR = OutputsToStart;
+	/* Enable the HRTIM outputs */
+	HRTIMx->HRTIM_COMMON.OENR = OutputsToStart;
 }
 
 /**
@@ -851,11 +800,10 @@ void HRTIM_WaveformOutputStart(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_OUTPUT_TE2: Timer E - Output 2
   * @retval None
   */
-void HRTIM_WaveformOutputStop(HRTIM_TypeDef * HRTIMx,
-                                               uint32_t OutputsToStop)
+void HRTIM_WaveformOutputStop(HRTIM_TypeDef *HRTIMx, uint32_t OutputsToStop)
 {
-  /* Disable the HRTIM outputs */
-  HRTIMx->HRTIM_COMMON.DISR = OutputsToStop;
+	/* Disable the HRTIM outputs */
+	HRTIMx->HRTIM_COMMON.DISR = OutputsToStop;
 }
 
 /**
@@ -891,44 +839,34 @@ void HRTIM_WaveformOutputStop(HRTIM_TypeDef * HRTIMx,
   *          This parameter can be: ENABLE or DISABLE.
   * @retval None
   */
-void HRTIM_ITConfig(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_IT, FunctionalState NewState)
+void HRTIM_ITConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_IT,
+		    FunctionalState NewState)
 {
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-   
-  switch(TimerIdx)
-  {
-    case HRTIM_TIMERINDEX_MASTER:
-    {
-      if(NewState != DISABLE)
-      {
-        HRTIMx->HRTIM_MASTER.MDIER |= HRTIM_IT;
-      }
-      else
-      {
-        HRTIMx->HRTIM_MASTER.MDIER &= ~HRTIM_IT;
-      }  
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_A:
-    case HRTIM_TIMERINDEX_TIMER_B:
-    case HRTIM_TIMERINDEX_TIMER_C:
-    case HRTIM_TIMERINDEX_TIMER_D:
-    case HRTIM_TIMERINDEX_TIMER_E:
-    {
-      if(NewState != DISABLE)
-      {
-        HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER |= HRTIM_IT;
-      }
-      else
-      {
-        HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER &= ~HRTIM_IT;
-      }
-    }
-    break;
-    
-    default:
-    break;  
-  }    
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+
+	switch (TimerIdx) {
+	case HRTIM_TIMERINDEX_MASTER: {
+		if (NewState != DISABLE) {
+			HRTIMx->HRTIM_MASTER.MDIER |= HRTIM_IT;
+		} else {
+			HRTIMx->HRTIM_MASTER.MDIER &= ~HRTIM_IT;
+		}
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_A:
+	case HRTIM_TIMERINDEX_TIMER_B:
+	case HRTIM_TIMERINDEX_TIMER_C:
+	case HRTIM_TIMERINDEX_TIMER_D:
+	case HRTIM_TIMERINDEX_TIMER_E: {
+		if (NewState != DISABLE) {
+			HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER |= HRTIM_IT;
+		} else {
+			HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER &= ~HRTIM_IT;
+		}
+	} break;
+
+	default:
+		break;
+	}
 }
 
 /**
@@ -948,16 +886,13 @@ void HRTIM_ITConfig(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_IT
   *          This parameter can be: ENABLE or DISABLE.
   * @retval None
   */
-void HRTIM_ITCommonConfig(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_CommonIT, FunctionalState NewState)
+void HRTIM_ITCommonConfig(HRTIM_TypeDef *HRTIMx, uint32_t HRTIM_CommonIT, FunctionalState NewState)
 {
-   if(NewState != DISABLE)
-    {
-      HRTIMx->HRTIM_COMMON.IER |= HRTIM_CommonIT;
-    }
-    else
-    {
-      HRTIMx->HRTIM_COMMON.IER &= ~HRTIM_CommonIT;
-    }
+	if (NewState != DISABLE) {
+		HRTIMx->HRTIM_COMMON.IER |= HRTIM_CommonIT;
+	} else {
+		HRTIMx->HRTIM_COMMON.IER &= ~HRTIM_CommonIT;
+	}
 }
 
 /**
@@ -991,30 +926,25 @@ void HRTIM_ITCommonConfig(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_CommonIT, Funct
   *            @arg HRTIM_TIM_FLAG_DLYPRT1: Timer delay protection Interrupt flag
   * @retval None
   */
-void HRTIM_ClearFlag(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_FLAG)
+void HRTIM_ClearFlag(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_FLAG)
 {
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  
-  switch(TimerIdx)
-  {
-    case HRTIM_TIMERINDEX_MASTER:
-    {
-      HRTIMx->HRTIM_MASTER.MICR |= HRTIM_FLAG;
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_A:
-    case HRTIM_TIMERINDEX_TIMER_B:
-    case HRTIM_TIMERINDEX_TIMER_C:
-    case HRTIM_TIMERINDEX_TIMER_D:
-    case HRTIM_TIMERINDEX_TIMER_E:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxICR |= HRTIM_FLAG;
-    }
-    break;
-    
-    default:
-    break;  
-  }    
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+
+	switch (TimerIdx) {
+	case HRTIM_TIMERINDEX_MASTER: {
+		HRTIMx->HRTIM_MASTER.MICR |= HRTIM_FLAG;
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_A:
+	case HRTIM_TIMERINDEX_TIMER_B:
+	case HRTIM_TIMERINDEX_TIMER_C:
+	case HRTIM_TIMERINDEX_TIMER_D:
+	case HRTIM_TIMERINDEX_TIMER_E: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxICR |= HRTIM_FLAG;
+	} break;
+
+	default:
+		break;
+	}
 }
 
 /**
@@ -1032,9 +962,9 @@ void HRTIM_ClearFlag(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_F
   *            @arg HRTIM_FLAG_BMPER: Burst mode period Interrupt flag
   * @retval None
   */
-void HRTIM_ClearCommonFlag(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_CommonFLAG)
+void HRTIM_ClearCommonFlag(HRTIM_TypeDef *HRTIMx, uint32_t HRTIM_CommonFLAG)
 {
-  HRTIMx->HRTIM_COMMON.ICR |= HRTIM_CommonFLAG;
+	HRTIMx->HRTIM_COMMON.ICR |= HRTIM_CommonFLAG;
 }
 
 /**
@@ -1068,30 +998,25 @@ void HRTIM_ClearCommonFlag(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_CommonFLAG)
   *            @arg HRTIM_TIM_IT_DLYPRT: Timer delay protection Interrupt source
   * @retval None
   */
-void HRTIM_ClearITPendingBit(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_IT)
+void HRTIM_ClearITPendingBit(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_IT)
 {
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  
-  switch(TimerIdx)
-  {
-    case HRTIM_TIMERINDEX_MASTER:
-    {
-      HRTIMx->HRTIM_MASTER.MICR |= HRTIM_IT;
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_A:
-    case HRTIM_TIMERINDEX_TIMER_B:
-    case HRTIM_TIMERINDEX_TIMER_C:
-    case HRTIM_TIMERINDEX_TIMER_D:
-    case HRTIM_TIMERINDEX_TIMER_E:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxICR |= HRTIM_IT;
-    }
-    break;
- 
-    default:
-    break;  
-  }    
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+
+	switch (TimerIdx) {
+	case HRTIM_TIMERINDEX_MASTER: {
+		HRTIMx->HRTIM_MASTER.MICR |= HRTIM_IT;
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_A:
+	case HRTIM_TIMERINDEX_TIMER_B:
+	case HRTIM_TIMERINDEX_TIMER_C:
+	case HRTIM_TIMERINDEX_TIMER_D:
+	case HRTIM_TIMERINDEX_TIMER_E: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxICR |= HRTIM_IT;
+	} break;
+
+	default:
+		break;
+	}
 }
 
 /**
@@ -1109,11 +1034,10 @@ void HRTIM_ClearITPendingBit(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t
   *            @arg HRTIM_IT_BMPER: Burst mode period Interrupt source
   * @retval None
   */
-void HRTIM_ClearCommonITPendingBit(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_CommonIT)
+void HRTIM_ClearCommonITPendingBit(HRTIM_TypeDef *HRTIMx, uint32_t HRTIM_CommonIT)
 {
-  HRTIMx->HRTIM_COMMON.ICR |= HRTIM_CommonIT;
+	HRTIMx->HRTIM_COMMON.ICR |= HRTIM_CommonIT;
 }
-
 
 /**
   * @brief  Checks whether the specified HRTIM flag is set or not.
@@ -1146,48 +1070,37 @@ void HRTIM_ClearCommonITPendingBit(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_Common
   *            @arg HRTIM_TIM_FLAG_DLYPRT: Timer delay protection Interrupt flag
   * @retval The new state of HRTIM_FLAG (SET or RESET).
   */
-FlagStatus HRTIM_GetFlagStatus(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_FLAG)
+FlagStatus HRTIM_GetFlagStatus(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_FLAG)
 {
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  
-  FlagStatus bitstatus = RESET;  
-  
-  switch(TimerIdx)
-  {
-    case HRTIM_TIMERINDEX_MASTER:
-    {
-      if ((HRTIMx->HRTIM_MASTER.MISR & HRTIM_FLAG) != RESET)
-      {
-        bitstatus = SET;
-      }
-      else
-      {
-        bitstatus = RESET;
-      }
-    }
-    break;
-    
-    case HRTIM_TIMERINDEX_TIMER_A:
-    case HRTIM_TIMERINDEX_TIMER_B:
-    case HRTIM_TIMERINDEX_TIMER_C:
-    case HRTIM_TIMERINDEX_TIMER_D:
-    case HRTIM_TIMERINDEX_TIMER_E:
-    {
-      if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_FLAG) != RESET)
-      {
-        bitstatus = SET;
-      }
-      else
-      {
-        bitstatus = RESET;
-      }
-    }
-    break;
- 
-    default:
-    break;  
-  }    
-  return bitstatus;
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+
+	FlagStatus bitstatus = RESET;
+
+	switch (TimerIdx) {
+	case HRTIM_TIMERINDEX_MASTER: {
+		if ((HRTIMx->HRTIM_MASTER.MISR & HRTIM_FLAG) != RESET) {
+			bitstatus = SET;
+		} else {
+			bitstatus = RESET;
+		}
+	} break;
+
+	case HRTIM_TIMERINDEX_TIMER_A:
+	case HRTIM_TIMERINDEX_TIMER_B:
+	case HRTIM_TIMERINDEX_TIMER_C:
+	case HRTIM_TIMERINDEX_TIMER_D:
+	case HRTIM_TIMERINDEX_TIMER_E: {
+		if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_FLAG) != RESET) {
+			bitstatus = SET;
+		} else {
+			bitstatus = RESET;
+		}
+	} break;
+
+	default:
+		break;
+	}
+	return bitstatus;
 }
 
 /**
@@ -1205,21 +1118,18 @@ FlagStatus HRTIM_GetFlagStatus(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32
   *            @arg HRTIM_FLAG_BMPER: Burst mode period Interrupt flag
   * @retval The new state of HRTIM_FLAG (SET or RESET).
   */
-FlagStatus HRTIM_GetCommonFlagStatus(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_CommonFLAG)
+FlagStatus HRTIM_GetCommonFlagStatus(HRTIM_TypeDef *HRTIMx, uint32_t HRTIM_CommonFLAG)
 {
-  FlagStatus bitstatus = RESET;  
+	FlagStatus bitstatus = RESET;
 
-  if((HRTIMx->HRTIM_COMMON.ISR & HRTIM_CommonFLAG) != RESET)
-    {
-      bitstatus = SET;
-    }
-    else
-    {
-      bitstatus = RESET;
-    }
-  return bitstatus;
+	if ((HRTIMx->HRTIM_COMMON.ISR & HRTIM_CommonFLAG) != RESET) {
+		bitstatus = SET;
+	} else {
+		bitstatus = RESET;
+	}
+	return bitstatus;
 }
-                                       
+
 /**
   * @brief  Checks whether the specified HRTIM interrupt has occurred or not.
   * @param  HRTIMx: pointer to HRTIMx peripheral
@@ -1251,55 +1161,44 @@ FlagStatus HRTIM_GetCommonFlagStatus(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_Comm
   *            @arg HRTIM_TIM_IT_DLYPRT: Timer delay protection Interrupt 
   * @retval The new state of the HRTIM_IT(SET or RESET).
   */
-ITStatus HRTIM_GetITStatus(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_IT)
+ITStatus HRTIM_GetITStatus(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_IT)
 {
-  ITStatus bitstatus = RESET;  
-  uint16_t itstatus = 0x0, itenable = 0x0;
-  
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
-  
-  switch(TimerIdx)
-  {
-    case HRTIM_TIMERINDEX_MASTER:
-    {
-      itstatus = (uint16_t)(HRTIMx->HRTIM_MASTER.MISR & HRTIM_IT);
-  
-      itenable = (uint16_t)(HRTIMx->HRTIM_MASTER.MDIER & HRTIM_IT);
-      if ((itstatus != (uint16_t)RESET) && (itenable != (uint16_t)RESET))
-      {
-        bitstatus = SET;
-      }
-      else
-      {
-        bitstatus = RESET;
-      }
-    }
-    break;
-    
-    case HRTIM_TIMERINDEX_TIMER_A:
-    case HRTIM_TIMERINDEX_TIMER_B:
-    case HRTIM_TIMERINDEX_TIMER_C:
-    case HRTIM_TIMERINDEX_TIMER_D:
-    case HRTIM_TIMERINDEX_TIMER_E:
-    {
-      itstatus = (uint16_t)(HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_IT);
-  
-      itenable = (uint16_t)(HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER & HRTIM_IT);
-      if ((itstatus != (uint16_t)RESET) && (itenable != (uint16_t)RESET))
-      {
-        bitstatus = SET;
-      }
-      else
-      {
-        bitstatus = RESET;
-      }
-    }
-    break;
- 
-    default:
-    break;  
-  }    
-  return bitstatus;
+	ITStatus bitstatus = RESET;
+	uint16_t itstatus = 0x0, itenable = 0x0;
+
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+
+	switch (TimerIdx) {
+	case HRTIM_TIMERINDEX_MASTER: {
+		itstatus = (uint16_t)(HRTIMx->HRTIM_MASTER.MISR & HRTIM_IT);
+
+		itenable = (uint16_t)(HRTIMx->HRTIM_MASTER.MDIER & HRTIM_IT);
+		if ((itstatus != (uint16_t)RESET) && (itenable != (uint16_t)RESET)) {
+			bitstatus = SET;
+		} else {
+			bitstatus = RESET;
+		}
+	} break;
+
+	case HRTIM_TIMERINDEX_TIMER_A:
+	case HRTIM_TIMERINDEX_TIMER_B:
+	case HRTIM_TIMERINDEX_TIMER_C:
+	case HRTIM_TIMERINDEX_TIMER_D:
+	case HRTIM_TIMERINDEX_TIMER_E: {
+		itstatus = (uint16_t)(HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_IT);
+
+		itenable = (uint16_t)(HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER & HRTIM_IT);
+		if ((itstatus != (uint16_t)RESET) && (itenable != (uint16_t)RESET)) {
+			bitstatus = SET;
+		} else {
+			bitstatus = RESET;
+		}
+	} break;
+
+	default:
+		break;
+	}
+	return bitstatus;
 }
 
 /**
@@ -1317,24 +1216,21 @@ ITStatus HRTIM_GetITStatus(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, uint32_t H
   *            @arg HRTIM_IT_BMPER: Burst mode period Interrupt 
   * @retval The new state of HRTIM_FLAG (SET or RESET).
   */
-ITStatus HRTIM_GetCommonITStatus(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_CommonIT)
+ITStatus HRTIM_GetCommonITStatus(HRTIM_TypeDef *HRTIMx, uint32_t HRTIM_CommonIT)
 {
-  ITStatus bitstatus = RESET;  
-  uint16_t itstatus = 0x0, itenable = 0x0;
- 
-  itstatus = (uint16_t)(HRTIMx->HRTIM_COMMON.ISR & HRTIM_CommonIT); 
-  itenable = (uint16_t)(HRTIMx->HRTIM_COMMON.IER & HRTIM_CommonIT);
-  
-  if ((itstatus != (uint16_t)RESET) && (itenable != (uint16_t)RESET))
-  {
-    bitstatus = SET;
-  }
-  else
-  {
-    bitstatus = RESET;
-  }
+	ITStatus bitstatus = RESET;
+	uint16_t itstatus = 0x0, itenable = 0x0;
 
-  return bitstatus;
+	itstatus = (uint16_t)(HRTIMx->HRTIM_COMMON.ISR & HRTIM_CommonIT);
+	itenable = (uint16_t)(HRTIMx->HRTIM_COMMON.IER & HRTIM_CommonIT);
+
+	if ((itstatus != (uint16_t)RESET) && (itenable != (uint16_t)RESET)) {
+		bitstatus = SET;
+	} else {
+		bitstatus = RESET;
+	}
+
+	return bitstatus;
 }
 
 /**
@@ -1370,44 +1266,34 @@ ITStatus HRTIM_GetCommonITStatus(HRTIM_TypeDef * HRTIMx, uint32_t HRTIM_CommonIT
   *          This parameter can be: ENABLE or DISABLE.
   * @retval None
   */
-void HRTIM_DMACmd(HRTIM_TypeDef* HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_DMA, FunctionalState NewState)
+void HRTIM_DMACmd(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_DMA,
+		  FunctionalState NewState)
 {
-  assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
+	assert_param(IS_HRTIM_TIMERINDEX(TimerIdx));
 
-  switch(TimerIdx)
-  {
-    case HRTIM_TIMERINDEX_MASTER:
-    {
-      if(NewState != DISABLE)
-      {
-        HRTIMx->HRTIM_MASTER.MDIER |= HRTIM_DMA;
-      }
-      else
-      {
-        HRTIMx->HRTIM_MASTER.MDIER &= ~HRTIM_DMA;
-      }  
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_A:
-    case HRTIM_TIMERINDEX_TIMER_B:
-    case HRTIM_TIMERINDEX_TIMER_C:
-    case HRTIM_TIMERINDEX_TIMER_D:
-    case HRTIM_TIMERINDEX_TIMER_E:
-    {
-      if(NewState != DISABLE)
-      {
-        HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER |= HRTIM_DMA;
-      }
-      else
-      {
-        HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER &= ~HRTIM_DMA;
-      }
-    }
-    break;
-    
-    default:
-    break;  
-  }      
+	switch (TimerIdx) {
+	case HRTIM_TIMERINDEX_MASTER: {
+		if (NewState != DISABLE) {
+			HRTIMx->HRTIM_MASTER.MDIER |= HRTIM_DMA;
+		} else {
+			HRTIMx->HRTIM_MASTER.MDIER &= ~HRTIM_DMA;
+		}
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_A:
+	case HRTIM_TIMERINDEX_TIMER_B:
+	case HRTIM_TIMERINDEX_TIMER_C:
+	case HRTIM_TIMERINDEX_TIMER_D:
+	case HRTIM_TIMERINDEX_TIMER_E: {
+		if (NewState != DISABLE) {
+			HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER |= HRTIM_DMA;
+		} else {
+			HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxDIER &= ~HRTIM_DMA;
+		}
+	} break;
+
+	default:
+		break;
+	}
 }
 
 /**
@@ -1457,109 +1343,83 @@ void HRTIM_DMACmd(HRTIM_TypeDef* HRTIMx, uint32_t TimerIdx, uint32_t HRTIM_DMA, 
   *         Inactive: SETxy =0, RSTxy = CMPy
   * @retval None
   */
-void HRTIM_SimpleOCChannelConfig(HRTIM_TypeDef * HRTIMx,
-                                                 uint32_t TimerIdx,
-                                                 uint32_t OCChannel,
-                                                 HRTIM_BasicOCChannelCfgTypeDef* pBasicOCChannelCfg)
+void HRTIM_SimpleOCChannelConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t OCChannel,
+				 HRTIM_BasicOCChannelCfgTypeDef *pBasicOCChannelCfg)
 {
-  uint32_t CompareUnit = HRTIM_COMPAREUNIT_1;
-  HRTIM_CompareCfgTypeDef CompareCfg;
-  HRTIM_OutputCfgTypeDef OutputCfg;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OCChannel));
-  assert_param(IS_HRTIM_BASICOCMODE(pBasicOCChannelCfg->Mode));
-  assert_param(IS_HRTIM_OUTPUTPOLARITY(pBasicOCChannelCfg->Polarity));
-  assert_param(IS_HRTIM_OUTPUTIDLESTATE(pBasicOCChannelCfg->IdleState));
-    
-  /* Configure timer compare unit */  
-  switch (OCChannel)
-  {
-    case HRTIM_OUTPUT_TA1:
-    case HRTIM_OUTPUT_TB1:
-    case HRTIM_OUTPUT_TC1:
-    case HRTIM_OUTPUT_TD1:
-    case HRTIM_OUTPUT_TE1:
-    {
-      CompareUnit = HRTIM_COMPAREUNIT_1;
-    }
-    break;
-    case HRTIM_OUTPUT_TA2:
-    case HRTIM_OUTPUT_TB2:
-    case HRTIM_OUTPUT_TC2:
-    case HRTIM_OUTPUT_TD2:
-    case HRTIM_OUTPUT_TE2:
-    {
-      CompareUnit = HRTIM_COMPAREUNIT_2;
-    }
-    break;
-    default:
-    break;
-  }
-  
-  CompareCfg.CompareValue = pBasicOCChannelCfg->Pulse;
-  CompareCfg.AutoDelayedMode = HRTIM_AUTODELAYEDMODE_REGULAR;
-  CompareCfg.AutoDelayedTimeout = 0;
-  
-  HRTIM_CompareUnitConfig(HRTIMx,
-                          TimerIdx,
-                          CompareUnit,
-                          &CompareCfg);
-  
-  /* Configure timer output */
-  OutputCfg.Polarity = pBasicOCChannelCfg->Polarity;
-  OutputCfg.IdleState = pBasicOCChannelCfg->IdleState;
-  OutputCfg.FaultState = HRTIM_OUTPUTFAULTSTATE_NONE;
-  OutputCfg.IdleMode = HRTIM_OUTPUTIDLEMODE_NONE;
-  OutputCfg.ChopperModeEnable = HRTIM_OUTPUTCHOPPERMODE_DISABLED;
-  OutputCfg.BurstModeEntryDelayed = HRTIM_OUTPUTBURSTMODEENTRY_REGULAR;
-  
-  switch (pBasicOCChannelCfg->Mode)
-  {
-    case HRTIM_BASICOCMODE_TOGGLE:
-    {
-      if (CompareUnit == HRTIM_COMPAREUNIT_1)
-      {
-        OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP1;
-      }
-      else
-      {
-        OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP2;
-      }
-      OutputCfg.ResetSource = OutputCfg.SetSource;
-    }
-    break;
-    case HRTIM_BASICOCMODE_ACTIVE:
-    {
-      if (CompareUnit == HRTIM_COMPAREUNIT_1)
-      {
-        OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP1;
-      }
-      else
-      {
-        OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP2;
-      }
-      OutputCfg.ResetSource = HRTIM_OUTPUTRESET_NONE;
-    }
-    break;
-    case HRTIM_BASICOCMODE_INACTIVE:
-    {
-      if (CompareUnit == HRTIM_COMPAREUNIT_1)
-      {
-        OutputCfg.ResetSource = HRTIM_OUTPUTRESET_TIMCMP1;
-      }
-      else
-      {
-        OutputCfg.ResetSource = HRTIM_OUTPUTRESET_TIMCMP2;
-      }
-      OutputCfg.SetSource = HRTIM_OUTPUTSET_NONE;
-    }
-    break;
-    default:
-    break;  
-  }
-  
-  HRTIM_OutputConfig(HRTIMx, TimerIdx, OCChannel, &OutputCfg);   
+	uint32_t CompareUnit = HRTIM_COMPAREUNIT_1;
+	HRTIM_CompareCfgTypeDef CompareCfg;
+	HRTIM_OutputCfgTypeDef OutputCfg;
+
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OCChannel));
+	assert_param(IS_HRTIM_BASICOCMODE(pBasicOCChannelCfg->Mode));
+	assert_param(IS_HRTIM_OUTPUTPOLARITY(pBasicOCChannelCfg->Polarity));
+	assert_param(IS_HRTIM_OUTPUTIDLESTATE(pBasicOCChannelCfg->IdleState));
+
+	/* Configure timer compare unit */
+	switch (OCChannel) {
+	case HRTIM_OUTPUT_TA1:
+	case HRTIM_OUTPUT_TB1:
+	case HRTIM_OUTPUT_TC1:
+	case HRTIM_OUTPUT_TD1:
+	case HRTIM_OUTPUT_TE1: {
+		CompareUnit = HRTIM_COMPAREUNIT_1;
+	} break;
+	case HRTIM_OUTPUT_TA2:
+	case HRTIM_OUTPUT_TB2:
+	case HRTIM_OUTPUT_TC2:
+	case HRTIM_OUTPUT_TD2:
+	case HRTIM_OUTPUT_TE2: {
+		CompareUnit = HRTIM_COMPAREUNIT_2;
+	} break;
+	default:
+		break;
+	}
+
+	CompareCfg.CompareValue = pBasicOCChannelCfg->Pulse;
+	CompareCfg.AutoDelayedMode = HRTIM_AUTODELAYEDMODE_REGULAR;
+	CompareCfg.AutoDelayedTimeout = 0;
+
+	HRTIM_CompareUnitConfig(HRTIMx, TimerIdx, CompareUnit, &CompareCfg);
+
+	/* Configure timer output */
+	OutputCfg.Polarity = pBasicOCChannelCfg->Polarity;
+	OutputCfg.IdleState = pBasicOCChannelCfg->IdleState;
+	OutputCfg.FaultState = HRTIM_OUTPUTFAULTSTATE_NONE;
+	OutputCfg.IdleMode = HRTIM_OUTPUTIDLEMODE_NONE;
+	OutputCfg.ChopperModeEnable = HRTIM_OUTPUTCHOPPERMODE_DISABLED;
+	OutputCfg.BurstModeEntryDelayed = HRTIM_OUTPUTBURSTMODEENTRY_REGULAR;
+
+	switch (pBasicOCChannelCfg->Mode) {
+	case HRTIM_BASICOCMODE_TOGGLE: {
+		if (CompareUnit == HRTIM_COMPAREUNIT_1) {
+			OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP1;
+		} else {
+			OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP2;
+		}
+		OutputCfg.ResetSource = OutputCfg.SetSource;
+	} break;
+	case HRTIM_BASICOCMODE_ACTIVE: {
+		if (CompareUnit == HRTIM_COMPAREUNIT_1) {
+			OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP1;
+		} else {
+			OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP2;
+		}
+		OutputCfg.ResetSource = HRTIM_OUTPUTRESET_NONE;
+	} break;
+	case HRTIM_BASICOCMODE_INACTIVE: {
+		if (CompareUnit == HRTIM_COMPAREUNIT_1) {
+			OutputCfg.ResetSource = HRTIM_OUTPUTRESET_TIMCMP1;
+		} else {
+			OutputCfg.ResetSource = HRTIM_OUTPUTRESET_TIMCMP2;
+		}
+		OutputCfg.SetSource = HRTIM_OUTPUTSET_NONE;
+	} break;
+	default:
+		break;
+	}
+
+	HRTIM_OutputConfig(HRTIMx, TimerIdx, OCChannel, &OutputCfg);
 }
 
 /**
@@ -1589,73 +1449,60 @@ void HRTIM_SimpleOCChannelConfig(HRTIM_TypeDef * HRTIMx,
   *         Output 2: SETx2R = CMP2, RST2R = PER
   * @retval None
   */
-void HRTIM_SimplePWMChannelConfig(HRTIM_TypeDef * HRTIMx,
-                                                  uint32_t TimerIdx,
-                                                  uint32_t PWMChannel,
-                                                  HRTIM_BasicPWMChannelCfgTypeDef* pBasicPWMChannelCfg)
+void HRTIM_SimplePWMChannelConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t PWMChannel,
+				  HRTIM_BasicPWMChannelCfgTypeDef *pBasicPWMChannelCfg)
 {
-  uint32_t CompareUnit = HRTIM_COMPAREUNIT_1;
-  HRTIM_CompareCfgTypeDef CompareCfg;
-  HRTIM_OutputCfgTypeDef OutputCfg;
+	uint32_t CompareUnit = HRTIM_COMPAREUNIT_1;
+	HRTIM_CompareCfgTypeDef CompareCfg;
+	HRTIM_OutputCfgTypeDef OutputCfg;
 
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, PWMChannel));
-  assert_param(IS_HRTIM_OUTPUTPOLARITY(pBasicPWMChannelCfg->Polarity));
-  assert_param(IS_HRTIM_OUTPUTIDLESTATE(pBasicPWMChannelCfg->IdleState));
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, PWMChannel));
+	assert_param(IS_HRTIM_OUTPUTPOLARITY(pBasicPWMChannelCfg->Polarity));
+	assert_param(IS_HRTIM_OUTPUTIDLESTATE(pBasicPWMChannelCfg->IdleState));
 
-  /* Configure timer compare unit */  
-  switch (PWMChannel)
-  {
-    case HRTIM_OUTPUT_TA1:
-    case HRTIM_OUTPUT_TB1:
-    case HRTIM_OUTPUT_TC1:
-    case HRTIM_OUTPUT_TD1:
-    case HRTIM_OUTPUT_TE1:
-    {
-      CompareUnit = HRTIM_COMPAREUNIT_1;
-    }
-    break;
-    case HRTIM_OUTPUT_TA2:
-    case HRTIM_OUTPUT_TB2:
-    case HRTIM_OUTPUT_TC2:
-    case HRTIM_OUTPUT_TD2:
-    case HRTIM_OUTPUT_TE2:
-    {
-      CompareUnit = HRTIM_COMPAREUNIT_2;
-    }
-    break;
-    default:
-    break;  
-  }
-  
-  CompareCfg.CompareValue = pBasicPWMChannelCfg->Pulse;
-  CompareCfg.AutoDelayedMode = HRTIM_AUTODELAYEDMODE_REGULAR;
-  CompareCfg.AutoDelayedTimeout = 0;
-  
-  HRTIM_CompareUnitConfig(HRTIMx,
-                          TimerIdx,
-                          CompareUnit,
-                          &CompareCfg);
-  
-  /* Configure timer output */
-  OutputCfg.Polarity = pBasicPWMChannelCfg->Polarity;
-  OutputCfg.IdleState = pBasicPWMChannelCfg->IdleState;
-  OutputCfg.FaultState = HRTIM_OUTPUTFAULTSTATE_NONE;
-  OutputCfg.IdleMode = HRTIM_OUTPUTIDLEMODE_NONE;
-  OutputCfg.ChopperModeEnable = HRTIM_OUTPUTCHOPPERMODE_DISABLED;
-  OutputCfg.BurstModeEntryDelayed = HRTIM_OUTPUTBURSTMODEENTRY_REGULAR;
-  
-  if (CompareUnit == HRTIM_COMPAREUNIT_1)
-  {
-    OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP1;
-  }
-  else
-  {
-    OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP2;
-  }
-  OutputCfg.ResetSource = HRTIM_OUTPUTSET_TIMPER;
-  
-  HRTIM_OutputConfig(HRTIMx, TimerIdx, PWMChannel, &OutputCfg);  
+	/* Configure timer compare unit */
+	switch (PWMChannel) {
+	case HRTIM_OUTPUT_TA1:
+	case HRTIM_OUTPUT_TB1:
+	case HRTIM_OUTPUT_TC1:
+	case HRTIM_OUTPUT_TD1:
+	case HRTIM_OUTPUT_TE1: {
+		CompareUnit = HRTIM_COMPAREUNIT_1;
+	} break;
+	case HRTIM_OUTPUT_TA2:
+	case HRTIM_OUTPUT_TB2:
+	case HRTIM_OUTPUT_TC2:
+	case HRTIM_OUTPUT_TD2:
+	case HRTIM_OUTPUT_TE2: {
+		CompareUnit = HRTIM_COMPAREUNIT_2;
+	} break;
+	default:
+		break;
+	}
+
+	CompareCfg.CompareValue = pBasicPWMChannelCfg->Pulse;
+	CompareCfg.AutoDelayedMode = HRTIM_AUTODELAYEDMODE_REGULAR;
+	CompareCfg.AutoDelayedTimeout = 0;
+
+	HRTIM_CompareUnitConfig(HRTIMx, TimerIdx, CompareUnit, &CompareCfg);
+
+	/* Configure timer output */
+	OutputCfg.Polarity = pBasicPWMChannelCfg->Polarity;
+	OutputCfg.IdleState = pBasicPWMChannelCfg->IdleState;
+	OutputCfg.FaultState = HRTIM_OUTPUTFAULTSTATE_NONE;
+	OutputCfg.IdleMode = HRTIM_OUTPUTIDLEMODE_NONE;
+	OutputCfg.ChopperModeEnable = HRTIM_OUTPUTCHOPPERMODE_DISABLED;
+	OutputCfg.BurstModeEntryDelayed = HRTIM_OUTPUTBURSTMODEENTRY_REGULAR;
+
+	if (CompareUnit == HRTIM_COMPAREUNIT_1) {
+		OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP1;
+	} else {
+		OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP2;
+	}
+	OutputCfg.ResetSource = HRTIM_OUTPUTSET_TIMPER;
+
+	HRTIM_OutputConfig(HRTIMx, TimerIdx, PWMChannel, &OutputCfg);
 }
 
 /**
@@ -1675,37 +1522,31 @@ void HRTIM_SimplePWMChannelConfig(HRTIM_TypeDef * HRTIMx,
   *       edges on event channel.
   * @retval None
   */
-void HRTIM_SimpleCaptureChannelConfig(HRTIM_TypeDef * HRTIMx,
-                                                      uint32_t TimerIdx,
-                                                      uint32_t CaptureChannel,
-                                                      HRTIM_BasicCaptureChannelCfgTypeDef* pBasicCaptureChannelCfg)
+void HRTIM_SimpleCaptureChannelConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+				      uint32_t CaptureChannel,
+				      HRTIM_BasicCaptureChannelCfgTypeDef *pBasicCaptureChannelCfg)
 {
-  HRTIM_EventCfgTypeDef EventCfg;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
-  assert_param(IS_HRTIM_CAPTUREUNIT(CaptureChannel));
-  assert_param(IS_HRTIM_EVENT(pBasicCaptureChannelCfg->Event));
-  assert_param(IS_HRTIM_EVENTPOLARITY(pBasicCaptureChannelCfg->EventPolarity));
-  assert_param(IS_HRTIM_EVENTSENSITIVITY(pBasicCaptureChannelCfg->EventSensitivity));
-  assert_param(IS_HRTIM_EVENTFILTER(pBasicCaptureChannelCfg->EventFilter));
-  
-  /* Configure external event channel */
-  EventCfg.FastMode = HRTIM_EVENTFASTMODE_DISABLE;
-  EventCfg.Filter = pBasicCaptureChannelCfg->EventFilter;
-  EventCfg.Polarity = pBasicCaptureChannelCfg->EventPolarity;
-  EventCfg.Sensitivity = pBasicCaptureChannelCfg->EventSensitivity;
-  EventCfg.Source = HRTIM_EVENTSRC_1;
-    
-  HRTIM_ExternalEventConfig(HRTIMx,
-                    pBasicCaptureChannelCfg->Event,
-                    &EventCfg);
+	HRTIM_EventCfgTypeDef EventCfg;
 
-  /* Memorize capture trigger (will be configured when the capture is started */  
-  HRTIM_CaptureUnitConfig(HRTIMx,
-                          TimerIdx,
-                          CaptureChannel,
-                          pBasicCaptureChannelCfg->Event); 
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	assert_param(IS_HRTIM_CAPTUREUNIT(CaptureChannel));
+	assert_param(IS_HRTIM_EVENT(pBasicCaptureChannelCfg->Event));
+	assert_param(IS_HRTIM_EVENTPOLARITY(pBasicCaptureChannelCfg->EventPolarity));
+	assert_param(IS_HRTIM_EVENTSENSITIVITY(pBasicCaptureChannelCfg->EventSensitivity));
+	assert_param(IS_HRTIM_EVENTFILTER(pBasicCaptureChannelCfg->EventFilter));
+
+	/* Configure external event channel */
+	EventCfg.FastMode = HRTIM_EVENTFASTMODE_DISABLE;
+	EventCfg.Filter = pBasicCaptureChannelCfg->EventFilter;
+	EventCfg.Polarity = pBasicCaptureChannelCfg->EventPolarity;
+	EventCfg.Sensitivity = pBasicCaptureChannelCfg->EventSensitivity;
+	EventCfg.Source = HRTIM_EVENTSRC_1;
+
+	HRTIM_ExternalEventConfig(HRTIMx, pBasicCaptureChannelCfg->Event, &EventCfg);
+
+	/* Memorize capture trigger (will be configured when the capture is started */
+	HRTIM_CaptureUnitConfig(HRTIMx, TimerIdx, CaptureChannel, pBasicCaptureChannelCfg->Event);
 }
 
 /**
@@ -1739,97 +1580,78 @@ void HRTIM_SimpleCaptureChannelConfig(HRTIM_TypeDef * HRTIMx,
   *         The counter mode should be HRTIM_MODE_SINGLESHOT_RETRIGGERABLE
   * @retval None
   */
-void HRTIM_SimpleOnePulseChannelConfig(HRTIM_TypeDef * HRTIMx,
-                                                       uint32_t TimerIdx,
-                                                       uint32_t OnePulseChannel,
-                                                       HRTIM_BasicOnePulseChannelCfgTypeDef* pBasicOnePulseChannelCfg)
+void HRTIM_SimpleOnePulseChannelConfig(
+	HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t OnePulseChannel,
+	HRTIM_BasicOnePulseChannelCfgTypeDef *pBasicOnePulseChannelCfg)
 {
-  uint32_t CompareUnit = HRTIM_COMPAREUNIT_1;
-  HRTIM_CompareCfgTypeDef CompareCfg;
-  HRTIM_OutputCfgTypeDef OutputCfg;
-  HRTIM_EventCfgTypeDef EventCfg;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OnePulseChannel));
-  assert_param(IS_HRTIM_OUTPUTPOLARITY(pBasicOnePulseChannelCfg->OutputPolarity));
-  assert_param(IS_HRTIM_OUTPUTIDLESTATE(pBasicOnePulseChannelCfg->OutputIdleState));
-  assert_param(IS_HRTIM_EVENT(pBasicOnePulseChannelCfg->Event));
-  assert_param(IS_HRTIM_EVENTPOLARITY(pBasicOnePulseChannelCfg->EventPolarity));
-  assert_param(IS_HRTIM_EVENTSENSITIVITY(pBasicOnePulseChannelCfg->EventSensitivity));
-  assert_param(IS_HRTIM_EVENTFILTER(pBasicOnePulseChannelCfg->EventFilter));
-  
-  /* Configure timer compare unit */  
-  switch (OnePulseChannel)
-  {
-    case HRTIM_OUTPUT_TA1:
-    case HRTIM_OUTPUT_TB1:
-    case HRTIM_OUTPUT_TC1:
-    case HRTIM_OUTPUT_TD1:
-    case HRTIM_OUTPUT_TE1:
-    {
-      CompareUnit = HRTIM_COMPAREUNIT_1;
-    }
-    break;
-    case HRTIM_OUTPUT_TA2:
-    case HRTIM_OUTPUT_TB2:
-    case HRTIM_OUTPUT_TC2:
-    case HRTIM_OUTPUT_TD2:
-    case HRTIM_OUTPUT_TE2:
-    {
-      CompareUnit = HRTIM_COMPAREUNIT_2;
-    }
-    break;
-    default:
-    break;      
-  }
-  
-  CompareCfg.CompareValue = pBasicOnePulseChannelCfg->Pulse;
-  CompareCfg.AutoDelayedMode = HRTIM_AUTODELAYEDMODE_REGULAR;
-  CompareCfg.AutoDelayedTimeout = 0;
-  
-  HRTIM_CompareUnitConfig(HRTIMx,
-                          TimerIdx,
-                          CompareUnit,
-                          &CompareCfg);
-  
-  /* Configure timer output */
-  OutputCfg.Polarity = pBasicOnePulseChannelCfg->OutputPolarity;
-  OutputCfg.IdleState = pBasicOnePulseChannelCfg->OutputIdleState;
-  OutputCfg.FaultState = HRTIM_OUTPUTFAULTSTATE_NONE;
-  OutputCfg.IdleMode = HRTIM_OUTPUTIDLEMODE_NONE;
-  OutputCfg.ChopperModeEnable = HRTIM_OUTPUTCHOPPERMODE_DISABLED;
-  OutputCfg.BurstModeEntryDelayed = HRTIM_OUTPUTBURSTMODEENTRY_REGULAR;
-  
-  if (CompareUnit == HRTIM_COMPAREUNIT_1)
-  {
-    OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP1;
-  }
-  else
-  {
-    OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP2;
-  }
-  OutputCfg.ResetSource = HRTIM_OUTPUTSET_TIMPER;
-  
-  HRTIM_OutputConfig(HRTIMx,
-                     TimerIdx,
-                     OnePulseChannel,
-                     &OutputCfg);  
-  
-  /* Configure external event channel */
-  EventCfg.FastMode = HRTIM_EVENTFASTMODE_DISABLE;
-  EventCfg.Filter = pBasicOnePulseChannelCfg->EventFilter;
-  EventCfg.Polarity = pBasicOnePulseChannelCfg->EventPolarity;
-  EventCfg.Sensitivity = pBasicOnePulseChannelCfg->EventSensitivity;
-  EventCfg.Source = HRTIM_EVENTSRC_1;
-    
-  HRTIM_ExternalEventConfig(HRTIMx,
-                    pBasicOnePulseChannelCfg->Event,
-                    &EventCfg);
+	uint32_t CompareUnit = HRTIM_COMPAREUNIT_1;
+	HRTIM_CompareCfgTypeDef CompareCfg;
+	HRTIM_OutputCfgTypeDef OutputCfg;
+	HRTIM_EventCfgTypeDef EventCfg;
 
-  /* Configure the timer reset register */
-  HRTIM_TIM_ResetConfig(HRTIMx,
-                        TimerIdx, 
-                        pBasicOnePulseChannelCfg->Event);  
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, OnePulseChannel));
+	assert_param(IS_HRTIM_OUTPUTPOLARITY(pBasicOnePulseChannelCfg->OutputPolarity));
+	assert_param(IS_HRTIM_OUTPUTIDLESTATE(pBasicOnePulseChannelCfg->OutputIdleState));
+	assert_param(IS_HRTIM_EVENT(pBasicOnePulseChannelCfg->Event));
+	assert_param(IS_HRTIM_EVENTPOLARITY(pBasicOnePulseChannelCfg->EventPolarity));
+	assert_param(IS_HRTIM_EVENTSENSITIVITY(pBasicOnePulseChannelCfg->EventSensitivity));
+	assert_param(IS_HRTIM_EVENTFILTER(pBasicOnePulseChannelCfg->EventFilter));
+
+	/* Configure timer compare unit */
+	switch (OnePulseChannel) {
+	case HRTIM_OUTPUT_TA1:
+	case HRTIM_OUTPUT_TB1:
+	case HRTIM_OUTPUT_TC1:
+	case HRTIM_OUTPUT_TD1:
+	case HRTIM_OUTPUT_TE1: {
+		CompareUnit = HRTIM_COMPAREUNIT_1;
+	} break;
+	case HRTIM_OUTPUT_TA2:
+	case HRTIM_OUTPUT_TB2:
+	case HRTIM_OUTPUT_TC2:
+	case HRTIM_OUTPUT_TD2:
+	case HRTIM_OUTPUT_TE2: {
+		CompareUnit = HRTIM_COMPAREUNIT_2;
+	} break;
+	default:
+		break;
+	}
+
+	CompareCfg.CompareValue = pBasicOnePulseChannelCfg->Pulse;
+	CompareCfg.AutoDelayedMode = HRTIM_AUTODELAYEDMODE_REGULAR;
+	CompareCfg.AutoDelayedTimeout = 0;
+
+	HRTIM_CompareUnitConfig(HRTIMx, TimerIdx, CompareUnit, &CompareCfg);
+
+	/* Configure timer output */
+	OutputCfg.Polarity = pBasicOnePulseChannelCfg->OutputPolarity;
+	OutputCfg.IdleState = pBasicOnePulseChannelCfg->OutputIdleState;
+	OutputCfg.FaultState = HRTIM_OUTPUTFAULTSTATE_NONE;
+	OutputCfg.IdleMode = HRTIM_OUTPUTIDLEMODE_NONE;
+	OutputCfg.ChopperModeEnable = HRTIM_OUTPUTCHOPPERMODE_DISABLED;
+	OutputCfg.BurstModeEntryDelayed = HRTIM_OUTPUTBURSTMODEENTRY_REGULAR;
+
+	if (CompareUnit == HRTIM_COMPAREUNIT_1) {
+		OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP1;
+	} else {
+		OutputCfg.SetSource = HRTIM_OUTPUTSET_TIMCMP2;
+	}
+	OutputCfg.ResetSource = HRTIM_OUTPUTSET_TIMPER;
+
+	HRTIM_OutputConfig(HRTIMx, TimerIdx, OnePulseChannel, &OutputCfg);
+
+	/* Configure external event channel */
+	EventCfg.FastMode = HRTIM_EVENTFASTMODE_DISABLE;
+	EventCfg.Filter = pBasicOnePulseChannelCfg->EventFilter;
+	EventCfg.Polarity = pBasicOnePulseChannelCfg->EventPolarity;
+	EventCfg.Sensitivity = pBasicOnePulseChannelCfg->EventSensitivity;
+	EventCfg.Source = HRTIM_EVENTSRC_1;
+
+	HRTIM_ExternalEventConfig(HRTIMx, pBasicOnePulseChannelCfg->Event, &EventCfg);
+
+	/* Configure the timer reset register */
+	HRTIM_TIM_ResetConfig(HRTIMx, TimerIdx, pBasicOnePulseChannelCfg->Event);
 }
 
 /**
@@ -1843,69 +1665,68 @@ void HRTIM_SimpleOnePulseChannelConfig(HRTIM_TypeDef * HRTIMx,
   *       the HRTIMx are available without any limitation.
   * @retval None
   */
-void HRTIM_WaveformTimerConfig(HRTIM_TypeDef * HRTIMx,
-                                                uint32_t TimerIdx,
-                                                HRTIM_TimerCfgTypeDef * pTimerCfg)
+void HRTIM_WaveformTimerConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			       HRTIM_TimerCfgTypeDef *pTimerCfg)
 {
-  uint32_t HRTIM_timcr;
-  uint32_t HRTIM_timfltr;
-  uint32_t HRTIM_timoutr;
-  uint32_t HRTIM_timrstr;
+	uint32_t HRTIM_timcr;
+	uint32_t HRTIM_timfltr;
+	uint32_t HRTIM_timoutr;
+	uint32_t HRTIM_timrstr;
 
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
-  assert_param(IS_HRTIM_TIMPUSHPULLMODE(pTimerCfg->PushPull));
-  assert_param(IS_HRTIM_TIMFAULTENABLE(pTimerCfg->FaultEnable));
-  assert_param(IS_HRTIM_TIMFAULTLOCK(pTimerCfg->FaultLock));
-  assert_param(IS_HRTIM_TIMDEADTIMEINSERTION(pTimerCfg->DeadTimeInsertion));
-  assert_param(IS_HRTIM_TIMDELAYEDPROTECTION(pTimerCfg->DelayedProtectionMode));
-  assert_param(IS_HRTIM_TIMUPDATETRIGGER(pTimerCfg->UpdateTrigger)); 
-  assert_param(IS_HRTIM_TIMRESETTRIGGER(pTimerCfg->ResetTrigger));
-  assert_param(IS_HRTIM_TIMUPDATEONRESET(pTimerCfg->ResetUpdate));
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	assert_param(IS_HRTIM_TIMPUSHPULLMODE(pTimerCfg->PushPull));
+	assert_param(IS_HRTIM_TIMFAULTENABLE(pTimerCfg->FaultEnable));
+	assert_param(IS_HRTIM_TIMFAULTLOCK(pTimerCfg->FaultLock));
+	assert_param(IS_HRTIM_TIMDEADTIMEINSERTION(pTimerCfg->DeadTimeInsertion));
+	assert_param(IS_HRTIM_TIMDELAYEDPROTECTION(pTimerCfg->DelayedProtectionMode));
+	assert_param(IS_HRTIM_TIMUPDATETRIGGER(pTimerCfg->UpdateTrigger));
+	assert_param(IS_HRTIM_TIMRESETTRIGGER(pTimerCfg->ResetTrigger));
+	assert_param(IS_HRTIM_TIMUPDATEONRESET(pTimerCfg->ResetUpdate));
 
-  /* Configure timing unit (Timer A to Timer E) */
-  HRTIM_timcr = HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR;
-  HRTIM_timfltr  = HRTIMx->HRTIM_TIMERx[TimerIdx].FLTxR;
-  HRTIM_timoutr  = HRTIMx->HRTIM_TIMERx[TimerIdx].OUTxR;
-  HRTIM_timrstr  = HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR;
-  
-  /* Set the push-pull mode */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_PSHPLL);
-  HRTIM_timcr |= pTimerCfg->PushPull;
-  
-  /* Enable/Disable registers update on timer counter reset */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_TRSTU);
-  HRTIM_timcr |= pTimerCfg->ResetUpdate;
-  
-  /* Set the timer update trigger */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_TIMUPDATETRIGGER);
-  HRTIM_timcr |= pTimerCfg->UpdateTrigger;
-  
-  /* Enable/Disable the fault channel at timer level */
-  HRTIM_timfltr &= ~(HRTIM_FLTR_FLTxEN);
-  HRTIM_timfltr |= (pTimerCfg->FaultEnable & HRTIM_FLTR_FLTxEN);
-  
-  /* Lock/Unlock fault sources at timer level */
-  HRTIM_timfltr &= ~(HRTIM_FLTR_FLTCLK);
-  HRTIM_timfltr |= pTimerCfg->FaultLock;
-  
-  /* Enable/Disable dead time insertion at timer level */
-  HRTIM_timoutr &= ~(HRTIM_OUTR_DTEN);
-  HRTIM_timoutr |= pTimerCfg->DeadTimeInsertion;
+	/* Configure timing unit (Timer A to Timer E) */
+	HRTIM_timcr = HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR;
+	HRTIM_timfltr = HRTIMx->HRTIM_TIMERx[TimerIdx].FLTxR;
+	HRTIM_timoutr = HRTIMx->HRTIM_TIMERx[TimerIdx].OUTxR;
+	HRTIM_timrstr = HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR;
 
-  /* Enable/Disable delayed protection at timer level */
-  HRTIM_timoutr &= ~(HRTIM_OUTR_DLYPRT| HRTIM_OUTR_DLYPRTEN);
-  HRTIM_timoutr |= pTimerCfg->DelayedProtectionMode;
-  
-  /* Set the timer counter reset trigger */
-  HRTIM_timrstr = pTimerCfg->ResetTrigger;
+	/* Set the push-pull mode */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_PSHPLL);
+	HRTIM_timcr |= pTimerCfg->PushPull;
 
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR  = HRTIM_timcr;
-  HRTIMx->HRTIM_TIMERx[TimerIdx].FLTxR = HRTIM_timfltr;
-  HRTIMx->HRTIM_TIMERx[TimerIdx].OUTxR = HRTIM_timoutr;
-  HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_timrstr;
- }
+	/* Enable/Disable registers update on timer counter reset */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_TRSTU);
+	HRTIM_timcr |= pTimerCfg->ResetUpdate;
+
+	/* Set the timer update trigger */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_TIMUPDATETRIGGER);
+	HRTIM_timcr |= pTimerCfg->UpdateTrigger;
+
+	/* Enable/Disable the fault channel at timer level */
+	HRTIM_timfltr &= ~(HRTIM_FLTR_FLTxEN);
+	HRTIM_timfltr |= (pTimerCfg->FaultEnable & HRTIM_FLTR_FLTxEN);
+
+	/* Lock/Unlock fault sources at timer level */
+	HRTIM_timfltr &= ~(HRTIM_FLTR_FLTCLK);
+	HRTIM_timfltr |= pTimerCfg->FaultLock;
+
+	/* Enable/Disable dead time insertion at timer level */
+	HRTIM_timoutr &= ~(HRTIM_OUTR_DTEN);
+	HRTIM_timoutr |= pTimerCfg->DeadTimeInsertion;
+
+	/* Enable/Disable delayed protection at timer level */
+	HRTIM_timoutr &= ~(HRTIM_OUTR_DLYPRT | HRTIM_OUTR_DLYPRTEN);
+	HRTIM_timoutr |= pTimerCfg->DelayedProtectionMode;
+
+	/* Set the timer counter reset trigger */
+	HRTIM_timrstr = pTimerCfg->ResetTrigger;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR = HRTIM_timcr;
+	HRTIMx->HRTIM_TIMERx[TimerIdx].FLTxR = HRTIM_timfltr;
+	HRTIMx->HRTIM_TIMERx[TimerIdx].OUTxR = HRTIM_timoutr;
+	HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_timrstr;
+}
 
 /**
   * @brief  Configures the compare unit of a timer operating in waveform mode 
@@ -1929,85 +1750,75 @@ void HRTIM_WaveformTimerConfig(HRTIM_TypeDef * HRTIMx,
   *         Auto delayed on output compare 4: capture unit 2 must be configured
   * @retval None
   */
- void HRTIM_WaveformCompareConfig(HRTIM_TypeDef * HRTIMx,
-                                                  uint32_t TimerIdx,
-                                                  uint32_t CompareUnit,
-                                                  HRTIM_CompareCfgTypeDef* pCompareCfg)
+void HRTIM_WaveformCompareConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CompareUnit,
+				 HRTIM_CompareCfgTypeDef *pCompareCfg)
 {
-    uint32_t HRTIM_timcr;
+	uint32_t HRTIM_timcr;
 
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
-  assert_param(IS_HRTIM_COMPAREUNIT_AUTODELAYEDMODE(CompareUnit, pCompareCfg->AutoDelayedMode));
-  
-  /* Configure the compare unit */
-  switch (CompareUnit)
-  {
-    case HRTIM_COMPAREUNIT_1:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR = pCompareCfg->CompareValue;
-    }
-    break;
-    case HRTIM_COMPAREUNIT_2:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CMP2xR = pCompareCfg->CompareValue;
-      
-      if (pCompareCfg->AutoDelayedMode != HRTIM_AUTODELAYEDMODE_REGULAR)
-      {
-        /* Configure auto-delayed mode */
-        HRTIM_timcr = HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR;
-        HRTIM_timcr &= ~HRTIM_TIMCR_DELCMP2;
-        HRTIM_timcr |= pCompareCfg->AutoDelayedMode;
-        HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR = HRTIM_timcr;
-        
-        /* Set the compare value for timeout compare unit (if any) */
-        if (pCompareCfg->AutoDelayedMode == HRTIM_AUTODELAYEDMODE_AUTODELAYED_TIMEOUTCMP1)
-        {
-          HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR = pCompareCfg->AutoDelayedTimeout;
-        }
-        else if (pCompareCfg->AutoDelayedMode == HRTIM_AUTODELAYEDMODE_AUTODELAYED_TIMEOUTCMP3)
-        {
-          HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR = pCompareCfg->AutoDelayedTimeout;
-        }
-      }
-    }
-    break;
-    case HRTIM_COMPAREUNIT_3:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR = pCompareCfg->CompareValue;
-    }
-    break;
-    case HRTIM_COMPAREUNIT_4:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CMP4xR = pCompareCfg->CompareValue;
-      
-      if (pCompareCfg->AutoDelayedMode != HRTIM_AUTODELAYEDMODE_REGULAR)
-      {
-        /* Configure auto-delayed mode */
-        HRTIM_timcr = HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR;
-        HRTIM_timcr &= ~HRTIM_TIMCR_DELCMP4;
-        HRTIM_timcr |= (pCompareCfg->AutoDelayedMode << 2);
-        HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR = HRTIM_timcr;
-        
-        /* Set the compare value for timeout compare unit (if any) */
-        if (pCompareCfg->AutoDelayedMode == HRTIM_AUTODELAYEDMODE_AUTODELAYED_TIMEOUTCMP1)
-        {
-          HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR = pCompareCfg->AutoDelayedTimeout;
-        }
-        else if (pCompareCfg->AutoDelayedMode == HRTIM_AUTODELAYEDMODE_AUTODELAYED_TIMEOUTCMP3)
-        {
-          HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR = pCompareCfg->AutoDelayedTimeout;
-        }
-      }
-    }
-    break;
-    default:
-    break;  
-  }
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	assert_param(
+		IS_HRTIM_COMPAREUNIT_AUTODELAYEDMODE(CompareUnit, pCompareCfg->AutoDelayedMode));
+
+	/* Configure the compare unit */
+	switch (CompareUnit) {
+	case HRTIM_COMPAREUNIT_1: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR = pCompareCfg->CompareValue;
+	} break;
+	case HRTIM_COMPAREUNIT_2: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CMP2xR = pCompareCfg->CompareValue;
+
+		if (pCompareCfg->AutoDelayedMode != HRTIM_AUTODELAYEDMODE_REGULAR) {
+			/* Configure auto-delayed mode */
+			HRTIM_timcr = HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR;
+			HRTIM_timcr &= ~HRTIM_TIMCR_DELCMP2;
+			HRTIM_timcr |= pCompareCfg->AutoDelayedMode;
+			HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR = HRTIM_timcr;
+
+			/* Set the compare value for timeout compare unit (if any) */
+			if (pCompareCfg->AutoDelayedMode ==
+			    HRTIM_AUTODELAYEDMODE_AUTODELAYED_TIMEOUTCMP1) {
+				HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR =
+					pCompareCfg->AutoDelayedTimeout;
+			} else if (pCompareCfg->AutoDelayedMode ==
+				   HRTIM_AUTODELAYEDMODE_AUTODELAYED_TIMEOUTCMP3) {
+				HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR =
+					pCompareCfg->AutoDelayedTimeout;
+			}
+		}
+	} break;
+	case HRTIM_COMPAREUNIT_3: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR = pCompareCfg->CompareValue;
+	} break;
+	case HRTIM_COMPAREUNIT_4: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CMP4xR = pCompareCfg->CompareValue;
+
+		if (pCompareCfg->AutoDelayedMode != HRTIM_AUTODELAYEDMODE_REGULAR) {
+			/* Configure auto-delayed mode */
+			HRTIM_timcr = HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR;
+			HRTIM_timcr &= ~HRTIM_TIMCR_DELCMP4;
+			HRTIM_timcr |= (pCompareCfg->AutoDelayedMode << 2);
+			HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR = HRTIM_timcr;
+
+			/* Set the compare value for timeout compare unit (if any) */
+			if (pCompareCfg->AutoDelayedMode ==
+			    HRTIM_AUTODELAYEDMODE_AUTODELAYED_TIMEOUTCMP1) {
+				HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR =
+					pCompareCfg->AutoDelayedTimeout;
+			} else if (pCompareCfg->AutoDelayedMode ==
+				   HRTIM_AUTODELAYEDMODE_AUTODELAYED_TIMEOUTCMP3) {
+				HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR =
+					pCompareCfg->AutoDelayedTimeout;
+			}
+		}
+	} break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -2022,43 +1833,32 @@ void HRTIM_WaveformTimerConfig(HRTIM_TypeDef * HRTIMx,
   * @param  Compare: specifies the Comparex register new value
   * @retval None
   */
-void HRTIM_MasterSetCompare(HRTIM_TypeDef * HRTIMx,
-                                                  uint32_t CompareUnit,
-                                                  uint32_t Compare)
+void HRTIM_MasterSetCompare(HRTIM_TypeDef *HRTIMx, uint32_t CompareUnit, uint32_t Compare)
 {
-  /* Check parameters */
-  assert_param(IS_HRTIM_COMPAREUNIT(CompareUnit));
-  
-  /* Configure the compare unit */
-  switch (CompareUnit)
-  {
-    case HRTIM_COMPAREUNIT_1:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_MASTER.MCMP1R = Compare;
-    }
-    break;
-    case HRTIM_COMPAREUNIT_2:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_MASTER.MCMP2R = Compare;
-    }
-    break;
-    case HRTIM_COMPAREUNIT_3:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_MASTER.MCMP3R = Compare;
-    }
-    break;
-    case HRTIM_COMPAREUNIT_4:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_MASTER.MCMP4R = Compare;
-    }
-    break;
-    default:
-    break;
-  }  
+	/* Check parameters */
+	assert_param(IS_HRTIM_COMPAREUNIT(CompareUnit));
+
+	/* Configure the compare unit */
+	switch (CompareUnit) {
+	case HRTIM_COMPAREUNIT_1: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_MASTER.MCMP1R = Compare;
+	} break;
+	case HRTIM_COMPAREUNIT_2: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_MASTER.MCMP2R = Compare;
+	} break;
+	case HRTIM_COMPAREUNIT_3: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_MASTER.MCMP3R = Compare;
+	} break;
+	case HRTIM_COMPAREUNIT_4: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_MASTER.MCMP4R = Compare;
+	} break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -2073,44 +1873,33 @@ void HRTIM_MasterSetCompare(HRTIM_TypeDef * HRTIMx,
   * @param  Compare: specifies the Comparex register new value
   * @retval None
   */
-void HRTIM_SlaveSetCompare(HRTIM_TypeDef * HRTIMx,
-                                                  uint32_t TimerIdx,
-                                                  uint32_t CompareUnit,
-                                                  uint32_t Compare)
+void HRTIM_SlaveSetCompare(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CompareUnit,
+			   uint32_t Compare)
 {
-    /* Check parameters */
-  assert_param(IS_HRTIM_COMPAREUNIT(CompareUnit));
-  
-  /* Configure the compare unit */
-  switch (CompareUnit)
-  {
-    case HRTIM_COMPAREUNIT_1:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR = Compare;
-    }
-    break;
-    case HRTIM_COMPAREUNIT_2:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CMP2xR = Compare;
-    }
-    break;
-    case HRTIM_COMPAREUNIT_3:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR = Compare;
-    }
-    break;
-    case HRTIM_COMPAREUNIT_4:
-    {
-      /* Set the compare value */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CMP4xR = Compare;
-    }
-    break;
-    default:
-    break;
-  }  
+	/* Check parameters */
+	assert_param(IS_HRTIM_COMPAREUNIT(CompareUnit));
+
+	/* Configure the compare unit */
+	switch (CompareUnit) {
+	case HRTIM_COMPAREUNIT_1: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR = Compare;
+	} break;
+	case HRTIM_COMPAREUNIT_2: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CMP2xR = Compare;
+	} break;
+	case HRTIM_COMPAREUNIT_3: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR = Compare;
+	} break;
+	case HRTIM_COMPAREUNIT_4: {
+		/* Set the compare value */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CMP4xR = Compare;
+	} break;
+	default:
+		break;
+	}
 }
 /**
   * @brief  Configures the capture unit of a timer operating in waveform mode 
@@ -2125,27 +1914,20 @@ void HRTIM_SlaveSetCompare(HRTIM_TypeDef * HRTIMx,
   * @param  pCaptureCfg: pointer to the compare unit configuration structure
   * @retval None
   */
-void HRTIM_WaveformCaptureConfig(HRTIM_TypeDef * HRTIMx,
-                                                  uint32_t TimerIdx,
-                                                  uint32_t CaptureUnit,
-                                                  HRTIM_CaptureCfgTypeDef* pCaptureCfg)
+void HRTIM_WaveformCaptureConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CaptureUnit,
+				 HRTIM_CaptureCfgTypeDef *pCaptureCfg)
 {
-  /* Configure the capture unit */
-  switch (CaptureUnit)
-  {
-    case HRTIM_CAPTUREUNIT_1:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR = pCaptureCfg->Trigger;
-    }
-    break;
-    case HRTIM_CAPTUREUNIT_2:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR = pCaptureCfg->Trigger;
-    }
-    break;
-    default:
-    break;
-  }
+	/* Configure the capture unit */
+	switch (CaptureUnit) {
+	case HRTIM_CAPTUREUNIT_1: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR = pCaptureCfg->Trigger;
+	} break;
+	case HRTIM_CAPTUREUNIT_2: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR = pCaptureCfg->Trigger;
+	} break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -2169,22 +1951,20 @@ void HRTIM_WaveformCaptureConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pOutputCfg: pointer to the timer output configuration structure
   * @retval None
   */
-void HRTIM_WaveformOutputConfig(HRTIM_TypeDef * HRTIMx,
-                                                uint32_t TimerIdx,
-                                                uint32_t Output,
-                                                HRTIM_OutputCfgTypeDef * pOutputCfg)
+void HRTIM_WaveformOutputConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Output,
+				HRTIM_OutputCfgTypeDef *pOutputCfg)
 {
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
-  assert_param(IS_HRTIM_OUTPUTPOLARITY(pOutputCfg->Polarity));
-  assert_param(IS_HRTIM_OUTPUTIDLESTATE(pOutputCfg->IdleState));
-  assert_param(IS_HRTIM_OUTPUTIDLEMODE(pOutputCfg->IdleMode));
-  assert_param(IS_HRTIM_OUTPUTFAULTSTATE(pOutputCfg->FaultState));
-  assert_param(IS_HRTIM_OUTPUTCHOPPERMODE(pOutputCfg->ChopperModeEnable));
-  assert_param(IS_HRTIM_OUTPUTBURSTMODEENTRY(pOutputCfg->BurstModeEntryDelayed));
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
+	assert_param(IS_HRTIM_OUTPUTPOLARITY(pOutputCfg->Polarity));
+	assert_param(IS_HRTIM_OUTPUTIDLESTATE(pOutputCfg->IdleState));
+	assert_param(IS_HRTIM_OUTPUTIDLEMODE(pOutputCfg->IdleMode));
+	assert_param(IS_HRTIM_OUTPUTFAULTSTATE(pOutputCfg->FaultState));
+	assert_param(IS_HRTIM_OUTPUTCHOPPERMODE(pOutputCfg->ChopperModeEnable));
+	assert_param(IS_HRTIM_OUTPUTBURSTMODEENTRY(pOutputCfg->BurstModeEntryDelayed));
 
-  /* Configure the timer output */
-  HRTIM_OutputConfig(HRTIMx, TimerIdx, Output, pOutputCfg);  
+	/* Configure the timer output */
+	HRTIM_OutputConfig(HRTIMx, TimerIdx, Output, pOutputCfg);
 }
 
 /**
@@ -2208,111 +1988,94 @@ void HRTIM_WaveformOutputConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pTimerEventFilteringCfg: pointer to the timer event filtering configuration structure
   * @retval None
   */
-void HRTIM_TimerEventFilteringConfig(HRTIM_TypeDef * HRTIMx,
-                                                      uint32_t TimerIdx,
-                                                      uint32_t Event,
-                                                      HRTIM_TimerEventFilteringCfgTypeDef* pTimerEventFilteringCfg)
+void HRTIM_TimerEventFilteringConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Event,
+				     HRTIM_TimerEventFilteringCfgTypeDef *pTimerEventFilteringCfg)
 {
-  uint32_t HRTIM_eefr;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
-  assert_param(IS_HRTIM_EVENT(Event));
-  assert_param(IS_HRTIM_TIMEVENTFILTER(pTimerEventFilteringCfg->Filter));
-  assert_param(IS_HRTIM_TIMEVENTLATCH(pTimerEventFilteringCfg->Latch));
+	uint32_t HRTIM_eefr;
 
-  /* Configure timer event filtering capabilities */
-  switch (Event)
-  {
-    case HRTIM_TIMEVENTFILTER_NONE:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = 0;
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = 0;
-    }
-    break;
-    case HRTIM_EVENT_1:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
-      HRTIM_eefr &= ~(HRTIM_EEFR1_EE1FLTR | HRTIM_EEFR1_EE1LTCH);
-      HRTIM_eefr |= (pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_2:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
-      HRTIM_eefr &= ~(HRTIM_EEFR1_EE2FLTR | HRTIM_EEFR1_EE2LTCH);
-      HRTIM_eefr |= ((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 6);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_3:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
-      HRTIM_eefr &= ~(HRTIM_EEFR1_EE3FLTR | HRTIM_EEFR1_EE3LTCH);
-      HRTIM_eefr |= ((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 12);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_4:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
-      HRTIM_eefr &= ~(HRTIM_EEFR1_EE4FLTR | HRTIM_EEFR1_EE4LTCH);
-      HRTIM_eefr |= ((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 18);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_5:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
-      HRTIM_eefr &= ~(HRTIM_EEFR1_EE5FLTR | HRTIM_EEFR1_EE5LTCH);
-      HRTIM_eefr |= ((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 24);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_6:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
-      HRTIM_eefr &= ~(HRTIM_EEFR2_EE6FLTR | HRTIM_EEFR2_EE6LTCH);
-      HRTIM_eefr |= (pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_7:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
-      HRTIM_eefr &= ~(HRTIM_EEFR2_EE7FLTR | HRTIM_EEFR2_EE7LTCH);
-      HRTIM_eefr |= ((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 6);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_8:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
-      HRTIM_eefr &= ~(HRTIM_EEFR2_EE8FLTR | HRTIM_EEFR2_EE8LTCH);
-      HRTIM_eefr |= ((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 12);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_9:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
-      HRTIM_eefr &= ~(HRTIM_EEFR2_EE9FLTR | HRTIM_EEFR2_EE9LTCH);
-      HRTIM_eefr |= ((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 18);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
-    }
-    break;
-    case HRTIM_EVENT_10:
-    {
-      HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
-      HRTIM_eefr &= ~(HRTIM_EEFR2_EE10FLTR | HRTIM_EEFR2_EE10LTCH);
-      HRTIM_eefr |= ((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 24);
-      HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
-    }
-    break;
-    default:
-    break;
-  }
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	assert_param(IS_HRTIM_EVENT(Event));
+	assert_param(IS_HRTIM_TIMEVENTFILTER(pTimerEventFilteringCfg->Filter));
+	assert_param(IS_HRTIM_TIMEVENTLATCH(pTimerEventFilteringCfg->Latch));
+
+	/* Configure timer event filtering capabilities */
+	switch (Event) {
+	case HRTIM_TIMEVENTFILTER_NONE: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = 0;
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = 0;
+	} break;
+	case HRTIM_EVENT_1: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
+		HRTIM_eefr &= ~(HRTIM_EEFR1_EE1FLTR | HRTIM_EEFR1_EE1LTCH);
+		HRTIM_eefr |= (pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_2: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
+		HRTIM_eefr &= ~(HRTIM_EEFR1_EE2FLTR | HRTIM_EEFR1_EE2LTCH);
+		HRTIM_eefr |=
+			((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 6);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_3: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
+		HRTIM_eefr &= ~(HRTIM_EEFR1_EE3FLTR | HRTIM_EEFR1_EE3LTCH);
+		HRTIM_eefr |=
+			((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 12);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_4: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
+		HRTIM_eefr &= ~(HRTIM_EEFR1_EE4FLTR | HRTIM_EEFR1_EE4LTCH);
+		HRTIM_eefr |=
+			((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 18);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_5: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1;
+		HRTIM_eefr &= ~(HRTIM_EEFR1_EE5FLTR | HRTIM_EEFR1_EE5LTCH);
+		HRTIM_eefr |=
+			((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 24);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR1 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_6: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
+		HRTIM_eefr &= ~(HRTIM_EEFR2_EE6FLTR | HRTIM_EEFR2_EE6LTCH);
+		HRTIM_eefr |= (pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_7: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
+		HRTIM_eefr &= ~(HRTIM_EEFR2_EE7FLTR | HRTIM_EEFR2_EE7LTCH);
+		HRTIM_eefr |=
+			((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 6);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_8: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
+		HRTIM_eefr &= ~(HRTIM_EEFR2_EE8FLTR | HRTIM_EEFR2_EE8LTCH);
+		HRTIM_eefr |=
+			((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 12);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_9: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
+		HRTIM_eefr &= ~(HRTIM_EEFR2_EE9FLTR | HRTIM_EEFR2_EE9LTCH);
+		HRTIM_eefr |=
+			((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 18);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
+	} break;
+	case HRTIM_EVENT_10: {
+		HRTIM_eefr = HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2;
+		HRTIM_eefr &= ~(HRTIM_EEFR2_EE10FLTR | HRTIM_EEFR2_EE10LTCH);
+		HRTIM_eefr |=
+			((pTimerEventFilteringCfg->Filter | pTimerEventFilteringCfg->Latch) << 24);
+		HRTIMx->HRTIM_TIMERx[TimerIdx].EEFxR2 = HRTIM_eefr;
+	} break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -2324,41 +2087,40 @@ void HRTIM_TimerEventFilteringConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pDeadTimeCfg: pointer to the dead time insertion configuration structure
   * @retval None
   */
-void HRTIM_DeadTimeConfig(HRTIM_TypeDef * HRTIMx,
-                                           uint32_t TimerIdx,
-                                           HRTIM_DeadTimeCfgTypeDef* pDeadTimeCfg)
+void HRTIM_DeadTimeConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			  HRTIM_DeadTimeCfgTypeDef *pDeadTimeCfg)
 {
-  uint32_t HRTIM_dtr;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
-  assert_param(IS_HRTIM_TIMDEADTIME_RISINGSIGN(pDeadTimeCfg->RisingSign));
-  assert_param(IS_HRTIM_TIMDEADTIME_RISINGLOCK(pDeadTimeCfg->RisingLock));
-  assert_param(IS_HRTIM_TIMDEADTIME_RISINGSIGNLOCK(pDeadTimeCfg->RisingSignLock));
-  assert_param(IS_HRTIM_TIMDEADTIME_FALLINGSIGN(pDeadTimeCfg->FallingSign));
-  assert_param(IS_HRTIM_TIMDEADTIME_FALLINGLOCK(pDeadTimeCfg->FallingLock));
-  assert_param(IS_HRTIM_TIMDEADTIME_FALLINGSIGNLOCK(pDeadTimeCfg->FallingSignLock));
+	uint32_t HRTIM_dtr;
 
-  HRTIM_dtr = HRTIMx->HRTIM_TIMERx[TimerIdx].DTxR;
-     
-  /* Clear timer dead times configuration */
-  HRTIM_dtr &= ~(HRTIM_DTR_DTR | HRTIM_DTR_SDTR | HRTIM_DTR_DTPRSC |
-                 HRTIM_DTR_DTRSLK | HRTIM_DTR_DTRLK | HRTIM_DTR_SDTF |
-                 HRTIM_DTR_SDTR | HRTIM_DTR_DTFSLK | HRTIM_DTR_DTFLK);
-  
-  /* Set timer dead times configuration */
-  HRTIM_dtr |= (pDeadTimeCfg->Prescaler << 10);
-  HRTIM_dtr |= pDeadTimeCfg->RisingValue;
-  HRTIM_dtr |= pDeadTimeCfg->RisingSign;
-  HRTIM_dtr |= pDeadTimeCfg->RisingSignLock;
-  HRTIM_dtr |= pDeadTimeCfg->RisingLock;
-  HRTIM_dtr |= (pDeadTimeCfg->FallingValue << 16);
-  HRTIM_dtr |= pDeadTimeCfg->FallingSign;
-  HRTIM_dtr |= pDeadTimeCfg->FallingSignLock;
-  HRTIM_dtr |= pDeadTimeCfg->FallingLock;
-    
-  /* Update the HRTIMx registers */  
-  HRTIMx->HRTIM_TIMERx[TimerIdx].DTxR = HRTIM_dtr;
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	assert_param(IS_HRTIM_TIMDEADTIME_RISINGSIGN(pDeadTimeCfg->RisingSign));
+	assert_param(IS_HRTIM_TIMDEADTIME_RISINGLOCK(pDeadTimeCfg->RisingLock));
+	assert_param(IS_HRTIM_TIMDEADTIME_RISINGSIGNLOCK(pDeadTimeCfg->RisingSignLock));
+	assert_param(IS_HRTIM_TIMDEADTIME_FALLINGSIGN(pDeadTimeCfg->FallingSign));
+	assert_param(IS_HRTIM_TIMDEADTIME_FALLINGLOCK(pDeadTimeCfg->FallingLock));
+	assert_param(IS_HRTIM_TIMDEADTIME_FALLINGSIGNLOCK(pDeadTimeCfg->FallingSignLock));
+
+	HRTIM_dtr = HRTIMx->HRTIM_TIMERx[TimerIdx].DTxR;
+
+	/* Clear timer dead times configuration */
+	HRTIM_dtr &= ~(HRTIM_DTR_DTR | HRTIM_DTR_SDTR | HRTIM_DTR_DTPRSC | HRTIM_DTR_DTRSLK |
+		       HRTIM_DTR_DTRLK | HRTIM_DTR_SDTF | HRTIM_DTR_SDTR | HRTIM_DTR_DTFSLK |
+		       HRTIM_DTR_DTFLK);
+
+	/* Set timer dead times configuration */
+	HRTIM_dtr |= (pDeadTimeCfg->Prescaler << 10);
+	HRTIM_dtr |= pDeadTimeCfg->RisingValue;
+	HRTIM_dtr |= pDeadTimeCfg->RisingSign;
+	HRTIM_dtr |= pDeadTimeCfg->RisingSignLock;
+	HRTIM_dtr |= pDeadTimeCfg->RisingLock;
+	HRTIM_dtr |= (pDeadTimeCfg->FallingValue << 16);
+	HRTIM_dtr |= pDeadTimeCfg->FallingSign;
+	HRTIM_dtr |= pDeadTimeCfg->FallingSignLock;
+	HRTIM_dtr |= pDeadTimeCfg->FallingLock;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_TIMERx[TimerIdx].DTxR = HRTIM_dtr;
 }
 
 /**
@@ -2370,27 +2132,26 @@ void HRTIM_DeadTimeConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pChopperModeCfg: pointer to the chopper mode configuration structure
   * @retval None
   */
-void HRTIM_ChopperModeConfig(HRTIM_TypeDef * HRTIMx,
-                                              uint32_t TimerIdx,
-                                              HRTIM_ChopperModeCfgTypeDef* pChopperModeCfg)
+void HRTIM_ChopperModeConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+			     HRTIM_ChopperModeCfgTypeDef *pChopperModeCfg)
 {
-  uint32_t HRTIM_chpr;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	uint32_t HRTIM_chpr;
 
-  HRTIM_chpr = HRTIMx->HRTIM_TIMERx[TimerIdx].CHPxR;
-     
-  /* Clear timer chopper mode configuration */
-  HRTIM_chpr &= ~(HRTIM_CHPR_CARFRQ | HRTIM_CHPR_CARDTY | HRTIM_CHPR_STRPW);
-  
-  /* Set timer chopper mode configuration */
-  HRTIM_chpr |= pChopperModeCfg->CarrierFreq;
-  HRTIM_chpr |= (pChopperModeCfg->DutyCycle << 4);
-  HRTIM_chpr |= (pChopperModeCfg->StartPulse << 7);
-    
-  /* Update the HRTIMx registers */  
-  HRTIMx->HRTIM_TIMERx[TimerIdx].CHPxR = HRTIM_chpr;
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+
+	HRTIM_chpr = HRTIMx->HRTIM_TIMERx[TimerIdx].CHPxR;
+
+	/* Clear timer chopper mode configuration */
+	HRTIM_chpr &= ~(HRTIM_CHPR_CARFRQ | HRTIM_CHPR_CARDTY | HRTIM_CHPR_STRPW);
+
+	/* Set timer chopper mode configuration */
+	HRTIM_chpr |= pChopperModeCfg->CarrierFreq;
+	HRTIM_chpr |= (pChopperModeCfg->DutyCycle << 4);
+	HRTIM_chpr |= (pChopperModeCfg->StartPulse << 7);
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_TIMERx[TimerIdx].CHPxR = HRTIM_chpr;
 }
 
 /**
@@ -2425,49 +2186,34 @@ void HRTIM_ChopperModeConfig(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_BURSTDMA_FLTR: HRTIM_TIMxFLTR
   * @retval None
   */
-void HRTIM_BurstDMAConfig(HRTIM_TypeDef * HRTIMx,
-                                           uint32_t TimerIdx,
-                                           uint32_t RegistersToUpdate)
+void HRTIM_BurstDMAConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t RegistersToUpdate)
 {
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_BURSTDMA(TimerIdx, RegistersToUpdate));
-  
-  /* Set the burst DMA timer update register */
-  switch (TimerIdx) 
-  {
-    case HRTIM_TIMERINDEX_TIMER_A:
-    {
-      HRTIMx->HRTIM_COMMON.BDTAUPR = RegistersToUpdate;
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_B:
-    {
-      HRTIMx->HRTIM_COMMON.BDTBUPR = RegistersToUpdate;
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_C:
-    {
-      HRTIMx->HRTIM_COMMON.BDTCUPR = RegistersToUpdate;
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_D:
-    {
-      HRTIMx->HRTIM_COMMON.BDTDUPR = RegistersToUpdate;
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_E:
-    {
-      HRTIMx->HRTIM_COMMON.BDTEUPR = RegistersToUpdate;
-    }
-    break;
-    case HRTIM_TIMERINDEX_MASTER:
-    {
-      HRTIMx->HRTIM_COMMON.BDMUPDR = RegistersToUpdate;
-    }
-    break;
-    default:
-    break;
-  }
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_BURSTDMA(TimerIdx, RegistersToUpdate));
+
+	/* Set the burst DMA timer update register */
+	switch (TimerIdx) {
+	case HRTIM_TIMERINDEX_TIMER_A: {
+		HRTIMx->HRTIM_COMMON.BDTAUPR = RegistersToUpdate;
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_B: {
+		HRTIMx->HRTIM_COMMON.BDTBUPR = RegistersToUpdate;
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_C: {
+		HRTIMx->HRTIM_COMMON.BDTCUPR = RegistersToUpdate;
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_D: {
+		HRTIMx->HRTIM_COMMON.BDTDUPR = RegistersToUpdate;
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_E: {
+		HRTIMx->HRTIM_COMMON.BDTEUPR = RegistersToUpdate;
+	} break;
+	case HRTIM_TIMERINDEX_MASTER: {
+		HRTIMx->HRTIM_COMMON.BDMUPDR = RegistersToUpdate;
+	} break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -2476,31 +2222,31 @@ void HRTIM_BurstDMAConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pSynchroCfg: pointer to the input/output synchronization configuration structure
   * @retval None
   */
-void HRTIM_SynchronizationConfig(HRTIM_TypeDef *HRTIMx, HRTIM_SynchroCfgTypeDef * pSynchroCfg)
+void HRTIM_SynchronizationConfig(HRTIM_TypeDef *HRTIMx, HRTIM_SynchroCfgTypeDef *pSynchroCfg)
 {
-  uint32_t HRTIM_mcr;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_SYNCINPUTSOURCE(pSynchroCfg->SyncInputSource));
-  assert_param(IS_HRTIM_SYNCOUTPUTSOURCE(pSynchroCfg->SyncOutputSource));
-  assert_param(IS_HRTIM_SYNCOUTPUTPOLARITY(pSynchroCfg->SyncOutputPolarity));
-    
-  HRTIM_mcr = HRTIMx->HRTIM_MASTER.MCR;
+	uint32_t HRTIM_mcr;
 
-  /* Set the synchronization input source */
-  HRTIM_mcr &= ~(HRTIM_MCR_SYNC_IN);
-  HRTIM_mcr |= pSynchroCfg->SyncInputSource;
-  
-  /* Set the event to be sent on the synchronization output */
-  HRTIM_mcr &= ~(HRTIM_MCR_SYNC_SRC);
-  HRTIM_mcr |= pSynchroCfg->SyncOutputSource;
-  
-  /* Set the polarity of the synchronization output */
-  HRTIM_mcr &= ~(HRTIM_MCR_SYNC_OUT);
-  HRTIM_mcr |= pSynchroCfg->SyncOutputPolarity;
-  
-  /* Update the HRTIMx registers */  
-  HRTIMx->HRTIM_MASTER.MCR = HRTIM_mcr;
+	/* Check parameters */
+	assert_param(IS_HRTIM_SYNCINPUTSOURCE(pSynchroCfg->SyncInputSource));
+	assert_param(IS_HRTIM_SYNCOUTPUTSOURCE(pSynchroCfg->SyncOutputSource));
+	assert_param(IS_HRTIM_SYNCOUTPUTPOLARITY(pSynchroCfg->SyncOutputPolarity));
+
+	HRTIM_mcr = HRTIMx->HRTIM_MASTER.MCR;
+
+	/* Set the synchronization input source */
+	HRTIM_mcr &= ~(HRTIM_MCR_SYNC_IN);
+	HRTIM_mcr |= pSynchroCfg->SyncInputSource;
+
+	/* Set the event to be sent on the synchronization output */
+	HRTIM_mcr &= ~(HRTIM_MCR_SYNC_SRC);
+	HRTIM_mcr |= pSynchroCfg->SyncOutputSource;
+
+	/* Set the polarity of the synchronization output */
+	HRTIM_mcr &= ~(HRTIM_MCR_SYNC_OUT);
+	HRTIM_mcr |= pSynchroCfg->SyncOutputPolarity;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_MASTER.MCR = HRTIM_mcr;
 }
 
 /**
@@ -2509,46 +2255,45 @@ void HRTIM_SynchronizationConfig(HRTIM_TypeDef *HRTIMx, HRTIM_SynchroCfgTypeDef 
   * @param  pBurstModeCfg: pointer to the burst mode configuration structure
   * @retval None
   */
-void HRTIM_BurstModeConfig(HRTIM_TypeDef * HRTIMx,
-                                            HRTIM_BurstModeCfgTypeDef* pBurstModeCfg)
+void HRTIM_BurstModeConfig(HRTIM_TypeDef *HRTIMx, HRTIM_BurstModeCfgTypeDef *pBurstModeCfg)
 {
-  uint32_t HRTIM_bmcr;
+	uint32_t HRTIM_bmcr;
 
-  /* Check parameters */
-  assert_param(IS_HRTIM_BURSTMODE(pBurstModeCfg->Mode));
-  assert_param(IS_HRTIM_BURSTMODECLOCKSOURCE(pBurstModeCfg->ClockSource));
-  assert_param(IS_HRTIM_HRTIM_BURSTMODEPRESCALER(pBurstModeCfg->Prescaler));
-  assert_param(IS_HRTIM_BURSTMODEPRELOAD(pBurstModeCfg->PreloadEnable));
-  
-  HRTIM_bmcr = HRTIMx->HRTIM_COMMON.BMCR;
+	/* Check parameters */
+	assert_param(IS_HRTIM_BURSTMODE(pBurstModeCfg->Mode));
+	assert_param(IS_HRTIM_BURSTMODECLOCKSOURCE(pBurstModeCfg->ClockSource));
+	assert_param(IS_HRTIM_HRTIM_BURSTMODEPRESCALER(pBurstModeCfg->Prescaler));
+	assert_param(IS_HRTIM_BURSTMODEPRELOAD(pBurstModeCfg->PreloadEnable));
 
-  /* Set the burst mode operating mode */
-  HRTIM_bmcr &= ~(HRTIM_BMCR_BMOM);
-  HRTIM_bmcr |= pBurstModeCfg->Mode;
-  
-  /* Set the burst mode clock source */
-  HRTIM_bmcr &= ~(HRTIM_BMCR_BMCLK);
-  HRTIM_bmcr |= pBurstModeCfg->ClockSource;
-  
-  /* Set the burst mode prescaler */
-  HRTIM_bmcr &= ~(HRTIM_BMCR_BMPSC);
-  HRTIM_bmcr |= pBurstModeCfg->Prescaler;
- 
-  /* Enable/disable burst mode registers preload */
-  HRTIM_bmcr &= ~(HRTIM_BMCR_BMPREN);
-  HRTIM_bmcr |= pBurstModeCfg->PreloadEnable;
- 
-  /* Set the burst mode trigger */
-  HRTIMx->HRTIM_COMMON.BMTRGR = pBurstModeCfg->Trigger;
-  
-  /* Set the burst mode compare value */
-  HRTIMx->HRTIM_COMMON.BMCMPR = pBurstModeCfg->IdleDuration;
-  
-  /* Set the burst mode period */
-  HRTIMx->HRTIM_COMMON.BMPER = pBurstModeCfg->Period;
-  
-  /* Update the HRTIMx registers */  
-  HRTIMx->HRTIM_COMMON.BMCR = HRTIM_bmcr;
+	HRTIM_bmcr = HRTIMx->HRTIM_COMMON.BMCR;
+
+	/* Set the burst mode operating mode */
+	HRTIM_bmcr &= ~(HRTIM_BMCR_BMOM);
+	HRTIM_bmcr |= pBurstModeCfg->Mode;
+
+	/* Set the burst mode clock source */
+	HRTIM_bmcr &= ~(HRTIM_BMCR_BMCLK);
+	HRTIM_bmcr |= pBurstModeCfg->ClockSource;
+
+	/* Set the burst mode prescaler */
+	HRTIM_bmcr &= ~(HRTIM_BMCR_BMPSC);
+	HRTIM_bmcr |= pBurstModeCfg->Prescaler;
+
+	/* Enable/disable burst mode registers preload */
+	HRTIM_bmcr &= ~(HRTIM_BMCR_BMPREN);
+	HRTIM_bmcr |= pBurstModeCfg->PreloadEnable;
+
+	/* Set the burst mode trigger */
+	HRTIMx->HRTIM_COMMON.BMTRGR = pBurstModeCfg->Trigger;
+
+	/* Set the burst mode compare value */
+	HRTIMx->HRTIM_COMMON.BMCMPR = pBurstModeCfg->IdleDuration;
+
+	/* Set the burst mode period */
+	HRTIMx->HRTIM_COMMON.BMPER = pBurstModeCfg->Period;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_COMMON.BMCR = HRTIM_bmcr;
 }
 
 /**
@@ -2569,20 +2314,17 @@ void HRTIM_BurstModeConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pEventCfg: pointer to the event conditioning configuration structure
   * @retval None
   */
-void HRTIM_EventConfig(HRTIM_TypeDef * HRTIMx,
-                                        uint32_t Event,
-                                        HRTIM_EventCfgTypeDef* pEventCfg)
+void HRTIM_EventConfig(HRTIM_TypeDef *HRTIMx, uint32_t Event, HRTIM_EventCfgTypeDef *pEventCfg)
 {
-  /* Check parameters */
-  assert_param(IS_HRTIM_EVENTSRC(pEventCfg->Source)); 
-  assert_param(IS_HRTIM_EVENTPOLARITY(pEventCfg->Polarity)); 
-  assert_param(IS_HRTIM_EVENTSENSITIVITY(pEventCfg->Sensitivity)); 
-  assert_param(IS_HRTIM_EVENTFASTMODE(pEventCfg->FastMode)); 
-  assert_param(IS_HRTIM_EVENTFILTER(pEventCfg->Filter)); 
+	/* Check parameters */
+	assert_param(IS_HRTIM_EVENTSRC(pEventCfg->Source));
+	assert_param(IS_HRTIM_EVENTPOLARITY(pEventCfg->Polarity));
+	assert_param(IS_HRTIM_EVENTSENSITIVITY(pEventCfg->Sensitivity));
+	assert_param(IS_HRTIM_EVENTFASTMODE(pEventCfg->FastMode));
+	assert_param(IS_HRTIM_EVENTFILTER(pEventCfg->Filter));
 
-  /* Configure the event channel */
-  HRTIM_ExternalEventConfig(HRTIMx, Event, pEventCfg);
- 
+	/* Configure the event channel */
+	HRTIM_ExternalEventConfig(HRTIMx, Event, pEventCfg);
 }
 
 /**
@@ -2596,23 +2338,22 @@ void HRTIM_EventConfig(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_EVENTPRESCALER_DIV8: fEEVS=fHRTIMx / 8
   * @retval None
   */
-void HRTIM_EventPrescalerConfig(HRTIM_TypeDef * HRTIMx,
-                                                 uint32_t Prescaler)
+void HRTIM_EventPrescalerConfig(HRTIM_TypeDef *HRTIMx, uint32_t Prescaler)
 {
-  uint32_t HRTIM_eecr3;
+	uint32_t HRTIM_eecr3;
 
-  /* Check parameters */
-  assert_param(IS_HRTIM_EVENTPRESCALER(Prescaler));
+	/* Check parameters */
+	assert_param(IS_HRTIM_EVENTPRESCALER(Prescaler));
 
-  /* Set the external event prescaler */
-  HRTIM_eecr3 = HRTIMx->HRTIM_COMMON.EECR3;
-  HRTIM_eecr3 &= ~(HRTIM_EECR3_EEVSD);
-  HRTIM_eecr3 |= Prescaler;
-  
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_COMMON.EECR3 = HRTIM_eecr3;
+	/* Set the external event prescaler */
+	HRTIM_eecr3 = HRTIMx->HRTIM_COMMON.EECR3;
+	HRTIM_eecr3 &= ~(HRTIM_EECR3_EEVSD);
+	HRTIM_eecr3 |= Prescaler;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_COMMON.EECR3 = HRTIM_eecr3;
 }
- 
+
 /**
   * @brief  Configures the conditioning of fault input
   * @param  HRTIMx: pointer to HRTIMx peripheral
@@ -2626,78 +2367,70 @@ void HRTIM_EventPrescalerConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pFaultCfg: pointer to the fault conditioning configuration structure
   * @retval None
   */
-void HRTIM_FaultConfig(HRTIM_TypeDef * HRTIMx,
-                                        HRTIM_FaultCfgTypeDef* pFaultCfg,
-                                        uint32_t Fault)
+void HRTIM_FaultConfig(HRTIM_TypeDef *HRTIMx, HRTIM_FaultCfgTypeDef *pFaultCfg, uint32_t Fault)
 {
-  uint32_t HRTIM_fltinr1;
-  uint32_t HRTIM_fltinr2;
+	uint32_t HRTIM_fltinr1;
+	uint32_t HRTIM_fltinr2;
 
-  /* Check parameters */
-  assert_param(IS_HRTIM_FAULT(Fault));
-  assert_param(IS_HRTIM_FAULTSOURCE(pFaultCfg->Source));
-  assert_param(IS_HRTIM_FAULTPOLARITY(pFaultCfg->Polarity));
-  assert_param(IS_HRTIM_FAULTFILTER(pFaultCfg->Filter));
-  assert_param(IS_HRTIM_FAULTLOCK(pFaultCfg->Lock));
+	/* Check parameters */
+	assert_param(IS_HRTIM_FAULT(Fault));
+	assert_param(IS_HRTIM_FAULTSOURCE(pFaultCfg->Source));
+	assert_param(IS_HRTIM_FAULTPOLARITY(pFaultCfg->Polarity));
+	assert_param(IS_HRTIM_FAULTFILTER(pFaultCfg->Filter));
+	assert_param(IS_HRTIM_FAULTLOCK(pFaultCfg->Lock));
 
-  /* Configure fault channel */
-  HRTIM_fltinr1 = HRTIMx->HRTIM_COMMON.FLTINxR1;
-  HRTIM_fltinr2 = HRTIMx->HRTIM_COMMON.FLTINxR2;
-  
-  switch (Fault)
-  {
-    case HRTIM_FAULT_1:
-    {
-      HRTIM_fltinr1 &= ~(HRTIM_FLTINR1_FLT1P | HRTIM_FLTINR1_FLT1SRC | HRTIM_FLTINR1_FLT1F | HRTIM_FLTINR1_FLT1LCK);
-      HRTIM_fltinr1 |= pFaultCfg->Polarity;
-      HRTIM_fltinr1 |= pFaultCfg->Source;
-      HRTIM_fltinr1 |= pFaultCfg->Filter;
-      HRTIM_fltinr1 |= pFaultCfg->Lock;
-    }
-    break;
-    case HRTIM_FAULT_2:
-    {
-      HRTIM_fltinr1 &= ~(HRTIM_FLTINR1_FLT2P | HRTIM_FLTINR1_FLT2SRC | HRTIM_FLTINR1_FLT2F | HRTIM_FLTINR1_FLT2LCK);
-      HRTIM_fltinr1 |= (pFaultCfg->Polarity << 8);
-      HRTIM_fltinr1 |= (pFaultCfg->Source << 8);
-      HRTIM_fltinr1 |= (pFaultCfg->Filter << 8);
-      HRTIM_fltinr1 |= (pFaultCfg->Lock << 8);
-    }
-    break;
-    case HRTIM_FAULT_3:
-    {
-      HRTIM_fltinr1 &= ~(HRTIM_FLTINR1_FLT3P | HRTIM_FLTINR1_FLT3SRC | HRTIM_FLTINR1_FLT3F | HRTIM_FLTINR1_FLT3LCK);
-      HRTIM_fltinr1 |= (pFaultCfg->Polarity << 16);
-      HRTIM_fltinr1 |= (pFaultCfg->Source << 16);
-      HRTIM_fltinr1 |= (pFaultCfg->Filter << 16);
-      HRTIM_fltinr1 |= (pFaultCfg->Lock << 16);
-    }
-    break;
-    case HRTIM_FAULT_4:
-    {
-      HRTIM_fltinr1 &= ~(HRTIM_FLTINR1_FLT4P | HRTIM_FLTINR1_FLT4SRC | HRTIM_FLTINR1_FLT4F | HRTIM_FLTINR1_FLT4LCK);
-      HRTIM_fltinr1 |= (pFaultCfg->Polarity << 24);
-      HRTIM_fltinr1 |= (pFaultCfg->Source << 24);
-      HRTIM_fltinr1 |= (pFaultCfg->Filter << 24);
-      HRTIM_fltinr1 |= (pFaultCfg->Lock << 24);
-    }
-    break;
-    case HRTIM_FAULT_5:
-    {
-      HRTIM_fltinr2 &= ~(HRTIM_FLTINR2_FLT5P | HRTIM_FLTINR2_FLT5SRC | HRTIM_FLTINR2_FLT5F | HRTIM_FLTINR2_FLT5LCK);
-      HRTIM_fltinr2 |= pFaultCfg->Polarity;
-      HRTIM_fltinr2 |= pFaultCfg->Source;
-      HRTIM_fltinr2 |= pFaultCfg->Filter;
-      HRTIM_fltinr2 |= pFaultCfg->Lock;
-    }
-    break;
-    default:
-    break;
-  }
+	/* Configure fault channel */
+	HRTIM_fltinr1 = HRTIMx->HRTIM_COMMON.FLTINxR1;
+	HRTIM_fltinr2 = HRTIMx->HRTIM_COMMON.FLTINxR2;
 
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_COMMON.FLTINxR1 = HRTIM_fltinr1;
-  HRTIMx->HRTIM_COMMON.FLTINxR2 = HRTIM_fltinr2;
+	switch (Fault) {
+	case HRTIM_FAULT_1: {
+		HRTIM_fltinr1 &= ~(HRTIM_FLTINR1_FLT1P | HRTIM_FLTINR1_FLT1SRC |
+				   HRTIM_FLTINR1_FLT1F | HRTIM_FLTINR1_FLT1LCK);
+		HRTIM_fltinr1 |= pFaultCfg->Polarity;
+		HRTIM_fltinr1 |= pFaultCfg->Source;
+		HRTIM_fltinr1 |= pFaultCfg->Filter;
+		HRTIM_fltinr1 |= pFaultCfg->Lock;
+	} break;
+	case HRTIM_FAULT_2: {
+		HRTIM_fltinr1 &= ~(HRTIM_FLTINR1_FLT2P | HRTIM_FLTINR1_FLT2SRC |
+				   HRTIM_FLTINR1_FLT2F | HRTIM_FLTINR1_FLT2LCK);
+		HRTIM_fltinr1 |= (pFaultCfg->Polarity << 8);
+		HRTIM_fltinr1 |= (pFaultCfg->Source << 8);
+		HRTIM_fltinr1 |= (pFaultCfg->Filter << 8);
+		HRTIM_fltinr1 |= (pFaultCfg->Lock << 8);
+	} break;
+	case HRTIM_FAULT_3: {
+		HRTIM_fltinr1 &= ~(HRTIM_FLTINR1_FLT3P | HRTIM_FLTINR1_FLT3SRC |
+				   HRTIM_FLTINR1_FLT3F | HRTIM_FLTINR1_FLT3LCK);
+		HRTIM_fltinr1 |= (pFaultCfg->Polarity << 16);
+		HRTIM_fltinr1 |= (pFaultCfg->Source << 16);
+		HRTIM_fltinr1 |= (pFaultCfg->Filter << 16);
+		HRTIM_fltinr1 |= (pFaultCfg->Lock << 16);
+	} break;
+	case HRTIM_FAULT_4: {
+		HRTIM_fltinr1 &= ~(HRTIM_FLTINR1_FLT4P | HRTIM_FLTINR1_FLT4SRC |
+				   HRTIM_FLTINR1_FLT4F | HRTIM_FLTINR1_FLT4LCK);
+		HRTIM_fltinr1 |= (pFaultCfg->Polarity << 24);
+		HRTIM_fltinr1 |= (pFaultCfg->Source << 24);
+		HRTIM_fltinr1 |= (pFaultCfg->Filter << 24);
+		HRTIM_fltinr1 |= (pFaultCfg->Lock << 24);
+	} break;
+	case HRTIM_FAULT_5: {
+		HRTIM_fltinr2 &= ~(HRTIM_FLTINR2_FLT5P | HRTIM_FLTINR2_FLT5SRC |
+				   HRTIM_FLTINR2_FLT5F | HRTIM_FLTINR2_FLT5LCK);
+		HRTIM_fltinr2 |= pFaultCfg->Polarity;
+		HRTIM_fltinr2 |= pFaultCfg->Source;
+		HRTIM_fltinr2 |= pFaultCfg->Filter;
+		HRTIM_fltinr2 |= pFaultCfg->Lock;
+	} break;
+	default:
+		break;
+	}
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_COMMON.FLTINxR1 = HRTIM_fltinr1;
+	HRTIMx->HRTIM_COMMON.FLTINxR2 = HRTIM_fltinr2;
 }
 
 /**
@@ -2711,21 +2444,20 @@ void HRTIM_FaultConfig(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_FAULTPRESCALER_DIV8: fFLTS=fHRTIMx / 8
   * @retval None
   */
-void HRTIM_FaultPrescalerConfig(HRTIM_TypeDef * HRTIMx,
-                                                 uint32_t Prescaler)
+void HRTIM_FaultPrescalerConfig(HRTIM_TypeDef *HRTIMx, uint32_t Prescaler)
 {
-  uint32_t HRTIM_fltinr2;
+	uint32_t HRTIM_fltinr2;
 
-  /* Check parameters */
-  assert_param(IS_HRTIM_FAULTPRESCALER(Prescaler));
-  
-  /* Set the external event prescaler */
-  HRTIM_fltinr2 = HRTIMx->HRTIM_COMMON.FLTINxR2;
-  HRTIM_fltinr2 &= ~(HRTIM_FLTINR2_FLTSD);
-  HRTIM_fltinr2 |= Prescaler;
-  
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_COMMON.FLTINxR2 = HRTIM_fltinr2;
+	/* Check parameters */
+	assert_param(IS_HRTIM_FAULTPRESCALER(Prescaler));
+
+	/* Set the external event prescaler */
+	HRTIM_fltinr2 = HRTIMx->HRTIM_COMMON.FLTINxR2;
+	HRTIM_fltinr2 &= ~(HRTIM_FLTINR2_FLTSD);
+	HRTIM_fltinr2 |= Prescaler;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_COMMON.FLTINxR2 = HRTIM_fltinr2;
 }
 
 /**
@@ -2744,59 +2476,48 @@ void HRTIM_FaultPrescalerConfig(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_FAULT_DISABLED: Fault mode disabled
   * @retval None
   */
-void HRTIM_FaultModeCtl(HRTIM_TypeDef * HRTIMx, uint32_t Fault, uint32_t Enable)
+void HRTIM_FaultModeCtl(HRTIM_TypeDef *HRTIMx, uint32_t Fault, uint32_t Enable)
 {
-  uint32_t HRTIM_fltinr1;
-  uint32_t HRTIM_fltinr2;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_FAULT(Fault));
-  assert_param(IS_HRTIM_FAULTCTL(Enable));
+	uint32_t HRTIM_fltinr1;
+	uint32_t HRTIM_fltinr2;
 
-  /* Configure fault channel */
-  HRTIM_fltinr1 = HRTIMx->HRTIM_COMMON.FLTINxR1;
-  HRTIM_fltinr2 = HRTIMx->HRTIM_COMMON.FLTINxR2;
-  
-  switch (Fault)
-  {
-    case HRTIM_FAULT_1:
-    {
-      HRTIM_fltinr1 &= ~HRTIM_FLTINR1_FLT1E;
-      HRTIM_fltinr1 |= Enable;
-    }
-    break;
-    case HRTIM_FAULT_2:
-    {
-      HRTIM_fltinr1 &= ~HRTIM_FLTINR1_FLT2E;
-      HRTIM_fltinr1 |= (Enable<< 8);
-    }
-    break;
-    case HRTIM_FAULT_3:
-    {
-      HRTIM_fltinr1 &= ~HRTIM_FLTINR1_FLT3E;
-      HRTIM_fltinr1 |= (Enable << 16);
-    }
-    break;
-    case HRTIM_FAULT_4:
-    {
-      HRTIM_fltinr1 &= ~HRTIM_FLTINR1_FLT4E; 
-      HRTIM_fltinr1 |= (Enable << 24);
-    }
-    break;
-    case HRTIM_FAULT_5:
-    {
-      HRTIM_fltinr2 &= ~HRTIM_FLTINR2_FLT5E;
-      HRTIM_fltinr2 |= Enable;
-    }
-    break;
-    default:
-    break;
-  }
+	/* Check parameters */
+	assert_param(IS_HRTIM_FAULT(Fault));
+	assert_param(IS_HRTIM_FAULTCTL(Enable));
 
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_COMMON.FLTINxR1 = HRTIM_fltinr1;
-  HRTIMx->HRTIM_COMMON.FLTINxR2 = HRTIM_fltinr2;
-}                              
+	/* Configure fault channel */
+	HRTIM_fltinr1 = HRTIMx->HRTIM_COMMON.FLTINxR1;
+	HRTIM_fltinr2 = HRTIMx->HRTIM_COMMON.FLTINxR2;
+
+	switch (Fault) {
+	case HRTIM_FAULT_1: {
+		HRTIM_fltinr1 &= ~HRTIM_FLTINR1_FLT1E;
+		HRTIM_fltinr1 |= Enable;
+	} break;
+	case HRTIM_FAULT_2: {
+		HRTIM_fltinr1 &= ~HRTIM_FLTINR1_FLT2E;
+		HRTIM_fltinr1 |= (Enable << 8);
+	} break;
+	case HRTIM_FAULT_3: {
+		HRTIM_fltinr1 &= ~HRTIM_FLTINR1_FLT3E;
+		HRTIM_fltinr1 |= (Enable << 16);
+	} break;
+	case HRTIM_FAULT_4: {
+		HRTIM_fltinr1 &= ~HRTIM_FLTINR1_FLT4E;
+		HRTIM_fltinr1 |= (Enable << 24);
+	} break;
+	case HRTIM_FAULT_5: {
+		HRTIM_fltinr2 &= ~HRTIM_FLTINR2_FLT5E;
+		HRTIM_fltinr2 |= Enable;
+	} break;
+	default:
+		break;
+	}
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_COMMON.FLTINxR1 = HRTIM_fltinr1;
+	HRTIMx->HRTIM_COMMON.FLTINxR2 = HRTIM_fltinr2;
+}
 
 /**
   * @brief  Configures both the ADC trigger register update source and the ADC
@@ -2811,64 +2532,54 @@ void HRTIM_FaultModeCtl(HRTIM_TypeDef * HRTIMx, uint32_t Fault, uint32_t Enable)
   * @param  pADCTriggerCfg: pointer to the ADC trigger configuration structure
   * @retval None
   */
-void HRTIM_ADCTriggerConfig(HRTIM_TypeDef * HRTIMx,
-                                             uint32_t ADCTrigger,
-                                             HRTIM_ADCTriggerCfgTypeDef* pADCTriggerCfg)
+void HRTIM_ADCTriggerConfig(HRTIM_TypeDef *HRTIMx, uint32_t ADCTrigger,
+			    HRTIM_ADCTriggerCfgTypeDef *pADCTriggerCfg)
 {
-  uint32_t HRTIM_cr1;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_ADCTRIGGER(ADCTrigger));
-  assert_param(IS_HRTIM_ADCTRIGGERUPDATE(pADCTriggerCfg->UpdateSource));
+	uint32_t HRTIM_cr1;
 
-  /* Set the ADC trigger update source */
-  HRTIM_cr1 = HRTIMx->HRTIM_COMMON.CR1;
-  
-  switch (ADCTrigger)
-  {
-    case HRTIM_ADCTRIGGER_1:
-    {
-      HRTIM_cr1 &= ~(HRTIM_CR1_ADC1USRC);
-      HRTIM_cr1 |= pADCTriggerCfg->UpdateSource;
-      
-      /* Set the ADC trigger 1 source */
-      HRTIMx->HRTIM_COMMON.ADC1R = pADCTriggerCfg->Trigger;
-    }
-    break;
-    case HRTIM_ADCTRIGGER_2:
-    {
-      HRTIM_cr1 &= ~(HRTIM_CR1_ADC2USRC);
-      HRTIM_cr1 |= (pADCTriggerCfg->UpdateSource << 3); 
+	/* Check parameters */
+	assert_param(IS_HRTIM_ADCTRIGGER(ADCTrigger));
+	assert_param(IS_HRTIM_ADCTRIGGERUPDATE(pADCTriggerCfg->UpdateSource));
 
-      /* Set the ADC trigger 2 source */
-      HRTIMx->HRTIM_COMMON.ADC2R = pADCTriggerCfg->Trigger;
-    }
-    break;
-    case HRTIM_ADCTRIGGER_3:
-    {
-      HRTIM_cr1 &= ~(HRTIM_CR1_ADC3USRC);
-      HRTIM_cr1 |= (pADCTriggerCfg->UpdateSource << 6); 
-      
-      /* Set the ADC trigger 3 source */
-      HRTIMx->HRTIM_COMMON.ADC3R = pADCTriggerCfg->Trigger;
-    }
-    case HRTIM_ADCTRIGGER_4:
-    {
-      HRTIM_cr1 &= ~(HRTIM_CR1_ADC4USRC);
-      HRTIM_cr1 |= (pADCTriggerCfg->UpdateSource << 9); 
-      
-      /* Set the ADC trigger 4 source */
-      HRTIMx->HRTIM_COMMON.ADC4R = pADCTriggerCfg->Trigger;
-    }
-    break;
-    default:
-    break;
-  }
-  
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_COMMON.CR1 = HRTIM_cr1;
+	/* Set the ADC trigger update source */
+	HRTIM_cr1 = HRTIMx->HRTIM_COMMON.CR1;
+
+	switch (ADCTrigger) {
+	case HRTIM_ADCTRIGGER_1: {
+		HRTIM_cr1 &= ~(HRTIM_CR1_ADC1USRC);
+		HRTIM_cr1 |= pADCTriggerCfg->UpdateSource;
+
+		/* Set the ADC trigger 1 source */
+		HRTIMx->HRTIM_COMMON.ADC1R = pADCTriggerCfg->Trigger;
+	} break;
+	case HRTIM_ADCTRIGGER_2: {
+		HRTIM_cr1 &= ~(HRTIM_CR1_ADC2USRC);
+		HRTIM_cr1 |= (pADCTriggerCfg->UpdateSource << 3);
+
+		/* Set the ADC trigger 2 source */
+		HRTIMx->HRTIM_COMMON.ADC2R = pADCTriggerCfg->Trigger;
+	} break;
+	case HRTIM_ADCTRIGGER_3: {
+		HRTIM_cr1 &= ~(HRTIM_CR1_ADC3USRC);
+		HRTIM_cr1 |= (pADCTriggerCfg->UpdateSource << 6);
+
+		/* Set the ADC trigger 3 source */
+		HRTIMx->HRTIM_COMMON.ADC3R = pADCTriggerCfg->Trigger;
+	}
+	case HRTIM_ADCTRIGGER_4: {
+		HRTIM_cr1 &= ~(HRTIM_CR1_ADC4USRC);
+		HRTIM_cr1 |= (pADCTriggerCfg->UpdateSource << 9);
+
+		/* Set the ADC trigger 4 source */
+		HRTIMx->HRTIM_COMMON.ADC4R = pADCTriggerCfg->Trigger;
+	} break;
+	default:
+		break;
+	}
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_COMMON.CR1 = HRTIM_cr1;
 }
-
 
 /**
   * @brief  Enables or disables the HRTIMx burst mode controller.
@@ -2879,20 +2590,20 @@ void HRTIM_ADCTriggerConfig(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_BURSTMODECTL_DISABLED: Burst mode disabled
   * @retval None
   */
-void HRTIM_BurstModeCtl(HRTIM_TypeDef * HRTIMx, uint32_t Enable)
+void HRTIM_BurstModeCtl(HRTIM_TypeDef *HRTIMx, uint32_t Enable)
 {
-  uint32_t HRTIM_bmcr;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_BURSTMODECTL(Enable));
-  
-  /* Enable/Disable the burst mode controller */
-  HRTIM_bmcr = HRTIMx->HRTIM_COMMON.BMCR;
-  HRTIM_bmcr &= ~(HRTIM_BMCR_BME);
-  HRTIM_bmcr |= Enable;
-  
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_COMMON.BMCR = HRTIM_bmcr;
+	uint32_t HRTIM_bmcr;
+
+	/* Check parameters */
+	assert_param(IS_HRTIM_BURSTMODECTL(Enable));
+
+	/* Enable/Disable the burst mode controller */
+	HRTIM_bmcr = HRTIMx->HRTIM_COMMON.BMCR;
+	HRTIM_bmcr &= ~(HRTIM_BMCR_BME);
+	HRTIM_bmcr |= Enable;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_COMMON.BMCR = HRTIM_bmcr;
 }
 
 /**
@@ -2909,30 +2620,23 @@ void HRTIM_BurstModeCtl(HRTIM_TypeDef * HRTIMx, uint32_t Enable)
   * @note The 'software capture' bit in the capure configuration register is
   *       automatically reset by hardware
   */
-void HRTIM_SoftwareCapture(HRTIM_TypeDef * HRTIMx,
-                                            uint32_t TimerIdx,
-                                            uint32_t CaptureUnit)
+void HRTIM_SoftwareCapture(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CaptureUnit)
 {
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
-  assert_param(IS_HRTIM_CAPTUREUNIT(CaptureUnit));
-  
-  /* Force a software capture on concerned capture unit */
-  switch (CaptureUnit)
-  {
-    case HRTIM_CAPTUREUNIT_1:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR |= HRTIM_CPT1CR_SWCPT;
-    }
-    break;
-    case HRTIM_CAPTUREUNIT_2:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR |= HRTIM_CPT2CR_SWCPT;
-    }
-    break;
-    default:
-    break;
-  }
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	assert_param(IS_HRTIM_CAPTUREUNIT(CaptureUnit));
+
+	/* Force a software capture on concerned capture unit */
+	switch (CaptureUnit) {
+	case HRTIM_CAPTUREUNIT_1: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR |= HRTIM_CPT1CR_SWCPT;
+	} break;
+	case HRTIM_CAPTUREUNIT_2: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR |= HRTIM_CPT2CR_SWCPT;
+	} break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -2950,15 +2654,13 @@ void HRTIM_SoftwareCapture(HRTIM_TypeDef * HRTIMx,
   * @note The 'software update' bits in the HRTIMx control register 2 register are
   *       automatically reset by hardware
   */
-void HRTIM_SoftwareUpdate(HRTIM_TypeDef * HRTIMx,
-                                           uint32_t TimersToUpdate)
+void HRTIM_SoftwareUpdate(HRTIM_TypeDef *HRTIMx, uint32_t TimersToUpdate)
 {
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMERUPDATE(TimersToUpdate));
-  
-  /* Force timer(s) registers update */
-  HRTIMx->HRTIM_COMMON.CR2 |= TimersToUpdate;
-  
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMERUPDATE(TimersToUpdate));
+
+	/* Force timer(s) registers update */
+	HRTIMx->HRTIM_COMMON.CR2 |= TimersToUpdate;
 }
 
 /**
@@ -2976,15 +2678,13 @@ void HRTIM_SoftwareUpdate(HRTIM_TypeDef * HRTIMx,
   * @note The 'software reset' bits in the HRTIMx control register 2  are
   *       automatically reset by hardware
   */
-void HRTIM_SoftwareReset(HRTIM_TypeDef * HRTIMx,
-                                          uint32_t TimersToReset)
+void HRTIM_SoftwareReset(HRTIM_TypeDef *HRTIMx, uint32_t TimersToReset)
 {
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMERRESET(TimersToReset));
-  
-  /* Force timer(s) registers update */
-  HRTIMx->HRTIM_COMMON.CR2 |= TimersToReset;
- 
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMERRESET(TimersToReset));
+
+	/* Force timer(s) registers update */
+	HRTIMx->HRTIM_COMMON.CR2 |= TimersToReset;
 }
 
 /**
@@ -3013,59 +2713,45 @@ void HRTIM_SoftwareReset(HRTIM_TypeDef * HRTIMx,
   * @note The 'software set/reset trigger' bit in the output set/reset registers 
   *       is automatically reset by hardware
   */
-void HRTIM_WaveformSetOutputLevel(HRTIM_TypeDef * HRTIMx,
-                                                   uint32_t TimerIdx,
-                                                   uint32_t Output,
-                                                   uint32_t OutputLevel)
+void HRTIM_WaveformSetOutputLevel(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Output,
+				  uint32_t OutputLevel)
 {
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
-  assert_param(IS_HRTIM_OUTPUTLEVEL(OutputLevel));
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
+	assert_param(IS_HRTIM_OUTPUTLEVEL(OutputLevel));
 
-  /* Force timer output level */
-  switch (Output)
-  {
-    case HRTIM_OUTPUT_TA1:
-    case HRTIM_OUTPUT_TB1:
-    case HRTIM_OUTPUT_TC1:
-    case HRTIM_OUTPUT_TD1:
-    case HRTIM_OUTPUT_TE1:
-    {
-      if (OutputLevel == HRTIM_OUTPUTLEVEL_ACTIVE)
-      {
-        /* Force output to its active state */
-        HRTIMx->HRTIM_TIMERx[TimerIdx].SETx1R |= HRTIM_SET1R_SST;
-      }
-      else
-      {
-        /* Force output to its inactive state */
-        HRTIMx->HRTIM_TIMERx[TimerIdx].RSTx1R |= HRTIM_RST1R_SRT;
-      }
-    }
-    break;
-    case HRTIM_OUTPUT_TA2:
-    case HRTIM_OUTPUT_TB2:
-    case HRTIM_OUTPUT_TC2:
-    case HRTIM_OUTPUT_TD2:
-    case HRTIM_OUTPUT_TE2:
-    {
-      if (OutputLevel == HRTIM_OUTPUTLEVEL_ACTIVE)
-      {
-        /* Force output to its active state */
-        HRTIMx->HRTIM_TIMERx[TimerIdx].SETx2R |= HRTIM_SET2R_SST;
-      }
-      else
-      {
-        /* Force output to its inactive state */
-        HRTIMx->HRTIM_TIMERx[TimerIdx].RSTx2R |= HRTIM_RST2R_SRT;
-      }
-    }
-    break;
-    default:
-    break;
-  } 
+	/* Force timer output level */
+	switch (Output) {
+	case HRTIM_OUTPUT_TA1:
+	case HRTIM_OUTPUT_TB1:
+	case HRTIM_OUTPUT_TC1:
+	case HRTIM_OUTPUT_TD1:
+	case HRTIM_OUTPUT_TE1: {
+		if (OutputLevel == HRTIM_OUTPUTLEVEL_ACTIVE) {
+			/* Force output to its active state */
+			HRTIMx->HRTIM_TIMERx[TimerIdx].SETx1R |= HRTIM_SET1R_SST;
+		} else {
+			/* Force output to its inactive state */
+			HRTIMx->HRTIM_TIMERx[TimerIdx].RSTx1R |= HRTIM_RST1R_SRT;
+		}
+	} break;
+	case HRTIM_OUTPUT_TA2:
+	case HRTIM_OUTPUT_TB2:
+	case HRTIM_OUTPUT_TC2:
+	case HRTIM_OUTPUT_TD2:
+	case HRTIM_OUTPUT_TE2: {
+		if (OutputLevel == HRTIM_OUTPUTLEVEL_ACTIVE) {
+			/* Force output to its active state */
+			HRTIMx->HRTIM_TIMERx[TimerIdx].SETx2R |= HRTIM_SET2R_SST;
+		} else {
+			/* Force output to its inactive state */
+			HRTIMx->HRTIM_TIMERx[TimerIdx].RSTx2R |= HRTIM_RST2R_SRT;
+		}
+	} break;
+	default:
+		break;
+	}
 }
-
 
 /**
   * @}
@@ -3098,34 +2784,27 @@ void HRTIM_WaveformSetOutputLevel(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_CAPTUREUNIT_2: Capture unit 2
   * @retval Captured value
   */
-uint32_t HRTIM_GetCapturedValue(HRTIM_TypeDef * HRTIMx,
-                                    uint32_t TimerIdx,
-                                    uint32_t CaptureUnit)
+uint32_t HRTIM_GetCapturedValue(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CaptureUnit)
 {
-  uint32_t captured_value = 0;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
-  assert_param(IS_HRTIM_CAPTUREUNIT(CaptureUnit));
+	uint32_t captured_value = 0;
 
-  /* Read captured value */
-  switch (CaptureUnit)
-  {
-    case HRTIM_CAPTUREUNIT_1:
-    {
-      captured_value = HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xR;
-    }
-    break;
-    case HRTIM_CAPTUREUNIT_2:
-    {
-      captured_value = HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xR;
-    }
-    break;
-    default:
-    break;
-  }
-  
-  return captured_value; 
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	assert_param(IS_HRTIM_CAPTUREUNIT(CaptureUnit));
+
+	/* Read captured value */
+	switch (CaptureUnit) {
+	case HRTIM_CAPTUREUNIT_1: {
+		captured_value = HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xR;
+	} break;
+	case HRTIM_CAPTUREUNIT_2: {
+		captured_value = HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xR;
+	} break;
+	default:
+		break;
+	}
+
+	return captured_value;
 }
 
 /**
@@ -3150,55 +2829,42 @@ uint32_t HRTIM_GetCapturedValue(HRTIM_TypeDef * HRTIMx,
   * @note Returned output level is taken before the output stage (chopper, 
   *        polarity).
   */
-uint32_t HRTIM_WaveformGetOutputLevel(HRTIM_TypeDef * HRTIMx,
-                                          uint32_t TimerIdx,
-                                          uint32_t Output)
+uint32_t HRTIM_WaveformGetOutputLevel(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Output)
 {
-  uint32_t output_level = HRTIM_OUTPUTLEVEL_INACTIVE;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
-  
-  /* Read the output level */
-  switch (Output)
-  {
-    case HRTIM_OUTPUT_TA1:
-    case HRTIM_OUTPUT_TB1:
-    case HRTIM_OUTPUT_TC1:
-    case HRTIM_OUTPUT_TD1:
-    case HRTIM_OUTPUT_TE1:
-    {
-      if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_O1CPY) != RESET)
-      {
-        output_level = HRTIM_OUTPUTLEVEL_ACTIVE;
-      }
-      else
-      {
-        output_level = HRTIM_OUTPUTLEVEL_INACTIVE;
-      }
-    }
-    break;
-    case HRTIM_OUTPUT_TA2:
-    case HRTIM_OUTPUT_TB2:
-    case HRTIM_OUTPUT_TC2:
-    case HRTIM_OUTPUT_TD2:
-    case HRTIM_OUTPUT_TE2:
-    {
-      if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_O2CPY) != RESET)
-      {
-        output_level = HRTIM_OUTPUTLEVEL_ACTIVE;
-      }
-      else
-      {
-        output_level = HRTIM_OUTPUTLEVEL_INACTIVE;
-      }
-    }
-    break;
-    default:
-    break;
-  }
-  
-  return output_level; 
+	uint32_t output_level = HRTIM_OUTPUTLEVEL_INACTIVE;
+
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
+
+	/* Read the output level */
+	switch (Output) {
+	case HRTIM_OUTPUT_TA1:
+	case HRTIM_OUTPUT_TB1:
+	case HRTIM_OUTPUT_TC1:
+	case HRTIM_OUTPUT_TD1:
+	case HRTIM_OUTPUT_TE1: {
+		if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_O1CPY) != RESET) {
+			output_level = HRTIM_OUTPUTLEVEL_ACTIVE;
+		} else {
+			output_level = HRTIM_OUTPUTLEVEL_INACTIVE;
+		}
+	} break;
+	case HRTIM_OUTPUT_TA2:
+	case HRTIM_OUTPUT_TB2:
+	case HRTIM_OUTPUT_TC2:
+	case HRTIM_OUTPUT_TD2:
+	case HRTIM_OUTPUT_TE2: {
+		if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_O2CPY) != RESET) {
+			output_level = HRTIM_OUTPUTLEVEL_ACTIVE;
+		} else {
+			output_level = HRTIM_OUTPUTLEVEL_INACTIVE;
+		}
+	} break;
+	default:
+		break;
+	}
+
+	return output_level;
 }
 
 /**
@@ -3222,99 +2888,70 @@ uint32_t HRTIM_WaveformGetOutputLevel(HRTIM_TypeDef * HRTIMx,
   * @retval Output state
   */
 #ifdef __GNUC__
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
-uint32_t HRTIM_WaveformGetOutputState(HRTIM_TypeDef * HRTIMx,
-                                          uint32_t TimerIdx,
-                                          uint32_t Output)
+uint32_t HRTIM_WaveformGetOutputState(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Output)
 {
-  uint32_t output_bit = 0;
-  uint32_t output_state = HRTIM_OUTPUTSTATE_IDLE;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
-  
-  /* Set output state according to output control status and output disable status */
-  switch (Output)
-  {
-    case HRTIM_OUTPUT_TA1:
-    {
-      output_bit = HRTIM_OENR_TA1OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TA2:
-    {
-      output_bit = HRTIM_OENR_TA2OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TB1:
-    {
-      output_bit = HRTIM_OENR_TB1OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TB2:
-    {
-      output_bit = HRTIM_OENR_TB2OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TC1:
-    {
-      output_bit = HRTIM_OENR_TC1OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TC2:
-    {
-      output_bit = HRTIM_OENR_TC2OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TD1:
-    {
-      output_bit = HRTIM_OENR_TD1OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TD2:
-    {
-      output_bit = HRTIM_OENR_TD2OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TE1:
-    {
-      output_bit = HRTIM_OENR_TE1OEN;
-    }
-    break;
-    case HRTIM_OUTPUT_TE2:
-    {
-      output_bit = HRTIM_OENR_TE2OEN;
-    }
-    break;
-    default:
-    break;
-  }
-  
-  if ((HRTIMx->HRTIM_COMMON.OENR & output_bit) != RESET)
-  {
-    /* Output is enabled: output in RUN state (whatever ouput disable status is)*/
-    output_state = HRTIM_OUTPUTSTATE_RUN;
-  }
-  else
-  {
-    if ((HRTIMx->HRTIM_COMMON.ODSR & output_bit) != RESET)
-    {
-    /* Output is disabled: output in FAULT state */
-      output_state = HRTIM_OUTPUTSTATE_FAULT;
-    }
-    else
-    {
-      /* Output is disabled: output in IDLE state */
-      output_state = HRTIM_OUTPUTSTATE_IDLE;
-    }
-  }
-  
-  return(output_state);  
+	uint32_t output_bit = 0;
+	uint32_t output_state = HRTIM_OUTPUTSTATE_IDLE;
+
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
+
+	/* Set output state according to output control status and output disable status */
+	switch (Output) {
+	case HRTIM_OUTPUT_TA1: {
+		output_bit = HRTIM_OENR_TA1OEN;
+	} break;
+	case HRTIM_OUTPUT_TA2: {
+		output_bit = HRTIM_OENR_TA2OEN;
+	} break;
+	case HRTIM_OUTPUT_TB1: {
+		output_bit = HRTIM_OENR_TB1OEN;
+	} break;
+	case HRTIM_OUTPUT_TB2: {
+		output_bit = HRTIM_OENR_TB2OEN;
+	} break;
+	case HRTIM_OUTPUT_TC1: {
+		output_bit = HRTIM_OENR_TC1OEN;
+	} break;
+	case HRTIM_OUTPUT_TC2: {
+		output_bit = HRTIM_OENR_TC2OEN;
+	} break;
+	case HRTIM_OUTPUT_TD1: {
+		output_bit = HRTIM_OENR_TD1OEN;
+	} break;
+	case HRTIM_OUTPUT_TD2: {
+		output_bit = HRTIM_OENR_TD2OEN;
+	} break;
+	case HRTIM_OUTPUT_TE1: {
+		output_bit = HRTIM_OENR_TE1OEN;
+	} break;
+	case HRTIM_OUTPUT_TE2: {
+		output_bit = HRTIM_OENR_TE2OEN;
+	} break;
+	default:
+		break;
+	}
+
+	if ((HRTIMx->HRTIM_COMMON.OENR & output_bit) != RESET) {
+		/* Output is enabled: output in RUN state (whatever ouput disable status is)*/
+		output_state = HRTIM_OUTPUTSTATE_RUN;
+	} else {
+		if ((HRTIMx->HRTIM_COMMON.ODSR & output_bit) != RESET) {
+			/* Output is disabled: output in FAULT state */
+			output_state = HRTIM_OUTPUTSTATE_FAULT;
+		} else {
+			/* Output is disabled: output in IDLE state */
+			output_state = HRTIM_OUTPUTSTATE_IDLE;
+		}
+	}
+
+	return (output_state);
 }
 #ifdef __GNUC__
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
 /**
@@ -3338,59 +2975,46 @@ uint32_t HRTIM_WaveformGetOutputState(HRTIM_TypeDef * HRTIMx,
   *                    @arg HRTIM_OUTPUT_TD2: Timer E - Output 2
   * @retval Delayed protection status 
   */
-uint32_t HRTIM_GetDelayedProtectionStatus(HRTIM_TypeDef * HRTIMx,
-                                              uint32_t TimerIdx,
-                                              uint32_t Output)
+uint32_t HRTIM_GetDelayedProtectionStatus(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Output)
 {
-  uint32_t delayed_protection_status = HRTIM_OUTPUTLEVEL_INACTIVE;
-  
-  /* Check parameters */
-  assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
+	uint32_t delayed_protection_status = HRTIM_OUTPUTLEVEL_INACTIVE;
 
-  /* Read the delayed protection status */
-  switch (Output)
-  {
-    case HRTIM_OUTPUT_TA1:
-    case HRTIM_OUTPUT_TB1:
-    case HRTIM_OUTPUT_TC1:
-    case HRTIM_OUTPUT_TD1:
-    case HRTIM_OUTPUT_TE1:
-    {
-      if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_O1STAT) != RESET)
-      {
-        /* Output 1 was active when the delayed idle protection was triggered */
-        delayed_protection_status = HRTIM_OUTPUTLEVEL_ACTIVE;
-      }
-      else
-      {
-        /* Output 1 was inactive when the delayed idle protection was triggered */
-        delayed_protection_status = HRTIM_OUTPUTLEVEL_INACTIVE;
-      }
-    }
-    break;
-    case HRTIM_OUTPUT_TA2:
-    case HRTIM_OUTPUT_TB2:
-    case HRTIM_OUTPUT_TC2:
-    case HRTIM_OUTPUT_TD2:
-    case HRTIM_OUTPUT_TE2:
-    {
-      if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_O2STAT) != RESET)
-      {
-        /* Output 2 was active when the delayed idle protection was triggered */
-        delayed_protection_status = HRTIM_OUTPUTLEVEL_ACTIVE;
-      }
-      else
-      {
-        /* Output 2 was inactive when the delayed idle protection was triggered */
-        delayed_protection_status = HRTIM_OUTPUTLEVEL_INACTIVE;
-      }
-    }
-    break;
-    default:
-    break;
-  }
-  
-  return delayed_protection_status;
+	/* Check parameters */
+	assert_param(IS_HRTIM_TIMER_OUTPUT(TimerIdx, Output));
+
+	/* Read the delayed protection status */
+	switch (Output) {
+	case HRTIM_OUTPUT_TA1:
+	case HRTIM_OUTPUT_TB1:
+	case HRTIM_OUTPUT_TC1:
+	case HRTIM_OUTPUT_TD1:
+	case HRTIM_OUTPUT_TE1: {
+		if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_O1STAT) != RESET) {
+			/* Output 1 was active when the delayed idle protection was triggered */
+			delayed_protection_status = HRTIM_OUTPUTLEVEL_ACTIVE;
+		} else {
+			/* Output 1 was inactive when the delayed idle protection was triggered */
+			delayed_protection_status = HRTIM_OUTPUTLEVEL_INACTIVE;
+		}
+	} break;
+	case HRTIM_OUTPUT_TA2:
+	case HRTIM_OUTPUT_TB2:
+	case HRTIM_OUTPUT_TC2:
+	case HRTIM_OUTPUT_TD2:
+	case HRTIM_OUTPUT_TE2: {
+		if ((HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_O2STAT) != RESET) {
+			/* Output 2 was active when the delayed idle protection was triggered */
+			delayed_protection_status = HRTIM_OUTPUTLEVEL_ACTIVE;
+		} else {
+			/* Output 2 was inactive when the delayed idle protection was triggered */
+			delayed_protection_status = HRTIM_OUTPUTLEVEL_INACTIVE;
+		}
+	} break;
+	default:
+		break;
+	}
+
+	return delayed_protection_status;
 }
 
 /**
@@ -3398,14 +3022,14 @@ uint32_t HRTIM_GetDelayedProtectionStatus(HRTIM_TypeDef * HRTIMx,
   * @param  HRTIMx: pointer to HRTIMx peripheral
   * @retval Burst mode controller status 
   */
-uint32_t HRTIM_GetBurstStatus(HRTIM_TypeDef * HRTIMx)
+uint32_t HRTIM_GetBurstStatus(HRTIM_TypeDef *HRTIMx)
 {
-  uint32_t burst_mode_status;
+	uint32_t burst_mode_status;
 
-  /* Read burst mode status */
-  burst_mode_status = (HRTIMx->HRTIM_COMMON.BMCR & HRTIM_BMCR_BMSTAT);
-  
-  return burst_mode_status; 
+	/* Read burst mode status */
+	burst_mode_status = (HRTIMx->HRTIM_COMMON.BMCR & HRTIM_BMCR_BMSTAT);
+
+	return burst_mode_status;
 }
 
 /**
@@ -3417,20 +3041,18 @@ uint32_t HRTIM_GetBurstStatus(HRTIM_TypeDef * HRTIMx)
   *                   @arg 0x0 to 0x4 for timers A to E 
   * @retval Burst mode controller status 
   */
-uint32_t HRTIM_GetCurrentPushPullStatus(HRTIM_TypeDef * HRTIMx,
-                                            uint32_t TimerIdx)
+uint32_t HRTIM_GetCurrentPushPullStatus(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx)
 {
-  uint32_t current_pushpull_status;
+	uint32_t current_pushpull_status;
 
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
 
-  /* Read current push pull status */
-  current_pushpull_status = (HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_CPPSTAT);
-  
-  return current_pushpull_status; 
+	/* Read current push pull status */
+	current_pushpull_status = (HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_CPPSTAT);
+
+	return current_pushpull_status;
 }
-
 
 /**
   * @brief  Indicates on which output the signal was applied, in push-pull mode
@@ -3441,18 +3063,17 @@ uint32_t HRTIM_GetCurrentPushPullStatus(HRTIM_TypeDef * HRTIMx,
   *                   @arg 0x0 to 0x4 for timers A to E 
   * @retval Idle Push Pull Status 
   */
-uint32_t HRTIM_GetIdlePushPullStatus(HRTIM_TypeDef * HRTIMx,
-                                         uint32_t TimerIdx)
+uint32_t HRTIM_GetIdlePushPullStatus(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx)
 {
-  uint32_t idle_pushpull_status;
+	uint32_t idle_pushpull_status;
 
-   /* Check the parameters */
-  assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
+	/* Check the parameters */
+	assert_param(IS_HRTIM_TIMING_UNIT(TimerIdx));
 
-  /* Read current push pull status */
-  idle_pushpull_status = (HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_IPPSTAT);
-  
-  return idle_pushpull_status; 
+	/* Read current push pull status */
+	idle_pushpull_status = (HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxISR & HRTIM_TIMISR_IPPSTAT);
+
+	return idle_pushpull_status;
 }
 
 /**
@@ -3460,19 +3081,19 @@ uint32_t HRTIM_GetIdlePushPullStatus(HRTIM_TypeDef * HRTIMx,
   * @param  HRTIMx: pointer to HRTIMx peripheral
   * @retval None
   */
-void  HRTIM_MasterBase_Config(HRTIM_TypeDef * HRTIMx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct)
-{  
-  /* Set the prescaler ratio */
-  HRTIMx->HRTIM_MASTER.MCR &= (uint32_t) ~(HRTIM_MCR_CK_PSC);
-  HRTIMx->HRTIM_MASTER.MCR  |= (uint32_t)HRTIM_BaseInitStruct->PrescalerRatio;
-  
-  /* Set the operating mode */
-  HRTIMx->HRTIM_MASTER.MCR  &= (uint32_t) ~(HRTIM_MCR_CONT | HRTIM_MCR_RETRIG);
-  HRTIMx->HRTIM_MASTER.MCR  |= (uint32_t)HRTIM_BaseInitStruct->Mode;
-  
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_MASTER.MPER = HRTIM_BaseInitStruct->Period;
-  HRTIMx->HRTIM_MASTER.MREP = HRTIM_BaseInitStruct->RepetitionCounter;
+void HRTIM_MasterBase_Config(HRTIM_TypeDef *HRTIMx, HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct)
+{
+	/* Set the prescaler ratio */
+	HRTIMx->HRTIM_MASTER.MCR &= (uint32_t) ~(HRTIM_MCR_CK_PSC);
+	HRTIMx->HRTIM_MASTER.MCR |= (uint32_t)HRTIM_BaseInitStruct->PrescalerRatio;
+
+	/* Set the operating mode */
+	HRTIMx->HRTIM_MASTER.MCR &= (uint32_t) ~(HRTIM_MCR_CONT | HRTIM_MCR_RETRIG);
+	HRTIMx->HRTIM_MASTER.MCR |= (uint32_t)HRTIM_BaseInitStruct->Mode;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_MASTER.MPER = HRTIM_BaseInitStruct->Period;
+	HRTIMx->HRTIM_MASTER.MREP = HRTIM_BaseInitStruct->RepetitionCounter;
 }
 
 /**
@@ -3481,19 +3102,21 @@ void  HRTIM_MasterBase_Config(HRTIM_TypeDef * HRTIMx, HRTIM_BaseInitTypeDef* HRT
   * @param  TimerIdx: Timer index
   * @retval None
   */
-void HRTIM_TimingUnitBase_Config(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTIM_BaseInitTypeDef* HRTIM_BaseInitStruct)
-{   
-  /* Set the prescaler ratio */
-  HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR &= (uint32_t) ~(HRTIM_TIMCR_CK_PSC);
-  HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR |= (uint32_t)HRTIM_BaseInitStruct->PrescalerRatio;
+void HRTIM_TimingUnitBase_Config(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+				 HRTIM_BaseInitTypeDef *HRTIM_BaseInitStruct)
+{
+	/* Set the prescaler ratio */
+	HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR &= (uint32_t) ~(HRTIM_TIMCR_CK_PSC);
+	HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR |= (uint32_t)HRTIM_BaseInitStruct->PrescalerRatio;
 
-  /* Set the operating mode */
-  HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR &= (uint32_t) ~(HRTIM_TIMCR_CONT | HRTIM_TIMCR_RETRIG);
-  HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR |= (uint32_t)HRTIM_BaseInitStruct->Mode;
-  
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_TIMERx[TimerIdx].PERxR = HRTIM_BaseInitStruct->Period;
-  HRTIMx->HRTIM_TIMERx[TimerIdx].REPxR = HRTIM_BaseInitStruct->RepetitionCounter;
+	/* Set the operating mode */
+	HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR &=
+		(uint32_t) ~(HRTIM_TIMCR_CONT | HRTIM_TIMCR_RETRIG);
+	HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR |= (uint32_t)HRTIM_BaseInitStruct->Mode;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_TIMERx[TimerIdx].PERxR = HRTIM_BaseInitStruct->Period;
+	HRTIMx->HRTIM_TIMERx[TimerIdx].REPxR = HRTIM_BaseInitStruct->RepetitionCounter;
 }
 
 /**
@@ -3503,52 +3126,50 @@ void HRTIM_TimingUnitBase_Config(HRTIM_TypeDef * HRTIMx, uint32_t TimerIdx, HRTI
   * @param  pTimerInit: pointer to the timer initialization data structure
   * @retval None
   */
-void  HRTIM_MasterWaveform_Config(HRTIM_TypeDef * HRTIMx, 
-                                HRTIM_TimerInitTypeDef * pTimerInit)
+void HRTIM_MasterWaveform_Config(HRTIM_TypeDef *HRTIMx, HRTIM_TimerInitTypeDef *pTimerInit)
 {
-  uint32_t HRTIM_mcr;
-  uint32_t HRTIM_bmcr;
-  
-  /* Configure master timer */
-  HRTIM_mcr = HRTIMx->HRTIM_MASTER.MCR;
-  HRTIM_bmcr = HRTIMx->HRTIM_COMMON.BMCR;
-  
-  /* Enable/Disable the half mode */
-  HRTIM_mcr &= ~(HRTIM_MCR_HALF);
-  HRTIM_mcr |= pTimerInit->HalfModeEnable;
-  
-  /* Enable/Disable the timer start upon synchronization event reception */
-  HRTIM_mcr &= ~(HRTIM_MCR_SYNCSTRTM);
-  HRTIM_mcr |= pTimerInit->StartOnSync;
- 
-  /* Enable/Disable the timer reset upon synchronization event reception */
-  HRTIM_mcr &= ~(HRTIM_MCR_SYNCRSTM);
-  HRTIM_mcr |= pTimerInit->ResetOnSync;
-  
-  /* Enable/Disable the DAC synchronization event generation */
-  HRTIM_mcr &= ~(HRTIM_MCR_DACSYNC);
-  HRTIM_mcr |= pTimerInit->DACSynchro;
-  
-  /* Enable/Disable preload mechanism for timer registers */
-  HRTIM_mcr &= ~(HRTIM_MCR_PREEN);
-  HRTIM_mcr |= pTimerInit->PreloadEnable;
-  
-  /* Master timer registers update handling */
-  HRTIM_mcr &= ~(HRTIM_MCR_BRSTDMA);
-  HRTIM_mcr |= (pTimerInit->UpdateGating << 2);
-  
-  /* Enable/Disable registers update on repetition */
-  HRTIM_mcr &= ~(HRTIM_MCR_MREPU);
-  HRTIM_mcr |= pTimerInit->RepetitionUpdate;
-  
-  /* Set the timer burst mode */
-  HRTIM_bmcr &= ~(HRTIM_BMCR_MTBM);
-  HRTIM_bmcr |= pTimerInit->BurstMode;
+	uint32_t HRTIM_mcr;
+	uint32_t HRTIM_bmcr;
 
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_MASTER.MCR  = HRTIM_mcr;
-  HRTIMx->HRTIM_COMMON.BMCR = HRTIM_bmcr;
-  
+	/* Configure master timer */
+	HRTIM_mcr = HRTIMx->HRTIM_MASTER.MCR;
+	HRTIM_bmcr = HRTIMx->HRTIM_COMMON.BMCR;
+
+	/* Enable/Disable the half mode */
+	HRTIM_mcr &= ~(HRTIM_MCR_HALF);
+	HRTIM_mcr |= pTimerInit->HalfModeEnable;
+
+	/* Enable/Disable the timer start upon synchronization event reception */
+	HRTIM_mcr &= ~(HRTIM_MCR_SYNCSTRTM);
+	HRTIM_mcr |= pTimerInit->StartOnSync;
+
+	/* Enable/Disable the timer reset upon synchronization event reception */
+	HRTIM_mcr &= ~(HRTIM_MCR_SYNCRSTM);
+	HRTIM_mcr |= pTimerInit->ResetOnSync;
+
+	/* Enable/Disable the DAC synchronization event generation */
+	HRTIM_mcr &= ~(HRTIM_MCR_DACSYNC);
+	HRTIM_mcr |= pTimerInit->DACSynchro;
+
+	/* Enable/Disable preload mechanism for timer registers */
+	HRTIM_mcr &= ~(HRTIM_MCR_PREEN);
+	HRTIM_mcr |= pTimerInit->PreloadEnable;
+
+	/* Master timer registers update handling */
+	HRTIM_mcr &= ~(HRTIM_MCR_BRSTDMA);
+	HRTIM_mcr |= (pTimerInit->UpdateGating << 2);
+
+	/* Enable/Disable registers update on repetition */
+	HRTIM_mcr &= ~(HRTIM_MCR_MREPU);
+	HRTIM_mcr |= pTimerInit->RepetitionUpdate;
+
+	/* Set the timer burst mode */
+	HRTIM_bmcr &= ~(HRTIM_BMCR_MTBM);
+	HRTIM_bmcr |= pTimerInit->BurstMode;
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_MASTER.MCR = HRTIM_mcr;
+	HRTIMx->HRTIM_COMMON.BMCR = HRTIM_bmcr;
 }
 
 /**
@@ -3558,88 +3179,75 @@ void  HRTIM_MasterWaveform_Config(HRTIM_TypeDef * HRTIMx,
   * @param  pTimerInit: pointer to the timer initialization data structure
   * @retval None
   */
-void HRTIM_TimingUnitWaveform_Config(HRTIM_TypeDef * HRTIMx, 
-                                    uint32_t TimerIdx, 
-                                    HRTIM_TimerInitTypeDef * pTimerInit)
+void HRTIM_TimingUnitWaveform_Config(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx,
+				     HRTIM_TimerInitTypeDef *pTimerInit)
 {
-  uint32_t HRTIM_timcr;
-  uint32_t HRTIM_bmcr;
-  
-  /* Configure timing unit */
-  HRTIM_timcr = HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR;
-  HRTIM_bmcr = HRTIMx->HRTIM_COMMON.BMCR;
-  
-  /* Enable/Disable the half mode */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_HALF);
-  HRTIM_timcr |= pTimerInit->HalfModeEnable;
-  
-  /* Enable/Disable the timer start upon synchronization event reception */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_SYNCSTRT);
-  HRTIM_timcr |= pTimerInit->StartOnSync;
- 
-  /* Enable/Disable the timer reset upon synchronization event reception */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_SYNCRST);
-  HRTIM_timcr |= pTimerInit->ResetOnSync;
-  
-  /* Enable/Disable the DAC synchronization event generation */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_DACSYNC);
-  HRTIM_timcr |= pTimerInit->DACSynchro;
-  
-  /* Enable/Disable preload mechanism for timer registers */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_PREEN);
-  HRTIM_timcr |= pTimerInit->PreloadEnable;
-  
-  /* Timing unit registers update handling */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_UPDGAT);
-  HRTIM_timcr |= pTimerInit->UpdateGating;
-  
-  /* Enable/Disable registers update on repetition */
-  HRTIM_timcr &= ~(HRTIM_TIMCR_TREPU);
-  if (pTimerInit->RepetitionUpdate == HRTIM_UPDATEONREPETITION_ENABLED)
-  {
-    HRTIM_timcr |= HRTIM_TIMCR_TREPU;
-  }
+	uint32_t HRTIM_timcr;
+	uint32_t HRTIM_bmcr;
 
-  /* Set the timer burst mode */
-  switch (TimerIdx)
-  {
-    case HRTIM_TIMERINDEX_TIMER_A:
-    {
-      HRTIM_bmcr &= ~(HRTIM_BMCR_TABM);
-      HRTIM_bmcr |= ( pTimerInit->BurstMode << 1);
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_B:
-    {
-      HRTIM_bmcr &= ~(HRTIM_BMCR_TBBM);
-      HRTIM_bmcr |= ( pTimerInit->BurstMode << 2);
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_C:
-    {
-      HRTIM_bmcr &= ~(HRTIM_BMCR_TCBM);
-      HRTIM_bmcr |= ( pTimerInit->BurstMode << 3);
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_D:
-    {
-      HRTIM_bmcr &= ~(HRTIM_BMCR_TDBM);
-      HRTIM_bmcr |= ( pTimerInit->BurstMode << 4);
-    }
-    break;
-    case HRTIM_TIMERINDEX_TIMER_E:
-    {
-      HRTIM_bmcr &= ~(HRTIM_BMCR_TEBM);
-      HRTIM_bmcr |= ( pTimerInit->BurstMode << 5);
-    }
-    break;
-    default:
-    break;
-  }
-  
-  /* Update the HRTIMx registers */
-  HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR = HRTIM_timcr;
-  HRTIMx->HRTIM_COMMON.BMCR = HRTIM_bmcr;
+	/* Configure timing unit */
+	HRTIM_timcr = HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR;
+	HRTIM_bmcr = HRTIMx->HRTIM_COMMON.BMCR;
+
+	/* Enable/Disable the half mode */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_HALF);
+	HRTIM_timcr |= pTimerInit->HalfModeEnable;
+
+	/* Enable/Disable the timer start upon synchronization event reception */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_SYNCSTRT);
+	HRTIM_timcr |= pTimerInit->StartOnSync;
+
+	/* Enable/Disable the timer reset upon synchronization event reception */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_SYNCRST);
+	HRTIM_timcr |= pTimerInit->ResetOnSync;
+
+	/* Enable/Disable the DAC synchronization event generation */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_DACSYNC);
+	HRTIM_timcr |= pTimerInit->DACSynchro;
+
+	/* Enable/Disable preload mechanism for timer registers */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_PREEN);
+	HRTIM_timcr |= pTimerInit->PreloadEnable;
+
+	/* Timing unit registers update handling */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_UPDGAT);
+	HRTIM_timcr |= pTimerInit->UpdateGating;
+
+	/* Enable/Disable registers update on repetition */
+	HRTIM_timcr &= ~(HRTIM_TIMCR_TREPU);
+	if (pTimerInit->RepetitionUpdate == HRTIM_UPDATEONREPETITION_ENABLED) {
+		HRTIM_timcr |= HRTIM_TIMCR_TREPU;
+	}
+
+	/* Set the timer burst mode */
+	switch (TimerIdx) {
+	case HRTIM_TIMERINDEX_TIMER_A: {
+		HRTIM_bmcr &= ~(HRTIM_BMCR_TABM);
+		HRTIM_bmcr |= (pTimerInit->BurstMode << 1);
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_B: {
+		HRTIM_bmcr &= ~(HRTIM_BMCR_TBBM);
+		HRTIM_bmcr |= (pTimerInit->BurstMode << 2);
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_C: {
+		HRTIM_bmcr &= ~(HRTIM_BMCR_TCBM);
+		HRTIM_bmcr |= (pTimerInit->BurstMode << 3);
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_D: {
+		HRTIM_bmcr &= ~(HRTIM_BMCR_TDBM);
+		HRTIM_bmcr |= (pTimerInit->BurstMode << 4);
+	} break;
+	case HRTIM_TIMERINDEX_TIMER_E: {
+		HRTIM_bmcr &= ~(HRTIM_BMCR_TEBM);
+		HRTIM_bmcr |= (pTimerInit->BurstMode << 5);
+	} break;
+	default:
+		break;
+	}
+
+	/* Update the HRTIMx registers */
+	HRTIMx->HRTIM_TIMERx[TimerIdx].TIMxCR = HRTIM_timcr;
+	HRTIMx->HRTIM_COMMON.BMCR = HRTIM_bmcr;
 }
 
 /**
@@ -3650,69 +3258,46 @@ void HRTIM_TimingUnitWaveform_Config(HRTIM_TypeDef * HRTIMx,
   * @param  pCompareCfg: pointer to the compare unit configuration data structure
   * @retval None
   */
-void  HRTIM_CompareUnitConfig(HRTIM_TypeDef * HRTIMx,
-                              uint32_t TimerIdx,
-                              uint32_t CompareUnit,
-                              HRTIM_CompareCfgTypeDef * pCompareCfg)
+void HRTIM_CompareUnitConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CompareUnit,
+			     HRTIM_CompareCfgTypeDef *pCompareCfg)
 {
-  if (TimerIdx == HRTIM_TIMERINDEX_MASTER)
-  {
-    /* Configure the compare unit of the master timer */
-    switch (CompareUnit)
-    {
-      case HRTIM_COMPAREUNIT_1:
-      {
-        HRTIMx->HRTIM_MASTER.MCMP1R = pCompareCfg->CompareValue;
-      }
-      break;
-      case HRTIM_COMPAREUNIT_2:
-      {
-        HRTIMx->HRTIM_MASTER.MCMP2R = pCompareCfg->CompareValue;
-      }
-      break;
-      case HRTIM_COMPAREUNIT_3:
-      {
-        HRTIMx->HRTIM_MASTER.MCMP3R = pCompareCfg->CompareValue;
-      }
-      break;
-      case HRTIM_COMPAREUNIT_4:
-      {
-        HRTIMx->HRTIM_MASTER.MCMP4R = pCompareCfg->CompareValue;
-      }
-      break;
-      default:
-      break;
-    }
-  }
-  else
-  {
-    /* Configure the compare unit of the timing unit */
-    switch (CompareUnit)
-    {
-      case HRTIM_COMPAREUNIT_1:
-      {
-        HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR = pCompareCfg->CompareValue;
-      }
-      break;
-      case HRTIM_COMPAREUNIT_2:
-      {
-        HRTIMx->HRTIM_TIMERx[TimerIdx].CMP2xR = pCompareCfg->CompareValue;
-      }
-      break;
-      case HRTIM_COMPAREUNIT_3:
-      {
-        HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR = pCompareCfg->CompareValue;
-      }
-      break;
-      case HRTIM_COMPAREUNIT_4:
-      {
-        HRTIMx->HRTIM_TIMERx[TimerIdx].CMP4xR = pCompareCfg->CompareValue;
-      }
-      break;
-      default:
-      break;
-    }
-  }
+	if (TimerIdx == HRTIM_TIMERINDEX_MASTER) {
+		/* Configure the compare unit of the master timer */
+		switch (CompareUnit) {
+		case HRTIM_COMPAREUNIT_1: {
+			HRTIMx->HRTIM_MASTER.MCMP1R = pCompareCfg->CompareValue;
+		} break;
+		case HRTIM_COMPAREUNIT_2: {
+			HRTIMx->HRTIM_MASTER.MCMP2R = pCompareCfg->CompareValue;
+		} break;
+		case HRTIM_COMPAREUNIT_3: {
+			HRTIMx->HRTIM_MASTER.MCMP3R = pCompareCfg->CompareValue;
+		} break;
+		case HRTIM_COMPAREUNIT_4: {
+			HRTIMx->HRTIM_MASTER.MCMP4R = pCompareCfg->CompareValue;
+		} break;
+		default:
+			break;
+		}
+	} else {
+		/* Configure the compare unit of the timing unit */
+		switch (CompareUnit) {
+		case HRTIM_COMPAREUNIT_1: {
+			HRTIMx->HRTIM_TIMERx[TimerIdx].CMP1xR = pCompareCfg->CompareValue;
+		} break;
+		case HRTIM_COMPAREUNIT_2: {
+			HRTIMx->HRTIM_TIMERx[TimerIdx].CMP2xR = pCompareCfg->CompareValue;
+		} break;
+		case HRTIM_COMPAREUNIT_3: {
+			HRTIMx->HRTIM_TIMERx[TimerIdx].CMP3xR = pCompareCfg->CompareValue;
+		} break;
+		case HRTIM_COMPAREUNIT_4: {
+			HRTIMx->HRTIM_TIMERx[TimerIdx].CMP4xR = pCompareCfg->CompareValue;
+		} break;
+		default:
+			break;
+		}
+	}
 }
 
 /**
@@ -3723,84 +3308,55 @@ void  HRTIM_CompareUnitConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pCaptureCfg: pointer to the compare unit configuration data structure
   * @retval None
   */
-void HRTIM_CaptureUnitConfig(HRTIM_TypeDef * HRTIMx,
-                             uint32_t TimerIdx,
-                             uint32_t CaptureUnit,
-                             uint32_t Event)
+void HRTIM_CaptureUnitConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t CaptureUnit,
+			     uint32_t Event)
 {
-  uint32_t CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_1;
-  
-  switch (Event)
-  {
-    case HRTIM_EVENT_1:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_1;
-    }
-    break;
-    case HRTIM_EVENT_2:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_2;
-    }
-    break;
-    case HRTIM_EVENT_3:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_3;
-    }
-    break;
-    case HRTIM_EVENT_4:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_4;
-    }
-    break;
-    case HRTIM_EVENT_5:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_5;
-    }
-    break;
-    case HRTIM_EVENT_6:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_6;
-    }
-    break;
-    case HRTIM_EVENT_7:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_7;
-    }
-    break;
-    case HRTIM_EVENT_8:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_8;
-    }
-    break;
-    case HRTIM_EVENT_9:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_9;
-    }
-    break;
-    case HRTIM_EVENT_10:
-    {
-      CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_10;
-    }
-    break;
-    default:
-    break;  
-    
-  }  
-  switch (CaptureUnit)
-  {
-    case HRTIM_CAPTUREUNIT_1:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR = CaptureTrigger;
-    }
-    break;
-    case HRTIM_CAPTUREUNIT_2:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR = CaptureTrigger;
-    }
-    break;
-    default:
-    break;  
-  }
+	uint32_t CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_1;
+
+	switch (Event) {
+	case HRTIM_EVENT_1: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_1;
+	} break;
+	case HRTIM_EVENT_2: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_2;
+	} break;
+	case HRTIM_EVENT_3: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_3;
+	} break;
+	case HRTIM_EVENT_4: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_4;
+	} break;
+	case HRTIM_EVENT_5: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_5;
+	} break;
+	case HRTIM_EVENT_6: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_6;
+	} break;
+	case HRTIM_EVENT_7: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_7;
+	} break;
+	case HRTIM_EVENT_8: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_8;
+	} break;
+	case HRTIM_EVENT_9: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_9;
+	} break;
+	case HRTIM_EVENT_10: {
+		CaptureTrigger = HRTIM_CAPTURETRIGGER_EEV_10;
+	} break;
+	default:
+		break;
+	}
+	switch (CaptureUnit) {
+	case HRTIM_CAPTUREUNIT_1: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CPT1xCR = CaptureTrigger;
+	} break;
+	case HRTIM_CAPTUREUNIT_2: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].CPT2xCR = CaptureTrigger;
+	} break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -3811,76 +3367,66 @@ void HRTIM_CaptureUnitConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pOutputCfg: pointer to the output configuration data structure
   * @retval None
   */
-void  HRTIM_OutputConfig(HRTIM_TypeDef * HRTIMx,
-                         uint32_t TimerIdx,
-                         uint32_t Output,
-                         HRTIM_OutputCfgTypeDef * pOutputCfg)
+void HRTIM_OutputConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Output,
+			HRTIM_OutputCfgTypeDef *pOutputCfg)
 {
-  uint32_t HRTIM_outr;
-  uint32_t shift = 0;
-  
-  HRTIM_outr = HRTIMx->HRTIM_TIMERx[TimerIdx].OUTxR;
-  
-  switch (Output)
-  {
-    case HRTIM_OUTPUT_TA1:
-    case HRTIM_OUTPUT_TB1:
-    case HRTIM_OUTPUT_TC1:
-    case HRTIM_OUTPUT_TD1:
-    case HRTIM_OUTPUT_TE1:
-    {
-      /* Set the output set/reset crossbar */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].SETx1R = pOutputCfg->SetSource;
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTx1R = pOutputCfg->ResetSource;
-      
-      shift = 0;
-    }
-    break;
-    case HRTIM_OUTPUT_TA2:
-    case HRTIM_OUTPUT_TB2:
-    case HRTIM_OUTPUT_TC2:
-    case HRTIM_OUTPUT_TD2:
-    case HRTIM_OUTPUT_TE2:
-    {
-      /* Set the output set/reset crossbar */
-      HRTIMx->HRTIM_TIMERx[TimerIdx].SETx2R = pOutputCfg->SetSource;
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTx2R = pOutputCfg->ResetSource;
+	uint32_t HRTIM_outr;
+	uint32_t shift = 0;
 
-      shift = 16;
-    }
-    break;
-    default:
-    break;
-  }
-  
-  /* Clear output config */
-  HRTIM_outr &= ~((HRTIM_OUTR_POL1 |
-                   HRTIM_OUTR_IDLM1 |
-                   HRTIM_OUTR_IDLES1|
-                   HRTIM_OUTR_FAULT1|
-                   HRTIM_OUTR_CHP1 |
-                   HRTIM_OUTR_DIDL1)  << shift);
-  
-  /* Set the polarity */
-  HRTIM_outr |= (pOutputCfg->Polarity << shift);
-  
-  /* Set the IDLE mode */
-  HRTIM_outr |= (pOutputCfg->IdleMode << shift);
-  
-  /* Set the IDLE state */
-  HRTIM_outr |= (pOutputCfg->IdleState << shift);
-  
-  /* Set the FAULT state */
-  HRTIM_outr |= (pOutputCfg->FaultState << shift);
-  
-  /* Set the chopper mode */
-  HRTIM_outr |= (pOutputCfg->ChopperModeEnable << shift);
+	HRTIM_outr = HRTIMx->HRTIM_TIMERx[TimerIdx].OUTxR;
 
-  /* Set the burst mode entry mode */
-  HRTIM_outr |= (pOutputCfg->BurstModeEntryDelayed << shift);
-  
-  /* Update HRTIMx register */
-  HRTIMx->HRTIM_TIMERx[TimerIdx].OUTxR = HRTIM_outr;
+	switch (Output) {
+	case HRTIM_OUTPUT_TA1:
+	case HRTIM_OUTPUT_TB1:
+	case HRTIM_OUTPUT_TC1:
+	case HRTIM_OUTPUT_TD1:
+	case HRTIM_OUTPUT_TE1: {
+		/* Set the output set/reset crossbar */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].SETx1R = pOutputCfg->SetSource;
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTx1R = pOutputCfg->ResetSource;
+
+		shift = 0;
+	} break;
+	case HRTIM_OUTPUT_TA2:
+	case HRTIM_OUTPUT_TB2:
+	case HRTIM_OUTPUT_TC2:
+	case HRTIM_OUTPUT_TD2:
+	case HRTIM_OUTPUT_TE2: {
+		/* Set the output set/reset crossbar */
+		HRTIMx->HRTIM_TIMERx[TimerIdx].SETx2R = pOutputCfg->SetSource;
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTx2R = pOutputCfg->ResetSource;
+
+		shift = 16;
+	} break;
+	default:
+		break;
+	}
+
+	/* Clear output config */
+	HRTIM_outr &= ~((HRTIM_OUTR_POL1 | HRTIM_OUTR_IDLM1 | HRTIM_OUTR_IDLES1 |
+			 HRTIM_OUTR_FAULT1 | HRTIM_OUTR_CHP1 | HRTIM_OUTR_DIDL1)
+			<< shift);
+
+	/* Set the polarity */
+	HRTIM_outr |= (pOutputCfg->Polarity << shift);
+
+	/* Set the IDLE mode */
+	HRTIM_outr |= (pOutputCfg->IdleMode << shift);
+
+	/* Set the IDLE state */
+	HRTIM_outr |= (pOutputCfg->IdleState << shift);
+
+	/* Set the FAULT state */
+	HRTIM_outr |= (pOutputCfg->FaultState << shift);
+
+	/* Set the chopper mode */
+	HRTIM_outr |= (pOutputCfg->ChopperModeEnable << shift);
+
+	/* Set the burst mode entry mode */
+	HRTIM_outr |= (pOutputCfg->BurstModeEntryDelayed << shift);
+
+	/* Update HRTIMx register */
+	HRTIMx->HRTIM_TIMERx[TimerIdx].OUTxR = HRTIM_outr;
 }
 
 /**
@@ -3890,154 +3436,137 @@ void  HRTIM_OutputConfig(HRTIM_TypeDef * HRTIMx,
   * @param  pEventCfg: pointer to the event channel configuration data structure
   * @retval None
   */
-static void HRTIM_ExternalEventConfig(HRTIM_TypeDef * HRTIMx,
-                              uint32_t Event,
-                              HRTIM_EventCfgTypeDef *pEventCfg)
+static void HRTIM_ExternalEventConfig(HRTIM_TypeDef *HRTIMx, uint32_t Event,
+				      HRTIM_EventCfgTypeDef *pEventCfg)
 {
-  uint32_t hrtim_eecr1;
-  uint32_t hrtim_eecr2;
-  uint32_t hrtim_eecr3;
+	uint32_t hrtim_eecr1;
+	uint32_t hrtim_eecr2;
+	uint32_t hrtim_eecr3;
 
-  /* Configure external event channel */
-  hrtim_eecr1 = HRTIMx->HRTIM_COMMON.EECR1;
-  hrtim_eecr2 = HRTIMx->HRTIM_COMMON.EECR2;
-  hrtim_eecr3 = HRTIMx->HRTIM_COMMON.EECR3;
-  
-  switch (Event)
-  {
-    case HRTIM_EVENT_1:
-    {
-      hrtim_eecr1 &= ~(HRTIM_EECR1_EE1SRC | HRTIM_EECR1_EE1POL | HRTIM_EECR1_EE1SNS | HRTIM_EECR1_EE1FAST);
-      hrtim_eecr1 |= pEventCfg->Source;
-      hrtim_eecr1 |= pEventCfg->Polarity;
-      hrtim_eecr1 |= pEventCfg->Sensitivity;
-      /* Update the HRTIM registers (all bit fields but EE1FAST bit) */
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-      /* Update the HRTIM registers (EE1FAST bit) */
-      hrtim_eecr1 |= pEventCfg->FastMode;
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-    }
-    break;
-    case HRTIM_EVENT_2:
-    {
-      hrtim_eecr1 &= ~(HRTIM_EECR1_EE2SRC | HRTIM_EECR1_EE2POL | HRTIM_EECR1_EE2SNS | HRTIM_EECR1_EE2FAST);
-      hrtim_eecr1 |= (pEventCfg->Source << 6);
-      hrtim_eecr1 |= (pEventCfg->Polarity << 6);
-      hrtim_eecr1 |= (pEventCfg->Sensitivity << 6);
-      /* Update the HRTIM registers (all bit fields but EE2FAST bit) */
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-      /* Update the HRTIM registers (EE2FAST bit) */
-      hrtim_eecr1 |= (pEventCfg->FastMode << 6);
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-    }
-    break;
-    case HRTIM_EVENT_3:
-    {
-      hrtim_eecr1 &= ~(HRTIM_EECR1_EE3SRC | HRTIM_EECR1_EE3POL | HRTIM_EECR1_EE3SNS | HRTIM_EECR1_EE3FAST);
-      hrtim_eecr1 |= (pEventCfg->Source << 12);
-      hrtim_eecr1 |= (pEventCfg->Polarity << 12);
-      hrtim_eecr1 |= (pEventCfg->Sensitivity << 12);
-      /* Update the HRTIM registers (all bit fields but EE3FAST bit) */
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-      /* Update the HRTIM registers (EE3FAST bit) */
-      hrtim_eecr1 |= (pEventCfg->FastMode << 12);
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-    }
-    break;
-    case HRTIM_EVENT_4:
-    {
-      hrtim_eecr1 &= ~(HRTIM_EECR1_EE4SRC | HRTIM_EECR1_EE4POL | HRTIM_EECR1_EE4SNS | HRTIM_EECR1_EE4FAST);
-      hrtim_eecr1 |= (pEventCfg->Source << 18);
-      hrtim_eecr1 |= (pEventCfg->Polarity << 18);
-      hrtim_eecr1 |= (pEventCfg->Sensitivity << 18);
-      /* Update the HRTIM registers (all bit fields but EE4FAST bit) */
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-      /* Update the HRTIM registers (EE4FAST bit) */
-      hrtim_eecr1 |= (pEventCfg->FastMode << 18);
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-    }
-    break;
-    case HRTIM_EVENT_5:
-    {
-      hrtim_eecr1 &= ~(HRTIM_EECR1_EE5SRC | HRTIM_EECR1_EE5POL | HRTIM_EECR1_EE5SNS | HRTIM_EECR1_EE5FAST);
-      hrtim_eecr1 |= (pEventCfg->Source << 24);
-      hrtim_eecr1 |= (pEventCfg->Polarity << 24);
-      hrtim_eecr1 |= (pEventCfg->Sensitivity << 24);
-      /* Update the HRTIM registers (all bit fields but EE5FAST bit) */
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-      /* Update the HRTIM registers (EE5FAST bit) */
-      hrtim_eecr1 |= (pEventCfg->FastMode << 24);
-      HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
-    }
-    break;
-    case HRTIM_EVENT_6:
-    {
-      hrtim_eecr2 &= ~(HRTIM_EECR2_EE6SRC | HRTIM_EECR2_EE6POL | HRTIM_EECR2_EE6SNS);
-      hrtim_eecr2 |= pEventCfg->Source;
-      hrtim_eecr2 |= pEventCfg->Polarity;
-      hrtim_eecr2 |= pEventCfg->Sensitivity;
-      hrtim_eecr3 &= ~(HRTIM_EECR3_EE6F);
-      hrtim_eecr3 |= pEventCfg->Filter;
-      /* Update the HRTIM registers */
-      HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
-      HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
-    }
-    break;
-    case HRTIM_EVENT_7:
-    {
-      hrtim_eecr2 &= ~(HRTIM_EECR2_EE7SRC | HRTIM_EECR2_EE7POL | HRTIM_EECR2_EE7SNS);
-      hrtim_eecr2 |= (pEventCfg->Source << 6);
-      hrtim_eecr2 |= (pEventCfg->Polarity << 6);
-      hrtim_eecr2 |= (pEventCfg->Sensitivity << 6);
-      hrtim_eecr3 &= ~(HRTIM_EECR3_EE7F);
-      hrtim_eecr3 |= (pEventCfg->Filter << 6);
-      /* Update the HRTIM registers */
-      HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
-      HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
-    }
-    break;
-    case HRTIM_EVENT_8:
-    {
-      hrtim_eecr2 &= ~(HRTIM_EECR2_EE8SRC | HRTIM_EECR2_EE8POL | HRTIM_EECR2_EE8SNS);
-      hrtim_eecr2 |= (pEventCfg->Source << 12);
-      hrtim_eecr2 |= (pEventCfg->Polarity << 12);
-      hrtim_eecr2 |= (pEventCfg->Sensitivity << 12);
-      hrtim_eecr3 &= ~(HRTIM_EECR3_EE8F);
-      hrtim_eecr3 |= (pEventCfg->Filter << 12);
-      /* Update the HRTIM registers */
-      HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
-      HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
-    }
-    break;
-    case HRTIM_EVENT_9:
-    {
-      hrtim_eecr2 &= ~(HRTIM_EECR2_EE9SRC | HRTIM_EECR2_EE9POL | HRTIM_EECR2_EE9SNS);
-      hrtim_eecr2 |= (pEventCfg->Source << 18);
-      hrtim_eecr2 |= (pEventCfg->Polarity << 18);
-      hrtim_eecr2 |= (pEventCfg->Sensitivity << 18);
-      hrtim_eecr3 &= ~(HRTIM_EECR3_EE9F);
-      hrtim_eecr3 |= (pEventCfg->Filter << 18);
-      /* Update the HRTIM registers */
-      HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
-      HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
-    }
-    break;
-    case HRTIM_EVENT_10:
-    {
-      hrtim_eecr2 &= ~(HRTIM_EECR2_EE10SRC | HRTIM_EECR2_EE10POL | HRTIM_EECR2_EE10SNS);
-      hrtim_eecr2 |= (pEventCfg->Source << 24);
-      hrtim_eecr2 |= (pEventCfg->Polarity << 24);
-      hrtim_eecr2 |= (pEventCfg->Sensitivity << 24);
-      hrtim_eecr3 &= ~(HRTIM_EECR3_EE10F);
-      hrtim_eecr3 |= (pEventCfg->Filter << 24);
-      /* Update the HRTIM registers */
-      HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
-      HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
-    }
-    break;
-    default:
-    break;
-  }
+	/* Configure external event channel */
+	hrtim_eecr1 = HRTIMx->HRTIM_COMMON.EECR1;
+	hrtim_eecr2 = HRTIMx->HRTIM_COMMON.EECR2;
+	hrtim_eecr3 = HRTIMx->HRTIM_COMMON.EECR3;
+
+	switch (Event) {
+	case HRTIM_EVENT_1: {
+		hrtim_eecr1 &= ~(HRTIM_EECR1_EE1SRC | HRTIM_EECR1_EE1POL | HRTIM_EECR1_EE1SNS |
+				 HRTIM_EECR1_EE1FAST);
+		hrtim_eecr1 |= pEventCfg->Source;
+		hrtim_eecr1 |= pEventCfg->Polarity;
+		hrtim_eecr1 |= pEventCfg->Sensitivity;
+		/* Update the HRTIM registers (all bit fields but EE1FAST bit) */
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+		/* Update the HRTIM registers (EE1FAST bit) */
+		hrtim_eecr1 |= pEventCfg->FastMode;
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+	} break;
+	case HRTIM_EVENT_2: {
+		hrtim_eecr1 &= ~(HRTIM_EECR1_EE2SRC | HRTIM_EECR1_EE2POL | HRTIM_EECR1_EE2SNS |
+				 HRTIM_EECR1_EE2FAST);
+		hrtim_eecr1 |= (pEventCfg->Source << 6);
+		hrtim_eecr1 |= (pEventCfg->Polarity << 6);
+		hrtim_eecr1 |= (pEventCfg->Sensitivity << 6);
+		/* Update the HRTIM registers (all bit fields but EE2FAST bit) */
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+		/* Update the HRTIM registers (EE2FAST bit) */
+		hrtim_eecr1 |= (pEventCfg->FastMode << 6);
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+	} break;
+	case HRTIM_EVENT_3: {
+		hrtim_eecr1 &= ~(HRTIM_EECR1_EE3SRC | HRTIM_EECR1_EE3POL | HRTIM_EECR1_EE3SNS |
+				 HRTIM_EECR1_EE3FAST);
+		hrtim_eecr1 |= (pEventCfg->Source << 12);
+		hrtim_eecr1 |= (pEventCfg->Polarity << 12);
+		hrtim_eecr1 |= (pEventCfg->Sensitivity << 12);
+		/* Update the HRTIM registers (all bit fields but EE3FAST bit) */
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+		/* Update the HRTIM registers (EE3FAST bit) */
+		hrtim_eecr1 |= (pEventCfg->FastMode << 12);
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+	} break;
+	case HRTIM_EVENT_4: {
+		hrtim_eecr1 &= ~(HRTIM_EECR1_EE4SRC | HRTIM_EECR1_EE4POL | HRTIM_EECR1_EE4SNS |
+				 HRTIM_EECR1_EE4FAST);
+		hrtim_eecr1 |= (pEventCfg->Source << 18);
+		hrtim_eecr1 |= (pEventCfg->Polarity << 18);
+		hrtim_eecr1 |= (pEventCfg->Sensitivity << 18);
+		/* Update the HRTIM registers (all bit fields but EE4FAST bit) */
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+		/* Update the HRTIM registers (EE4FAST bit) */
+		hrtim_eecr1 |= (pEventCfg->FastMode << 18);
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+	} break;
+	case HRTIM_EVENT_5: {
+		hrtim_eecr1 &= ~(HRTIM_EECR1_EE5SRC | HRTIM_EECR1_EE5POL | HRTIM_EECR1_EE5SNS |
+				 HRTIM_EECR1_EE5FAST);
+		hrtim_eecr1 |= (pEventCfg->Source << 24);
+		hrtim_eecr1 |= (pEventCfg->Polarity << 24);
+		hrtim_eecr1 |= (pEventCfg->Sensitivity << 24);
+		/* Update the HRTIM registers (all bit fields but EE5FAST bit) */
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+		/* Update the HRTIM registers (EE5FAST bit) */
+		hrtim_eecr1 |= (pEventCfg->FastMode << 24);
+		HRTIMx->HRTIM_COMMON.EECR1 = hrtim_eecr1;
+	} break;
+	case HRTIM_EVENT_6: {
+		hrtim_eecr2 &= ~(HRTIM_EECR2_EE6SRC | HRTIM_EECR2_EE6POL | HRTIM_EECR2_EE6SNS);
+		hrtim_eecr2 |= pEventCfg->Source;
+		hrtim_eecr2 |= pEventCfg->Polarity;
+		hrtim_eecr2 |= pEventCfg->Sensitivity;
+		hrtim_eecr3 &= ~(HRTIM_EECR3_EE6F);
+		hrtim_eecr3 |= pEventCfg->Filter;
+		/* Update the HRTIM registers */
+		HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
+		HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
+	} break;
+	case HRTIM_EVENT_7: {
+		hrtim_eecr2 &= ~(HRTIM_EECR2_EE7SRC | HRTIM_EECR2_EE7POL | HRTIM_EECR2_EE7SNS);
+		hrtim_eecr2 |= (pEventCfg->Source << 6);
+		hrtim_eecr2 |= (pEventCfg->Polarity << 6);
+		hrtim_eecr2 |= (pEventCfg->Sensitivity << 6);
+		hrtim_eecr3 &= ~(HRTIM_EECR3_EE7F);
+		hrtim_eecr3 |= (pEventCfg->Filter << 6);
+		/* Update the HRTIM registers */
+		HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
+		HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
+	} break;
+	case HRTIM_EVENT_8: {
+		hrtim_eecr2 &= ~(HRTIM_EECR2_EE8SRC | HRTIM_EECR2_EE8POL | HRTIM_EECR2_EE8SNS);
+		hrtim_eecr2 |= (pEventCfg->Source << 12);
+		hrtim_eecr2 |= (pEventCfg->Polarity << 12);
+		hrtim_eecr2 |= (pEventCfg->Sensitivity << 12);
+		hrtim_eecr3 &= ~(HRTIM_EECR3_EE8F);
+		hrtim_eecr3 |= (pEventCfg->Filter << 12);
+		/* Update the HRTIM registers */
+		HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
+		HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
+	} break;
+	case HRTIM_EVENT_9: {
+		hrtim_eecr2 &= ~(HRTIM_EECR2_EE9SRC | HRTIM_EECR2_EE9POL | HRTIM_EECR2_EE9SNS);
+		hrtim_eecr2 |= (pEventCfg->Source << 18);
+		hrtim_eecr2 |= (pEventCfg->Polarity << 18);
+		hrtim_eecr2 |= (pEventCfg->Sensitivity << 18);
+		hrtim_eecr3 &= ~(HRTIM_EECR3_EE9F);
+		hrtim_eecr3 |= (pEventCfg->Filter << 18);
+		/* Update the HRTIM registers */
+		HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
+		HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
+	} break;
+	case HRTIM_EVENT_10: {
+		hrtim_eecr2 &= ~(HRTIM_EECR2_EE10SRC | HRTIM_EECR2_EE10POL | HRTIM_EECR2_EE10SNS);
+		hrtim_eecr2 |= (pEventCfg->Source << 24);
+		hrtim_eecr2 |= (pEventCfg->Polarity << 24);
+		hrtim_eecr2 |= (pEventCfg->Sensitivity << 24);
+		hrtim_eecr3 &= ~(HRTIM_EECR3_EE10F);
+		hrtim_eecr3 |= (pEventCfg->Filter << 24);
+		/* Update the HRTIM registers */
+		HRTIMx->HRTIM_COMMON.EECR2 = hrtim_eecr2;
+		HRTIMx->HRTIM_COMMON.EECR3 = hrtim_eecr3;
+	} break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -4047,65 +3576,42 @@ static void HRTIM_ExternalEventConfig(HRTIM_TypeDef * HRTIMx,
   * @param  Event: Event channel identifier
   * @retval None
   */
-void HRTIM_TIM_ResetConfig(HRTIM_TypeDef * HRTIMx,
-                           uint32_t TimerIdx,
-                           uint32_t Event)
+void HRTIM_TIM_ResetConfig(HRTIM_TypeDef *HRTIMx, uint32_t TimerIdx, uint32_t Event)
 {
-  switch (Event)
-  {
-    case HRTIM_EVENT_1:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_1;
-    }
-    break;
-    case HRTIM_EVENT_2:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_2;
-    }
-    break;
-    case HRTIM_EVENT_3:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_3;
-    }
-    break;
-    case HRTIM_EVENT_4:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_4;
-    }
-    break;
-    case HRTIM_EVENT_5:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_5;
-    }
-    break;
-    case HRTIM_EVENT_6:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_6;
-    }
-    break;
-    case HRTIM_EVENT_7:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_7;
-    }
-    break;
-    case HRTIM_EVENT_8:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_8;
-    }
-    break;
-    case HRTIM_EVENT_9:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_9;
-    }
-    break;
-    case HRTIM_EVENT_10:
-    {
-      HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_10;
-    }
-    break;
-    default:
-    break;
-  }
+	switch (Event) {
+	case HRTIM_EVENT_1: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_1;
+	} break;
+	case HRTIM_EVENT_2: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_2;
+	} break;
+	case HRTIM_EVENT_3: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_3;
+	} break;
+	case HRTIM_EVENT_4: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_4;
+	} break;
+	case HRTIM_EVENT_5: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_5;
+	} break;
+	case HRTIM_EVENT_6: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_6;
+	} break;
+	case HRTIM_EVENT_7: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_7;
+	} break;
+	case HRTIM_EVENT_8: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_8;
+	} break;
+	case HRTIM_EVENT_9: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_9;
+	} break;
+	case HRTIM_EVENT_10: {
+		HRTIMx->HRTIM_TIMERx[TimerIdx].RSTxR = HRTIM_TIMRESETTRIGGER_EEV_10;
+	} break;
+	default:
+		break;
+	}
 }
 /**
   * @}
@@ -4119,6 +3625,3 @@ void HRTIM_TIM_ResetConfig(HRTIM_TypeDef * HRTIMx,
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
-

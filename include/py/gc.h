@@ -49,7 +49,7 @@ void gc_collect_end(void);
 void gc_sweep_all(void);
 
 enum {
-    GC_ALLOC_FLAG_HAS_FINALISER = 1,
+	GC_ALLOC_FLAG_HAS_FINALISER = 1,
 };
 
 void *gc_alloc(size_t n_bytes, unsigned int alloc_flags);
@@ -58,13 +58,13 @@ size_t gc_nbytes(const void *ptr);
 void *gc_realloc(void *ptr, size_t n_bytes, bool allow_move);
 
 typedef struct _gc_info_t {
-    size_t total;
-    size_t used;
-    size_t free;
-    size_t max_free;
-    size_t num_1block;
-    size_t num_2block;
-    size_t max_block;
+	size_t total;
+	size_t used;
+	size_t free;
+	size_t max_free;
+	size_t num_1block;
+	size_t num_2block;
+	size_t max_block;
 } gc_info_t;
 
 void gc_info(gc_info_t *info);

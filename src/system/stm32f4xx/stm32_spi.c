@@ -25,14 +25,15 @@ struct stm32_spi {
 	struct mutex lock;
 };
 
-struct stm32_spi *_devices[4] = {NULL};
+struct stm32_spi *_devices[4] = { NULL };
 
 // RX
-void DMA2_Stream0_IRQHandler(void) {
+void DMA2_Stream0_IRQHandler(void)
+{
 	struct stm32_spi *self = _devices[0];
 	BUG_ON(!self);
 	int32_t wake = 0;
-	if(DMA_GetITStatus(DMA2_Stream0, DMA_IT_TCIF0) != RESET) {
+	if (DMA_GetITStatus(DMA2_Stream0, DMA_IT_TCIF0) != RESET) {
 		DMA_ClearITPendingBit(DMA2_Stream0, DMA_IT_TCIF0);
 
 		SPI_Cmd(SPI1, DISABLE);
@@ -42,18 +43,20 @@ void DMA2_Stream0_IRQHandler(void) {
 }
 
 // TX
-void DMA2_Stream3_IRQHandler(void) {
-	if(DMA_GetITStatus(DMA2_Stream3, DMA_IT_TCIF3) != RESET) {
+void DMA2_Stream3_IRQHandler(void)
+{
+	if (DMA_GetITStatus(DMA2_Stream3, DMA_IT_TCIF3) != RESET) {
 		DMA_ClearITPendingBit(DMA2_Stream3, DMA_IT_TCIF3);
 	}
 }
 
 // RX
-void DMA1_Stream3_IRQHandler(void) {
+void DMA1_Stream3_IRQHandler(void)
+{
 	struct stm32_spi *self = _devices[1];
 	BUG_ON(!self);
 	int32_t wake = 0;
-	if(DMA_GetITStatus(DMA1_Stream3, DMA_IT_TCIF3) != RESET) {
+	if (DMA_GetITStatus(DMA1_Stream3, DMA_IT_TCIF3) != RESET) {
 		DMA_ClearITPendingBit(DMA1_Stream3, DMA_IT_TCIF3);
 
 		thread_sem_give_from_isr(&self->rx_sem, &wake);
@@ -63,8 +66,9 @@ void DMA1_Stream3_IRQHandler(void) {
 }
 
 // TX
-void DMA1_Stream4_IRQHandler(void) {
-	if(DMA_GetITStatus(DMA1_Stream4, DMA_IT_TCIF4) != RESET) {
+void DMA1_Stream4_IRQHandler(void)
+{
+	if (DMA_GetITStatus(DMA1_Stream4, DMA_IT_TCIF4) != RESET) {
 		DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF4);
 	}
 }
@@ -87,10 +91,10 @@ DMA_FLAG_DMEIF4 | DMA_FLAG_FEIF4); DMA_Cmd(dma, ENABLE); while (DMA_GetCmdStatus
 }
 */
 static int _stm32_spi_transfer(spi_device_t dev, gpio_device_t gpio, uint32_t cs_pin,
-                               const void *tx_data, void *rx_data, size_t size,
-                               msec_t timeout) {
+			       const void *tx_data, void *rx_data, size_t size, msec_t timeout)
+{
 	struct stm32_spi *self = container_of(dev, struct stm32_spi, dev.ops);
-	if(!self->hw)
+	if (!self->hw)
 		return -1;
 
 #if 0
@@ -124,26 +128,27 @@ static int _stm32_spi_transfer(spi_device_t dev, gpio_device_t gpio, uint32_t cs
 
 	// this is quick and dirty just to get it to work
 	thread_mutex_lock(&self->lock);
-	if(gpio)
+	if (gpio)
 		gpio_reset(gpio, cs_pin);
 	SPI_Cmd(self->hw, ENABLE);
 	const uint8_t *tx = (const uint8_t *)tx_data;
 	uint8_t *rx = (uint8_t *)rx_data;
-	for(size_t c = 0; c < size; c++) {
-		while(SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_BSY))
+	for (size_t c = 0; c < size; c++) {
+		while (SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_BSY))
 			;
 		SPI_I2S_SendData(self->hw, *tx++);
-		while(!SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_TXE))
+		while (!SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_TXE))
 			;
-		while(!SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_RXNE));
+		while (!SPI_I2S_GetFlagStatus(self->hw, SPI_I2S_FLAG_RXNE))
+			;
 		uint8_t dr = (uint8_t)SPI_I2S_ReceiveData(self->hw);
-		if(rx_data){
+		if (rx_data) {
 			*rx = dr;
 			rx++;
 		}
 	}
 	SPI_Cmd(self->hw, DISABLE);
-	if(gpio)
+	if (gpio)
 		gpio_set(gpio, cs_pin);
 	thread_mutex_unlock(&self->lock);
 	//}
@@ -151,11 +156,11 @@ static int _stm32_spi_transfer(spi_device_t dev, gpio_device_t gpio, uint32_t cs
 	return (int)size;
 }
 
-static const struct spi_device_ops _ops = {.transfer = _stm32_spi_transfer};
+static const struct spi_device_ops _ops = { .transfer = _stm32_spi_transfer };
 
-static int _stm32_spi_probe(void *fdt, int fdt_node) {
-	SPI_TypeDef *SPIx =
-	    (SPI_TypeDef *)fdt_get_int_or_default(fdt, (int)fdt_node, "reg", 0);
+static int _stm32_spi_probe(void *fdt, int fdt_node)
+{
+	SPI_TypeDef *SPIx = (SPI_TypeDef *)fdt_get_int_or_default(fdt, (int)fdt_node, "reg", 0);
 
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
@@ -182,7 +187,7 @@ static int _stm32_spi_probe(void *fdt, int fdt_node) {
 	SPI_Init(SPIx, &spi);
 	SPI_CalculateCRC(SPIx, DISABLE);
 
-	if(SPIx == SPI1) {
+	if (SPIx == SPI1) {
 #if 0
 		DMA_InitTypeDef dma;
 		DMA_StructInit(&dma);
@@ -227,7 +232,7 @@ static int _stm32_spi_probe(void *fdt, int fdt_node) {
 #endif
 		printk("spi1: ready\n");
 		_devices[0] = self;
-	} else if(SPIx == SPI2) {
+	} else if (SPIx == SPI2) {
 #if 0
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
 
@@ -275,11 +280,11 @@ static int _stm32_spi_probe(void *fdt, int fdt_node) {
 		_devices[1] = self;
 
 		printk("spi2: ready\n");
-	} else if(SPIx == SPI3) {
+	} else if (SPIx == SPI3) {
 		_devices[2] = self;
 
 		printk("spi3: ready\n");
-	} else if(SPIx == SPI4) {
+	} else if (SPIx == SPI4) {
 		_devices[3] = self;
 
 		printk("spi4: ready\n");
@@ -299,7 +304,8 @@ static int _stm32_spi_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_spi_remove(void *fdt, int fdt_node) {
+static int _stm32_spi_remove(void *fdt, int fdt_node)
+{
 	return 0;
 }
 

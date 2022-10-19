@@ -89,10 +89,9 @@
   * @{
   */
 
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define EXTI_LINENONE     ((uint32_t)0x00000)        /* No interrupt selected */
+#define EXTI_LINENONE ((uint32_t)0x00000) /* No interrupt selected */
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -114,7 +113,7 @@
 @endverbatim
   * @{
   */
-    
+
 /**
   * @brief  Deinitializes the EXTI peripheral registers to their default reset 
   *         values.
@@ -123,18 +122,18 @@
   */
 void EXTI_DeInit(void)
 {
-  EXTI->IMR    = 0x1F800000;
-  EXTI->EMR    = 0x00000000;
-  EXTI->RTSR   = 0x00000000;
-  EXTI->FTSR   = 0x00000000;
-  EXTI->SWIER  = 0x00000000;
-  EXTI->PR     = 0xE07FFFFF;
-  EXTI->IMR2   = 0x0000000C;
-  EXTI->EMR2   = 0x00000000;
-  EXTI->RTSR2  = 0x00000000;
-  EXTI->FTSR2  = 0x00000000;
-  EXTI->SWIER2 = 0x00000000;
-  EXTI->PR2    = 0x00000003;
+	EXTI->IMR = 0x1F800000;
+	EXTI->EMR = 0x00000000;
+	EXTI->RTSR = 0x00000000;
+	EXTI->FTSR = 0x00000000;
+	EXTI->SWIER = 0x00000000;
+	EXTI->PR = 0xE07FFFFF;
+	EXTI->IMR2 = 0x0000000C;
+	EXTI->EMR2 = 0x00000000;
+	EXTI->RTSR2 = 0x00000000;
+	EXTI->FTSR2 = 0x00000000;
+	EXTI->SWIER2 = 0x00000000;
+	EXTI->PR2 = 0x00000003;
 }
 
 /**
@@ -149,59 +148,66 @@ void EXTI_DeInit(void)
   *         contains the configuration information for the EXTI peripheral.
   * @retval None
   */
-  
 
-void EXTI_Init(EXTI_InitTypeDef* EXTI_InitStruct)
+void EXTI_Init(EXTI_InitTypeDef *EXTI_InitStruct)
 {
-  uint32_t tmp = 0;
+	uint32_t tmp = 0;
 
-  /* Check the parameters */
-  assert_param(IS_EXTI_MODE(EXTI_InitStruct->EXTI_Mode));
-  assert_param(IS_EXTI_TRIGGER(EXTI_InitStruct->EXTI_Trigger));
-  assert_param(IS_EXTI_LINE_ALL(EXTI_InitStruct->EXTI_Line));
-  assert_param(IS_FUNCTIONAL_STATE(EXTI_InitStruct->EXTI_LineCmd));
+	/* Check the parameters */
+	assert_param(IS_EXTI_MODE(EXTI_InitStruct->EXTI_Mode));
+	assert_param(IS_EXTI_TRIGGER(EXTI_InitStruct->EXTI_Trigger));
+	assert_param(IS_EXTI_LINE_ALL(EXTI_InitStruct->EXTI_Line));
+	assert_param(IS_FUNCTIONAL_STATE(EXTI_InitStruct->EXTI_LineCmd));
 
-  tmp = (uint32_t)EXTI_BASE;
-      
-  if (EXTI_InitStruct->EXTI_LineCmd != DISABLE)
-  {
-    /* Clear EXTI line configuration */   
-    *(__IO uint32_t *) (((uint32_t) &(EXTI->IMR)) + ((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20) &= ~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));   
-    *(__IO uint32_t *) (((uint32_t) &(EXTI->EMR)) + ((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20) &= ~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
-     
-    tmp += EXTI_InitStruct->EXTI_Mode + (((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20);
+	tmp = (uint32_t)EXTI_BASE;
 
-    *(__IO uint32_t *) tmp |= (uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
-    
-    tmp = (uint32_t)EXTI_BASE;
+	if (EXTI_InitStruct->EXTI_LineCmd != DISABLE) {
+		/* Clear EXTI line configuration */
+		*(__IO uint32_t *)(((uint32_t) & (EXTI->IMR)) +
+				   ((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20) &=
+			~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
+		*(__IO uint32_t *)(((uint32_t) & (EXTI->EMR)) +
+				   ((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20) &=
+			~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
 
-    /* Clear Rising Falling edge configuration */
-    *(__IO uint32_t *) (((uint32_t) &(EXTI->RTSR)) + ((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20) &= ~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
-    *(__IO uint32_t *) (((uint32_t) &(EXTI->FTSR)) + ((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20) &= ~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
-    
-      /* Select the trigger for the selected interrupts */
-    if (EXTI_InitStruct->EXTI_Trigger == EXTI_Trigger_Rising_Falling)
-    {
-      /* Rising Falling edge */
-    *(__IO uint32_t *) (((uint32_t) &(EXTI->RTSR)) + ((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20) |= (uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
-    *(__IO uint32_t *) (((uint32_t) &(EXTI->FTSR)) + ((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20) |= (uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));      
-    }
-    else
-    {
-      tmp += EXTI_InitStruct->EXTI_Trigger + (((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20);
+		tmp += EXTI_InitStruct->EXTI_Mode + (((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20);
 
-      *(__IO uint32_t *) tmp |= (uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
-    }
-  }
-      
-  else
-  {
-    tmp += EXTI_InitStruct->EXTI_Mode + (((EXTI_InitStruct->EXTI_Line) >> 5 ) * 0x20);
+		*(__IO uint32_t *)tmp |= (uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
 
-    /* Disable the selected external lines */
-    *(__IO uint32_t *) tmp &= ~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
-  }
-         
+		tmp = (uint32_t)EXTI_BASE;
+
+		/* Clear Rising Falling edge configuration */
+		*(__IO uint32_t *)(((uint32_t) & (EXTI->RTSR)) +
+				   ((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20) &=
+			~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
+		*(__IO uint32_t *)(((uint32_t) & (EXTI->FTSR)) +
+				   ((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20) &=
+			~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
+
+		/* Select the trigger for the selected interrupts */
+		if (EXTI_InitStruct->EXTI_Trigger == EXTI_Trigger_Rising_Falling) {
+			/* Rising Falling edge */
+			*(__IO uint32_t *)(((uint32_t) & (EXTI->RTSR)) +
+					   ((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20) |=
+				(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
+			*(__IO uint32_t *)(((uint32_t) & (EXTI->FTSR)) +
+					   ((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20) |=
+				(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
+		} else {
+			tmp += EXTI_InitStruct->EXTI_Trigger +
+			       (((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20);
+
+			*(__IO uint32_t *)tmp |=
+				(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
+		}
+	}
+
+	else {
+		tmp += EXTI_InitStruct->EXTI_Mode + (((EXTI_InitStruct->EXTI_Line) >> 5) * 0x20);
+
+		/* Disable the selected external lines */
+		*(__IO uint32_t *)tmp &= ~(uint32_t)(1 << (EXTI_InitStruct->EXTI_Line & 0x1F));
+	}
 }
 
 /**
@@ -210,12 +216,12 @@ void EXTI_Init(EXTI_InitTypeDef* EXTI_InitStruct)
   *         be initialized.
   * @retval None
   */
-void EXTI_StructInit(EXTI_InitTypeDef* EXTI_InitStruct)
+void EXTI_StructInit(EXTI_InitTypeDef *EXTI_InitStruct)
 {
-  EXTI_InitStruct->EXTI_Line = EXTI_LINENONE;
-  EXTI_InitStruct->EXTI_Mode = EXTI_Mode_Interrupt;
-  EXTI_InitStruct->EXTI_Trigger = EXTI_Trigger_Rising_Falling;
-  EXTI_InitStruct->EXTI_LineCmd = DISABLE;
+	EXTI_InitStruct->EXTI_Line = EXTI_LINENONE;
+	EXTI_InitStruct->EXTI_Mode = EXTI_Mode_Interrupt;
+	EXTI_InitStruct->EXTI_Trigger = EXTI_Trigger_Rising_Falling;
+	EXTI_InitStruct->EXTI_LineCmd = DISABLE;
 }
 
 /**
@@ -227,17 +233,17 @@ void EXTI_StructInit(EXTI_InitTypeDef* EXTI_InitStruct)
   */
 void EXTI_GenerateSWInterrupt(uint32_t EXTI_Line)
 {
-  /* Check the parameters */
-  assert_param(IS_EXTI_LINE_EXT(EXTI_Line));
+	/* Check the parameters */
+	assert_param(IS_EXTI_LINE_EXT(EXTI_Line));
 
-  *(__IO uint32_t *) (((uint32_t) &(EXTI->SWIER)) + ((EXTI_Line) >> 5 ) * 0x20) |= (uint32_t)(1 << (EXTI_Line & 0x1F));
-
+	*(__IO uint32_t *)(((uint32_t) & (EXTI->SWIER)) + ((EXTI_Line) >> 5) * 0x20) |=
+		(uint32_t)(1 << (EXTI_Line & 0x1F));
 }
 
 /**
   * @}
   */
-  
+
 /** @defgroup EXTI_Group2 Interrupts and flags management functions
  *  @brief    EXTI Interrupts and flags management functions
  *
@@ -261,20 +267,18 @@ void EXTI_GenerateSWInterrupt(uint32_t EXTI_Line)
   */
 FlagStatus EXTI_GetFlagStatus(uint32_t EXTI_Line)
 {
-  FlagStatus bitstatus = RESET;
-  
-  /* Check the parameters */
-  assert_param(IS_GET_EXTI_LINE(EXTI_Line));
-   
-  if ((*(__IO uint32_t *) (((uint32_t) &(EXTI->PR)) + ((EXTI_Line) >> 5 ) * 0x20)& (uint32_t)(1 << (EXTI_Line & 0x1F))) != (uint32_t)RESET)
-  {
-    bitstatus = SET;
-  }
-  else
-  {
-    bitstatus = RESET;
-  }
-  return bitstatus;
+	FlagStatus bitstatus = RESET;
+
+	/* Check the parameters */
+	assert_param(IS_GET_EXTI_LINE(EXTI_Line));
+
+	if ((*(__IO uint32_t *)(((uint32_t) & (EXTI->PR)) + ((EXTI_Line) >> 5) * 0x20) &
+	     (uint32_t)(1 << (EXTI_Line & 0x1F))) != (uint32_t)RESET) {
+		bitstatus = SET;
+	} else {
+		bitstatus = RESET;
+	}
+	return bitstatus;
 }
 
 /**
@@ -285,10 +289,11 @@ FlagStatus EXTI_GetFlagStatus(uint32_t EXTI_Line)
   */
 void EXTI_ClearFlag(uint32_t EXTI_Line)
 {
-  /* Check the parameters */
-  assert_param(IS_EXTI_LINE_EXT(EXTI_Line));
+	/* Check the parameters */
+	assert_param(IS_EXTI_LINE_EXT(EXTI_Line));
 
-  *(__IO uint32_t *) (((uint32_t) &(EXTI->PR)) + ((EXTI_Line) >> 5 ) * 0x20) = (uint32_t)(1 << (EXTI_Line & 0x1F));  
+	*(__IO uint32_t *)(((uint32_t) & (EXTI->PR)) + ((EXTI_Line) >> 5) * 0x20) =
+		(uint32_t)(1 << (EXTI_Line & 0x1F));
 }
 
 /**
@@ -299,21 +304,18 @@ void EXTI_ClearFlag(uint32_t EXTI_Line)
   */
 ITStatus EXTI_GetITStatus(uint32_t EXTI_Line)
 {
-  ITStatus bitstatus = RESET;
-  
-  /* Check the parameters */
-  assert_param(IS_GET_EXTI_LINE(EXTI_Line));
-  
-  if ((*(__IO uint32_t *) (((uint32_t) &(EXTI->PR)) + ((EXTI_Line) >> 5 ) * 0x20)& (uint32_t)(1 << (EXTI_Line & 0x1F))) != (uint32_t)RESET)
-  {
-    bitstatus = SET;
-  }
-  else
-  {
-    bitstatus = RESET;
-  }
-  return bitstatus;
-  
+	ITStatus bitstatus = RESET;
+
+	/* Check the parameters */
+	assert_param(IS_GET_EXTI_LINE(EXTI_Line));
+
+	if ((*(__IO uint32_t *)(((uint32_t) & (EXTI->PR)) + ((EXTI_Line) >> 5) * 0x20) &
+	     (uint32_t)(1 << (EXTI_Line & 0x1F))) != (uint32_t)RESET) {
+		bitstatus = SET;
+	} else {
+		bitstatus = RESET;
+	}
+	return bitstatus;
 }
 
 /**
@@ -324,10 +326,11 @@ ITStatus EXTI_GetITStatus(uint32_t EXTI_Line)
   */
 void EXTI_ClearITPendingBit(uint32_t EXTI_Line)
 {
-  /* Check the parameters */
-  assert_param(IS_EXTI_LINE_EXT(EXTI_Line));
-  
-  *(__IO uint32_t *) (((uint32_t) &(EXTI->PR)) + ((EXTI_Line) >> 5 ) * 0x20) = (uint32_t)(1 << (EXTI_Line & 0x1F));
+	/* Check the parameters */
+	assert_param(IS_EXTI_LINE_EXT(EXTI_Line));
+
+	*(__IO uint32_t *)(((uint32_t) & (EXTI->PR)) + ((EXTI_Line) >> 5) * 0x20) =
+		(uint32_t)(1 << (EXTI_Line & 0x1F));
 }
 
 /**

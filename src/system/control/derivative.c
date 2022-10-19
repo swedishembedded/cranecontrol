@@ -14,12 +14,14 @@
  **/
 #include "control/derivative.h"
 
-void derivative_init(struct derivative *self, float pole, float gain){
+void derivative_init(struct derivative *self, float pole, float gain)
+{
 	self->pgain = 1.f - pole;
 	self->dgain = self->pgain * gain;
 }
 
-float derivative_update(struct derivative *self, float input){
+float derivative_update(struct derivative *self, float input)
+{
 	float ret = self->dgain * (input - self->state);
 	// x(n + 1) = x(n) - x(n - 1);
 	self->state = self->pgain * (input - self->state);

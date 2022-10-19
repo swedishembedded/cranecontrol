@@ -23,9 +23,11 @@
 
 static struct list_head _driver_list = LIST_HEAD_INIT(_driver_list);
 
-static int _init_subnodes(void *fdt, int root) {
+static int _init_subnodes(void *fdt, int root)
+{
 	int node;
-	fdt_for_each_subnode(node, fdt, root) {
+	fdt_for_each_subnode(node, fdt, root)
+	{
 		struct device_driver *driver;
 
 		char path[32];
@@ -33,30 +35,32 @@ static int _init_subnodes(void *fdt, int root) {
 
 		bool found_driver = false;
 
-		list_for_each_entry(driver, &_driver_list, list) {
-			if(!driver->compatible || !driver->probe)
+		list_for_each_entry(driver, &_driver_list, list)
+		{
+			if (!driver->compatible || !driver->probe)
 				continue;
 			int r = 0;
 			r = fdt_node_check_compatible(fdt, node, driver->compatible);
-			if(r == 1) {
-			} else if(fdt_first_property_offset(fdt, root) >= 0 &&
-			          r == -FDT_ERR_NOTFOUND) {
+			if (r == 1) {
+			} else if (fdt_first_property_offset(fdt, root) >= 0 &&
+				   r == -FDT_ERR_NOTFOUND) {
 				// the node has properties but no compatible string (nodes without properties
 				// are allowed not to have it)
 				found_driver = true;
 				break;
-			} else if(r == 0) {
+			} else if (r == 0) {
 				found_driver = true;
 				printk(PRINT_SYSTEM ">> %s\n", path);
-				if((r = driver->probe(fdt, node)) < 0) {
-					printk(PRINT_ERROR "devicetree: failed to probe %s (error(%d): %s)\n",
+				if ((r = driver->probe(fdt, node)) < 0) {
+					printk(PRINT_ERROR
+					       "devicetree: failed to probe %s (error(%d): %s)\n",
 					       path, r, strerror(-r));
 				}
 				break;
 			}
 		}
 
-		if(!found_driver) {
+		if (!found_driver) {
 			printk(PRINT_ERROR
 			       "devicetree: driver for %s was not included in the firmware\n",
 			       path);
@@ -68,15 +72,18 @@ static int _init_subnodes(void *fdt, int root) {
 	return 0;
 }
 
-static int _deinit_subnodes(void *fdt, int root) {
+static int _deinit_subnodes(void *fdt, int root)
+{
 	int node;
-	fdt_for_each_subnode(node, fdt, root) {
+	fdt_for_each_subnode(node, fdt, root)
+	{
 		struct device_driver *driver;
 		_deinit_subnodes(fdt, node);
-		list_for_each_entry(driver, &_driver_list, list) {
-			if(!driver->compatible || !driver->remove)
+		list_for_each_entry(driver, &_driver_list, list)
+		{
+			if (!driver->compatible || !driver->remove)
 				continue;
-			if(fdt_node_check_compatible(fdt, node, driver->compatible) == 0) {
+			if (fdt_node_check_compatible(fdt, node, driver->compatible) == 0) {
 				driver->remove(fdt, node);
 				break;
 			}
@@ -85,21 +92,24 @@ static int _deinit_subnodes(void *fdt, int root) {
 	return 0;
 }
 
-int probe_device_drivers(void *fdt) {
-	if(fdt_check_header(fdt) != 0)
+int probe_device_drivers(void *fdt)
+{
+	if (fdt_check_header(fdt) != 0)
 		return -EINVAL;
 
 	return _init_subnodes(fdt, 0);
 }
 
-int remove_device_drivers(void *fdt) {
-	if(fdt_check_header(fdt) != 0)
+int remove_device_drivers(void *fdt)
+{
+	if (fdt_check_header(fdt) != 0)
 		return -EINVAL;
 
 	return _deinit_subnodes(fdt, 0);
 }
 
-void register_device_driver(struct device_driver *self) {
+void register_device_driver(struct device_driver *self)
+{
 	INIT_LIST_HEAD(&self->list);
 	list_add(&self->list, &_driver_list);
 }

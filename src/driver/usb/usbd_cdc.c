@@ -16,7 +16,7 @@
 
 #define USB_CDC_DEFAULT_VENDOR_ID 0x25AE
 #define USB_CDC_DEFAULT_PRODUCT_ID 0x24AB
-#define USB_CDC_CMD_PACKET_SIZE 8          /* Control Endpoint Packet size */
+#define USB_CDC_CMD_PACKET_SIZE 8 /* Control Endpoint Packet size */
 #define USB_CDC_DATA_FS_CMD_PACKET_SIZE 16 /* Endpoint IN & OUT Packet size */
 #define USB_CDC_DATA_FS_MAX_PACKET_SIZE 64 /* Endpoint IN & OUT Packet size */
 
@@ -46,21 +46,21 @@ static const struct usb_device_descriptor _default_device_desc = {
 };
 #endif
 const uint8_t USB_DEVICE_QR_DESC[] = {
-    (uint8_t)10,                        //    bLength
-    (uint8_t)0x06,      //    bDescriptorType
-    (uint8_t)0x00,                      //    bcdUSB
-    (uint8_t)0x02,                      //    bcdUSB
-    (uint8_t)USB_DEV_CLASS_COMM,                  //    bDeviceClass
-    (uint8_t)0,                         //    bDeviceSubClass
-    (uint8_t)0,                         //    bDeviceProtocol
-    (uint8_t)8,                         //    bMaxPacketSize0
-    (uint8_t)1,                         //    bNumConfigurations
-    (uint8_t)0                          // reserved
+	(uint8_t)10, //    bLength
+	(uint8_t)0x06, //    bDescriptorType
+	(uint8_t)0x00, //    bcdUSB
+	(uint8_t)0x02, //    bcdUSB
+	(uint8_t)USB_DEV_CLASS_COMM, //    bDeviceClass
+	(uint8_t)0, //    bDeviceSubClass
+	(uint8_t)0, //    bDeviceProtocol
+	(uint8_t)8, //    bMaxPacketSize0
+	(uint8_t)1, //    bNumConfigurations
+	(uint8_t)0 // reserved
 };
 
 struct usb_cdc {
 	struct serial_device dev;
-    usbd_device_t usbd;
+	usbd_device_t usbd;
 };
 
 #if 0
@@ -78,53 +78,57 @@ static int _usb_cdc_command_isr(struct usbd_device *dev, struct usb_setup_packet
     return 0;
 }
 #endif
-static int _serial_write(serial_port_t dev, const void *data, size_t size, uint32_t timeout){
+static int _serial_write(serial_port_t dev, const void *data, size_t size, uint32_t timeout)
+{
 	struct usb_cdc *self = container_of(dev, struct usb_cdc, dev.ops);
-	if(!self) return -1;
+	if (!self)
+		return -1;
 
-    // send data to the host
-    //return usbd_write(self->usbd, USB_CDC_IN_EP, data, size, timeout);
-    return 0;
+	// send data to the host
+	//return usbd_write(self->usbd, USB_CDC_IN_EP, data, size, timeout);
+	return 0;
 }
 
-static int _serial_read(serial_port_t dev, void *data, size_t size, uint32_t timeout){
+static int _serial_read(serial_port_t dev, void *data, size_t size, uint32_t timeout)
+{
 	struct usb_cdc *self = container_of(dev, struct usb_cdc, dev.ops);
-	if(!self) return -1;
+	if (!self)
+		return -1;
 
-    // receive data in full if possible or timeout at 1 or more received bites
-    //return usbd_read(self->usbd, USB_CDC_OUT_EP, data, size, timeout);
-    return 0;
+	// receive data in full if possible or timeout at 1 or more received bites
+	//return usbd_read(self->usbd, USB_CDC_OUT_EP, data, size, timeout);
+	return 0;
 }
 
-static const struct serial_device_ops _serial_ops = {
-	.read = _serial_read,
-	.write = _serial_write
-};
+static const struct serial_device_ops _serial_ops = { .read = _serial_read,
+						      .write = _serial_write };
 
-static int _usb_cdc_probe(void *fdt, int fdt_node){
+static int _usb_cdc_probe(void *fdt, int fdt_node)
+{
 	int usb_node = fdt_find_node_by_ref(fdt, fdt_node, "usb");
-    if(usb_node < 0){
-        dbg_printk("USBCDC: no usb node!\n");
-        return -1;
-    }
+	if (usb_node < 0) {
+		dbg_printk("USBCDC: no usb node!\n");
+		return -1;
+	}
 
-    usbd_device_t usbd = usbd_find_by_node(usb_node);
-    if(!usbd){
-        dbg_printk("USBCDC: nousb\n");
-        return -1;
-    }
+	usbd_device_t usbd = usbd_find_by_node(usb_node);
+	if (!usbd) {
+		dbg_printk("USBCDC: nousb\n");
+		return -1;
+	}
 
-    struct usb_cdc *self = kzmalloc(sizeof(struct usb_cdc));
-    self->usbd = usbd;
+	struct usb_cdc *self = kzmalloc(sizeof(struct usb_cdc));
+	self->usbd = usbd;
 
 	serial_device_init(&self->dev, fdt, fdt_node, &_serial_ops);
-    serial_device_register(&self->dev);
+	serial_device_register(&self->dev);
 
-    return 0;
+	return 0;
 }
 
-static int _usb_cdc_remove(void *fdt, int fdt_node){
-    return 0;
+static int _usb_cdc_remove(void *fdt, int fdt_node)
+{
+	return 0;
 }
 
-DEVICE_DRIVER(usbd_serial,"fw,usbd_cdc", _usb_cdc_probe,_usb_cdc_remove)
+DEVICE_DRIVER(usbd_serial, "fw,usbd_cdc", _usb_cdc_probe, _usb_cdc_remove)

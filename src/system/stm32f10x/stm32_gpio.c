@@ -21,13 +21,13 @@ struct stm32_gpio {
 	uint8_t npins;
 };
 
-static int _stm32_gpio_write_pin(gpio_device_t dev, uint32_t pin, bool value) {
+static int _stm32_gpio_write_pin(gpio_device_t dev, uint32_t pin, bool value)
+{
 	struct stm32_gpio *self = container_of(dev, struct stm32_gpio, dev.ops);
-	if(pin >= self->npins)
+	if (pin >= self->npins)
 		return -EINVAL;
-	gpio_debug("gpio pin %08x: %04x = %d\n", self->pins[pin].gpio, self->pins[pin].pin,
-	           value);
-	if(value) {
+	gpio_debug("gpio pin %08x: %04x = %d\n", self->pins[pin].gpio, self->pins[pin].pin, value);
+	if (value) {
 		GPIO_SetBits(self->pins[pin].gpio, self->pins[pin].pin);
 	} else {
 		GPIO_ResetBits(self->pins[pin].gpio, self->pins[pin].pin);
@@ -35,29 +35,30 @@ static int _stm32_gpio_write_pin(gpio_device_t dev, uint32_t pin, bool value) {
 	return 0;
 }
 
-static int _stm32_gpio_read_pin(gpio_device_t dev, uint32_t pin, bool *value) {
+static int _stm32_gpio_read_pin(gpio_device_t dev, uint32_t pin, bool *value)
+{
 	struct stm32_gpio *self = container_of(dev, struct stm32_gpio, dev.ops);
-	if(pin >= self->npins)
+	if (pin >= self->npins)
 		return -EINVAL;
 	*value = !!GPIO_ReadInputDataBit(self->pins[pin].gpio, self->pins[pin].pin);
 	return 0;
 }
 
-static const struct gpio_device_ops _gpio_ops = {.read_pin = _stm32_gpio_read_pin,
-                                                 .write_pin = _stm32_gpio_write_pin};
+static const struct gpio_device_ops _gpio_ops = { .read_pin = _stm32_gpio_read_pin,
+						  .write_pin = _stm32_gpio_write_pin };
 
-static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
+static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node)
+{
 	int len = 0, defs_len = 0;
 	const fdt32_t *val = (const fdt32_t *)fdt_getprop(fdt, fdt_node, "pinctrl", &len);
-	const fdt32_t *defs =
-	    (const fdt32_t *)fdt_getprop(fdt, fdt_node, "defaults", &defs_len);
+	const fdt32_t *defs = (const fdt32_t *)fdt_getprop(fdt, fdt_node, "defaults", &defs_len);
 
-	if(defs && (len != (defs_len * 3))) {
+	if (defs && (len != (defs_len * 3))) {
 		printk("gpio: defaults not supplied for all pins\n");
 		return -1;
 	}
 
-	if(len == 0 || !val)
+	if (len == 0 || !val)
 		return -1;
 
 	uint8_t pin_count = (uint8_t)(len / 4 / 3);
@@ -67,7 +68,7 @@ static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
 	gpio_device_init(&self->dev, fdt, fdt_node, &_gpio_ops);
 	self->npins = pin_count;
 
-	for(uint8_t c = 0; c < pin_count; c++) {
+	for (uint8_t c = 0; c < pin_count; c++) {
 		const fdt32_t *base = val + (3 * c);
 		GPIO_TypeDef *GPIOx = (GPIO_TypeDef *)fdt32_to_cpu(*(base));
 		uint16_t pin = (uint16_t)fdt32_to_cpu(*(base + 1));
@@ -81,11 +82,12 @@ static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
 		gpio.GPIO_Pin = pin;
 		gpio.GPIO_Mode = (opts)&0xff;
 		gpio.GPIO_Speed = (opts >> 8) & 0x3;
-		if(!gpio.GPIO_Speed)
+		if (!gpio.GPIO_Speed)
 			gpio.GPIO_Speed = GPIO_Speed_2MHz;
 		GPIO_Init(GPIOx, &gpio);
 
-		if((gpio.GPIO_Mode == GPIO_Mode_Out_PP || gpio.GPIO_Mode == GPIO_Mode_Out_OD) && defs) {
+		if ((gpio.GPIO_Mode == GPIO_Mode_Out_PP || gpio.GPIO_Mode == GPIO_Mode_Out_OD) &&
+		    defs) {
 			uint16_t en = (uint16_t)fdt32_to_cpu(*(defs + c));
 			GPIO_WriteBit(GPIOx, pin, en);
 		}
@@ -102,7 +104,8 @@ static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_gpio_probe(void *fdt, int fdt_node) {
+static int _stm32_gpio_probe(void *fdt, int fdt_node)
+{
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
@@ -111,22 +114,23 @@ static int _stm32_gpio_probe(void *fdt, int fdt_node) {
 	// check if we directly have a pinmux here
 	int len = 0;
 	const fdt32_t *val = (const fdt32_t *)fdt_getprop(fdt, fdt_node, "pinctrl", &len);
-	if(val && len > 0) {
-		if(_stm32_gpio_setup_subnode(fdt, fdt_node) < 0) {
+	if (val && len > 0) {
+		if (_stm32_gpio_setup_subnode(fdt, fdt_node) < 0) {
 			return -1;
 		}
 	}
 
 	// otherwise scan all children
 	int node;
-	fdt_for_each_subnode(node, fdt, fdt_node) {
-		if(_stm32_gpio_setup_subnode(fdt, node) < 0) {
+	fdt_for_each_subnode(node, fdt, fdt_node)
+	{
+		if (_stm32_gpio_setup_subnode(fdt, node) < 0) {
 			return -1;
 		}
 	}
 
 	val = (const fdt32_t *)fdt_getprop(fdt, fdt_node, "remap", &len);
-	for(uint8_t c = 0; c < (len / 4); c++) {
+	for (uint8_t c = 0; c < (len / 4); c++) {
 		const fdt32_t *base = val + c;
 		uint32_t remap = (uint32_t)fdt32_to_cpu(*(base));
 		GPIO_PinRemapConfig(remap, ENABLE);
@@ -136,7 +140,8 @@ static int _stm32_gpio_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_gpio_remove(void *fdt, int fdt_node) {
+static int _stm32_gpio_remove(void *fdt, int fdt_node)
+{
 	// TODO
 	return 0;
 }

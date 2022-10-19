@@ -35,18 +35,20 @@
 //define active resolution mode
 #define BH1750_MODE BH1750_MODEH
 
-void bh1750_init(struct bh1750 *self, i2c_dev_t i2c, uint8_t addr) {
+void bh1750_init(struct bh1750 *self, i2c_dev_t i2c, uint8_t addr)
+{
 	self->i2c = i2c;
 	self->addr = addr;
-	uint8_t mode = BH1750_MODE; 
+	uint8_t mode = BH1750_MODE;
 	i2c_start_write(i2c, addr, &mode, 1);
-	i2c_stop(i2c); 
+	i2c_stop(i2c);
 }
 
-uint16_t bh1750_read_intensity_lux(struct bh1750 *self) {
+uint16_t bh1750_read_intensity_lux(struct bh1750 *self)
+{
 	uint16_t ret = 0;
-	
-	i2c_start_read(self->i2c, self->addr, (uint8_t*)&ret, 2);
+
+	i2c_start_read(self->i2c, self->addr, (uint8_t *)&ret, 2);
 	i2c_stop(self->i2c);
-	return ret / 1.2f; 
+	return ret / 1.2f;
 }

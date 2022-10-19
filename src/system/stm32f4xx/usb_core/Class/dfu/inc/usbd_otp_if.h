@@ -28,10 +28,10 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-#define OTP_START_ADD                  0x1FFF7800             
-#define OTP_END_ADD                    (uint32_t)(OTP_START_ADD + 528) 
+#define OTP_START_ADD 0x1FFF7800
+#define OTP_END_ADD (uint32_t)(OTP_START_ADD + 528)
 
-#define OTP_IF_STRING                  "@OTP Area   /0x1FFF7800/01*512 g,01*016 g"
+#define OTP_IF_STRING "@OTP Area   /0x1FFF7800/01*512 g,01*016 g"
 
 extern DFU_MAL_Prop_TypeDef DFU_Otp_cb;
 

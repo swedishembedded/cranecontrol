@@ -29,19 +29,19 @@
 #include "py/obj.h"
 
 typedef struct _mp_obj_fun_bc_t {
-    mp_obj_base_t base;
-    mp_obj_dict_t *globals;         // the context within which this function was defined
-    const byte *bytecode;           // bytecode for the function
-    const mp_uint_t *const_table;   // constant table
-    #if MICROPY_PY_SYS_SETTRACE
-    const struct _mp_raw_code_t *rc;
-    #endif
-    // the following extra_args array is allocated space to take (in order):
-    //  - values of positional default args (if any)
-    //  - a single slot for default kw args dict (if it has them)
-    //  - a single slot for var args tuple (if it takes them)
-    //  - a single slot for kw args dict (if it takes them)
-    mp_obj_t extra_args[];
+	mp_obj_base_t base;
+	mp_obj_dict_t *globals; // the context within which this function was defined
+	const byte *bytecode; // bytecode for the function
+	const mp_uint_t *const_table; // constant table
+#if MICROPY_PY_SYS_SETTRACE
+	const struct _mp_raw_code_t *rc;
+#endif
+	// the following extra_args array is allocated space to take (in order):
+	//  - values of positional default args (if any)
+	//  - a single slot for default kw args dict (if it has them)
+	//  - a single slot for var args tuple (if it takes them)
+	//  - a single slot for kw args dict (if it takes them)
+	mp_obj_t extra_args[];
 } mp_obj_fun_bc_t;
 
 void mp_obj_fun_bc_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest);

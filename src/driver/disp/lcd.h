@@ -13,7 +13,6 @@ References:
     http://jump.to/fleury
 */
 
-
 #ifndef LCD_H
 #define LCD_H
 
@@ -22,8 +21,8 @@ References:
 #include <arch/interface.h>
 
 struct lcd {
-	pio_dev_t port; 
-	uint8_t dataport; 
+	pio_dev_t port;
+	uint8_t dataport;
 };
 
 extern void lcd_init(struct lcd *self, pio_dev_t port, uint8_t dispAttr);

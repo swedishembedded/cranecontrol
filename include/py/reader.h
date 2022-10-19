@@ -34,9 +34,9 @@
 #define MP_READER_EOF ((mp_uint_t)(-1))
 
 typedef struct _mp_reader_t {
-    void *data;
-    mp_uint_t (*readbyte)(void *data);
-    void (*close)(void *data);
+	void *data;
+	mp_uint_t (*readbyte)(void *data);
+	void (*close)(void *data);
 } mp_reader_t;
 
 void mp_reader_new_mem(mp_reader_t *reader, const byte *buf, size_t len, size_t free_len);

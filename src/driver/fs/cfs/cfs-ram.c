@@ -37,11 +37,11 @@
 #include "cfs/cfs.h"
 
 struct filestate {
-  int flag;
+	int flag;
 #define FLAG_FILE_CLOSED 0
-#define FLAG_FILE_OPEN   1
-  int fileptr;
-  int filesize;
+#define FLAG_FILE_OPEN 1
+	int fileptr;
+	int filesize;
 };
 
 #ifdef CFS_RAM_CONF_SIZE
@@ -54,111 +54,102 @@ static struct filestate file;
 static char filemem[CFS_RAM_SIZE];
 
 /*---------------------------------------------------------------------------*/
-int
-cfs_open(const char *n, int f)
+int cfs_open(const char *n, int f)
 {
-  if(file.flag == FLAG_FILE_CLOSED) {
-    file.flag = FLAG_FILE_OPEN;
-    if(f & CFS_READ) {
-      file.fileptr = 0;
-    }
-    if(f & CFS_WRITE){
-      if(f & CFS_APPEND) {
-	file.fileptr = file.filesize;
-      } else {
-	file.fileptr = 0;
-	file.filesize = 0;
-      }
-    }
-    return 1;
-  } else {
-    return -1;
-  }
+	if (file.flag == FLAG_FILE_CLOSED) {
+		file.flag = FLAG_FILE_OPEN;
+		if (f & CFS_READ) {
+			file.fileptr = 0;
+		}
+		if (f & CFS_WRITE) {
+			if (f & CFS_APPEND) {
+				file.fileptr = file.filesize;
+			} else {
+				file.fileptr = 0;
+				file.filesize = 0;
+			}
+		}
+		return 1;
+	} else {
+		return -1;
+	}
 }
 /*---------------------------------------------------------------------------*/
-void
-cfs_close(int f)
+void cfs_close(int f)
 {
-  file.flag = FLAG_FILE_CLOSED;
+	file.flag = FLAG_FILE_CLOSED;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_read(int f, void *buf, unsigned int len)
+int cfs_read(int f, void *buf, unsigned int len)
 {
-  if(file.fileptr + len > sizeof(filemem)) {
-    len = sizeof(filemem) - file.fileptr;
-  }
-  
-  if(file.fileptr + len > file.filesize) {
-    len = file.filesize - file.fileptr;
-  }
+	if (file.fileptr + len > sizeof(filemem)) {
+		len = sizeof(filemem) - file.fileptr;
+	}
 
-  if(f == 1) {
-    memcpy(buf, &filemem[file.fileptr], len);
-    file.fileptr += len;
-    return len;
-  } else {
-    return -1;
-  }
-}
-/*---------------------------------------------------------------------------*/
-int
-cfs_write(int f, const void *buf, unsigned int len)
-{
-  if(file.fileptr >= sizeof(filemem)) {
-    return 0;
-  }
-  if(file.fileptr + len > sizeof(filemem)) {
-    len = sizeof(filemem) - file.fileptr;
-  }
+	if (file.fileptr + len > file.filesize) {
+		len = file.filesize - file.fileptr;
+	}
 
-  if(file.fileptr + len > file.filesize) {
-    /* Extend the size of the file. */
-    file.filesize = file.fileptr + len;
-  }
-  
-  if(f == 1) {
-    memcpy(&filemem[file.fileptr], buf, len);
-    file.fileptr += len;
-    return len;
-  } else {
-    return -1;
-  }
+	if (f == 1) {
+		memcpy(buf, &filemem[file.fileptr], len);
+		file.fileptr += len;
+		return len;
+	} else {
+		return -1;
+	}
 }
 /*---------------------------------------------------------------------------*/
-cfs_offset_t
-cfs_seek(int f, cfs_offset_t o, int w)
+int cfs_write(int f, const void *buf, unsigned int len)
 {
-  if(w == CFS_SEEK_SET && f == 1) {
-    if(o > file.filesize) {
-      o = file.filesize;
-    }
-    file.fileptr = o;
-    return o;
-  }
-  return (cfs_offset_t)-1;
+	if (file.fileptr >= sizeof(filemem)) {
+		return 0;
+	}
+	if (file.fileptr + len > sizeof(filemem)) {
+		len = sizeof(filemem) - file.fileptr;
+	}
+
+	if (file.fileptr + len > file.filesize) {
+		/* Extend the size of the file. */
+		file.filesize = file.fileptr + len;
+	}
+
+	if (f == 1) {
+		memcpy(&filemem[file.fileptr], buf, len);
+		file.fileptr += len;
+		return len;
+	} else {
+		return -1;
+	}
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_remove(const char *name)
+cfs_offset_t cfs_seek(int f, cfs_offset_t o, int w)
 {
-  return -1;
+	if (w == CFS_SEEK_SET && f == 1) {
+		if (o > file.filesize) {
+			o = file.filesize;
+		}
+		file.fileptr = o;
+		return o;
+	}
+	return (cfs_offset_t)-1;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_opendir(struct cfs_dir *p, const char *n)
+int cfs_remove(const char *name)
 {
-  return -1;
+	return -1;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
+int cfs_opendir(struct cfs_dir *p, const char *n)
 {
-  return -1;
+	return -1;
 }
 /*---------------------------------------------------------------------------*/
-void
-cfs_closedir(struct cfs_dir *p)
+int cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
+{
+	return -1;
+}
+/*---------------------------------------------------------------------------*/
+void cfs_closedir(struct cfs_dir *p)
 {
 }
 /*---------------------------------------------------------------------------*/

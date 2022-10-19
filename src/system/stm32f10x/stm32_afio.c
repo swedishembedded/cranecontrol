@@ -9,7 +9,8 @@
 
 #include "driver.h"
 
-static int _stm32_afio_probe(void *fdt, int fdt_node) {
+static int _stm32_afio_probe(void *fdt, int fdt_node)
+{
 	uint32_t mapr = (uint32_t)fdt_get_int_or_default(fdt, (int)fdt_node, "mapr", 0);
 
 	printk("afio: init\n");
@@ -20,7 +21,8 @@ static int _stm32_afio_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_afio_remove(void *fdt, int fdt_node) {
+static int _stm32_afio_remove(void *fdt, int fdt_node)
+{
 	// TODO
 	return 0;
 }

@@ -36,11 +36,11 @@
 #include "dev/xmem.h"
 
 struct filestate {
-  int flag;
+	int flag;
 #define FLAG_FILE_CLOSED 0
-#define FLAG_FILE_OPEN   1
-  unsigned int fileptr;
-  unsigned int filesize;
+#define FLAG_FILE_OPEN 1
+	unsigned int fileptr;
+	unsigned int filesize;
 };
 
 #ifdef CFS_XMEM_CONF_OFFSET
@@ -59,116 +59,107 @@ struct filestate {
 static struct filestate file;
 
 /*---------------------------------------------------------------------------*/
-int
-cfs_open(const char *n, int f)
+int cfs_open(const char *n, int f)
 {
-  if(file.flag == FLAG_FILE_CLOSED) {
-    file.flag = FLAG_FILE_OPEN;
-    if(f & CFS_READ) {
-      file.fileptr = 0;
-    }
-    if(f & CFS_WRITE){
-      if(f & CFS_APPEND) {
-	file.fileptr = file.filesize;
-      } else {
+	if (file.flag == FLAG_FILE_CLOSED) {
+		file.flag = FLAG_FILE_OPEN;
+		if (f & CFS_READ) {
+			file.fileptr = 0;
+		}
+		if (f & CFS_WRITE) {
+			if (f & CFS_APPEND) {
+				file.fileptr = file.filesize;
+			} else {
+				file.fileptr = 0;
+				file.filesize = 0;
+				xmem_erase(CFS_XMEM_SIZE, CFS_XMEM_OFFSET);
+			}
+		}
+		return 1;
+	} else {
+		return -1;
+	}
+}
+/*---------------------------------------------------------------------------*/
+void cfs_close(int f)
+{
+	file.flag = FLAG_FILE_CLOSED;
+}
+/*---------------------------------------------------------------------------*/
+int cfs_read(int f, void *buf, unsigned int len)
+{
+	if (file.fileptr + len > CFS_XMEM_SIZE) {
+		len = CFS_XMEM_SIZE - file.fileptr;
+	}
+
+	if (file.fileptr + len > file.filesize) {
+		len = file.filesize - file.fileptr;
+	}
+
+	if (f == 1) {
+		xmem_pread(buf, len, CFS_XMEM_OFFSET + file.fileptr);
+		file.fileptr += len;
+		return len;
+	} else {
+		return -1;
+	}
+}
+/*---------------------------------------------------------------------------*/
+int cfs_write(int f, const void *buf, unsigned int len)
+{
+	if (file.fileptr >= CFS_XMEM_SIZE) {
+		return 0;
+	}
+	if (file.fileptr + len > CFS_XMEM_SIZE) {
+		len = CFS_XMEM_SIZE - file.fileptr;
+	}
+
+	if (file.fileptr + len > file.filesize) {
+		/* Extend the size of the file. */
+		file.filesize = file.fileptr + len;
+	}
+
+	if (f == 1) {
+		xmem_pwrite(buf, len, CFS_XMEM_OFFSET + file.fileptr);
+		file.fileptr += len;
+		return len;
+	} else {
+		return -1;
+	}
+}
+/*---------------------------------------------------------------------------*/
+cfs_offset_t cfs_seek(int f, cfs_offset_t o, int w)
+{
+	if (w == CFS_SEEK_SET && f == 1) {
+		if (o > file.filesize) {
+			o = file.filesize;
+		}
+		file.fileptr = o;
+		return o;
+	}
+	return -1;
+}
+/*---------------------------------------------------------------------------*/
+int cfs_remove(const char *name)
+{
+	file.flag = FLAG_FILE_CLOSED;
 	file.fileptr = 0;
 	file.filesize = 0;
 	xmem_erase(CFS_XMEM_SIZE, CFS_XMEM_OFFSET);
-      }
-    }
-    return 1;
-  } else {
-    return -1;
-  }
+	return 0;
 }
 /*---------------------------------------------------------------------------*/
-void
-cfs_close(int f)
+int cfs_opendir(struct cfs_dir *p, const char *n)
 {
-  file.flag = FLAG_FILE_CLOSED;
+	return -1;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_read(int f, void *buf, unsigned int len)
+int cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
 {
-  if(file.fileptr + len > CFS_XMEM_SIZE) {
-    len = CFS_XMEM_SIZE - file.fileptr;
-  }
-
-  if(file.fileptr + len > file.filesize) {
-    len = file.filesize - file.fileptr;
-  }
-
-  if(f == 1) {
-    xmem_pread(buf, len, CFS_XMEM_OFFSET + file.fileptr);
-    file.fileptr += len;
-    return len;
-  } else {
-    return -1;
-  }
+	return -1;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_write(int f, const void *buf, unsigned int len)
-{
-  if(file.fileptr >= CFS_XMEM_SIZE) {
-    return 0;
-  }
-  if(file.fileptr + len > CFS_XMEM_SIZE) {
-    len = CFS_XMEM_SIZE - file.fileptr;
-  }
-
-  if(file.fileptr + len > file.filesize) {
-    /* Extend the size of the file. */
-    file.filesize = file.fileptr + len;
-  }
-
-  if(f == 1) {
-    xmem_pwrite(buf, len, CFS_XMEM_OFFSET + file.fileptr);
-    file.fileptr += len;
-    return len;
-  } else {
-    return -1;
-  }
-}
-/*---------------------------------------------------------------------------*/
-cfs_offset_t
-cfs_seek(int f, cfs_offset_t o, int w)
-{
-  if(w == CFS_SEEK_SET && f == 1) {
-    if(o > file.filesize) {
-      o = file.filesize;
-    }
-    file.fileptr = o;
-    return o;
-  }
-  return -1;
-}
-/*---------------------------------------------------------------------------*/
-int
-cfs_remove(const char *name)
-{
-  file.flag = FLAG_FILE_CLOSED;
-  file.fileptr = 0;
-  file.filesize = 0;
-  xmem_erase(CFS_XMEM_SIZE, CFS_XMEM_OFFSET);
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-int
-cfs_opendir(struct cfs_dir *p, const char *n)
-{
-  return -1;
-}
-/*---------------------------------------------------------------------------*/
-int
-cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
-{
-  return -1;
-}
-/*---------------------------------------------------------------------------*/
-void
-cfs_closedir(struct cfs_dir *p)
+void cfs_closedir(struct cfs_dir *p)
 {
 }
 /*---------------------------------------------------------------------------*/

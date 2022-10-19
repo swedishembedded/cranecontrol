@@ -31,10 +31,10 @@
 // instance object
 // creating an instance of a class makes one of these objects
 typedef struct _mp_obj_instance_t {
-    mp_obj_base_t base;
-    mp_map_t members;
-    mp_obj_t subobj[];
-    // TODO maybe cache __getattr__ and __setattr__ for efficient lookup of them
+	mp_obj_base_t base;
+	mp_map_t members;
+	mp_obj_t subobj[];
+	// TODO maybe cache __getattr__ and __setattr__ for efficient lookup of them
 } mp_obj_instance_t;
 
 #if MICROPY_CPYTHON_COMPAT
@@ -49,7 +49,8 @@ mp_obj_t mp_obj_instance_call(mp_obj_t self_in, size_t n_args, size_t n_kw, cons
 #define mp_obj_is_instance_type(type) ((type)->make_new == mp_obj_instance_make_new)
 #define mp_obj_is_native_type(type) ((type)->make_new != mp_obj_instance_make_new)
 // this needs to be exposed for the above macros to work correctly
-mp_obj_t mp_obj_instance_make_new(const mp_obj_type_t *self_in, size_t n_args, size_t n_kw, const mp_obj_t *args);
+mp_obj_t mp_obj_instance_make_new(const mp_obj_type_t *self_in, size_t n_args, size_t n_kw,
+				  const mp_obj_t *args);
 
 // this needs to be exposed for mp_getiter
 mp_obj_t mp_obj_instance_getiter(mp_obj_t self_in, mp_obj_iter_buf_t *iter_buf);

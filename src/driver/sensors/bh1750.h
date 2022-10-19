@@ -25,11 +25,11 @@
 #ifndef BH1750_H_
 #define BH1750_H_
 
-#define BH1750_ADDR (0x23<<1) //device address
+#define BH1750_ADDR (0x23 << 1) //device address
 
 struct bh1750 {
 	i2c_dev_t i2c;
-	uint8_t addr; 
+	uint8_t addr;
 };
 
 void bh1750_init(struct bh1750 *self, i2c_dev_t i2c, uint8_t addr);

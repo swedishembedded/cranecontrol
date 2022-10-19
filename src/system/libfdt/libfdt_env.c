@@ -5,7 +5,6 @@
 
 #include "libfdt_internal.h"
 
-
 uint16_t fdt16_to_cpu(fdt16_t x)
 {
 	return (FDT_FORCE uint16_t)CPU_TO_FDT16(x);
@@ -47,8 +46,7 @@ void *fdt_offset_ptr_w_(void *fdt, int offset)
 const struct fdt_reserve_entry *fdt_mem_rsv_(const void *fdt, int n)
 {
 	const struct fdt_reserve_entry *rsv_table =
-		(const struct fdt_reserve_entry *)
-		((const char *)fdt + fdt_off_mem_rsvmap(fdt));
+		(const struct fdt_reserve_entry *)((const char *)fdt + fdt_off_mem_rsvmap(fdt));
 
 	return rsv_table + n;
 }
@@ -56,5 +54,3 @@ struct fdt_reserve_entry *fdt_mem_rsv_w_(void *fdt, int n)
 {
 	return (void *)(uintptr_t)fdt_mem_rsv_(fdt, n);
 }
-
-

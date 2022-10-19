@@ -34,19 +34,21 @@
 
 static serial_port_t _default_serial_port = 0;
 
-int serial_set_printk_port(serial_port_t port) {
+int serial_set_printk_port(serial_port_t port)
+{
 	_default_serial_port = port;
 	return 0;
 }
 
-int printk(const char *fmt, ...) {
+int printk(const char *fmt, ...)
+{
 	static bool _printk_mutex_inited = false;
 	static struct mutex _printk_lock;
 	static char buf[80];
 
-	if(!_default_serial_port)
+	if (!_default_serial_port)
 		return -1;
-	if(!_printk_mutex_inited) {
+	if (!_printk_mutex_inited) {
 		thread_mutex_init(&_printk_lock);
 		_printk_mutex_inited = true;
 	}
@@ -59,9 +61,9 @@ int printk(const char *fmt, ...) {
 	va_end(argptr);
 
 	int ret = 0;
-	if(serial_write(_default_serial_port, buf, (size_t)len, PRINTK_WRITE_TIMEOUT) < 0)
+	if (serial_write(_default_serial_port, buf, (size_t)len, PRINTK_WRITE_TIMEOUT) < 0)
 		ret = -1;
-	if(serial_write(_default_serial_port, "\x1b[0m", 4, PRINTK_WRITE_TIMEOUT) < 0)
+	if (serial_write(_default_serial_port, "\x1b[0m", 4, PRINTK_WRITE_TIMEOUT) < 0)
 		ret = -1;
 
 	thread_mutex_unlock(&_printk_lock);
@@ -69,22 +71,25 @@ int printk(const char *fmt, ...) {
 	return ret;
 }
 
-int serial_write_string(serial_port_t dev, const char *str, timeout_t to) {
+int serial_write_string(serial_port_t dev, const char *str, timeout_t to)
+{
 	return serial_write(dev, str, strlen(str), to);
 }
 
-int serial_write_u32(serial_port_t dev, uint32_t value, timeout_t to) {
+int serial_write_u32(serial_port_t dev, uint32_t value, timeout_t to)
+{
 	char buf[12];
 	int len = snprintf(buf, sizeof(buf), "%u", (unsigned)value);
-	if(len < 0)
+	if (len < 0)
 		return -EINVAL;
 	return serial_write(dev, buf, (size_t)len, to);
 }
 
-int serial_write_i32(serial_port_t dev, int32_t value, timeout_t to) {
+int serial_write_i32(serial_port_t dev, int32_t value, timeout_t to)
+{
 	char buf[12];
 	int len = snprintf(buf, sizeof(buf), "%d", (signed)value);
-	if(len < 0)
+	if (len < 0)
 		return -EINVAL;
 	return serial_write(dev, buf, (size_t)len, to);
 }

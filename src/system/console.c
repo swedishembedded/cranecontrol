@@ -31,22 +31,22 @@
 
 DEFINE_DEVICE_CLASS(console)
 
-int console_add_command(console_device_t con,
-		void *userptr,
-		const char *name,
-		const char *description,
-		const char *options,
-		int (*proc)(console_device_t con, void *userptr, int argc, char **argv)
-){
+int console_add_command(console_device_t con, void *userptr, const char *name,
+			const char *description, const char *options,
+			int (*proc)(console_device_t con, void *userptr, int argc, char **argv))
+{
 	struct console_command *self = kzmalloc(sizeof(struct console_command));
 	self->name = kzmalloc(strlen(name) + 1);
-	if(!self->name) return -ENOMEM;
+	if (!self->name)
+		return -ENOMEM;
 	strcpy(self->name, name);
 	self->description = kzmalloc(strlen(description) + 1);
-	if(!self->description) return -ENOMEM;
+	if (!self->description)
+		return -ENOMEM;
 	strcpy(self->description, description);
 	self->options = kzmalloc(strlen(options) + 1);
-	if(!self->options) return -ENOMEM;
+	if (!self->options)
+		return -ENOMEM;
 	strcpy(self->options, options);
 	self->proc = proc;
 	self->userptr = userptr;

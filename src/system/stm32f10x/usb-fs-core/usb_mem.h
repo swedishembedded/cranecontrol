@@ -25,7 +25,6 @@
   ******************************************************************************
   */
 
-
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __USB_MEM_H
 #define __USB_MEM_H
@@ -40,6 +39,6 @@ void PMAToUserBufferCopy(uint8_t *pbUsrBuf, uint16_t wPMABufAddr, uint16_t wNByt
 
 /* External variables --------------------------------------------------------*/
 
-#endif  /*__USB_MEM_H*/
+#endif /*__USB_MEM_H*/
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

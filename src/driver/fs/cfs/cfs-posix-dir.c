@@ -39,48 +39,45 @@
 #include "cfs/cfs.h"
 
 struct cfs_posix_dir {
-  DIR *dirp;
+	DIR *dirp;
 };
 
 /*---------------------------------------------------------------------------*/
-int
-cfs_opendir(struct cfs_dir *p, const char *n)
+int cfs_opendir(struct cfs_dir *p, const char *n)
 {
-  struct cfs_posix_dir *dir = (struct cfs_posix_dir *)p;
+	struct cfs_posix_dir *dir = (struct cfs_posix_dir *)p;
 
-  dir->dirp = opendir(n);
-  return dir->dirp == NULL;
+	dir->dirp = opendir(n);
+	return dir->dirp == NULL;
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
+int cfs_readdir(struct cfs_dir *p, struct cfs_dirent *e)
 {
-  struct cfs_posix_dir *dir = (struct cfs_posix_dir *)p;
-  struct dirent *res;
+	struct cfs_posix_dir *dir = (struct cfs_posix_dir *)p;
+	struct dirent *res;
 
-  if(dir->dirp == NULL) {
-    return -1;
-  }
-  res = readdir(dir->dirp);
-  if(res == NULL) {
-    return -1;
-  }
-  strncpy(e->name, res->d_name, sizeof(e->name));
+	if (dir->dirp == NULL) {
+		return -1;
+	}
+	res = readdir(dir->dirp);
+	if (res == NULL) {
+		return -1;
+	}
+	strncpy(e->name, res->d_name, sizeof(e->name));
 #if defined(__APPLE2__) || defined(__APPLE2ENH__) || defined(__CBM__)
-  e->size = res->d_blocks;
+	e->size = res->d_blocks;
 #else /* __APPLE2__ || __APPLE2ENH__ || __CBM__ */
-  e->size = 0;
+	e->size = 0;
 #endif /* __APPLE2__ || __APPLE2ENH__ || __CBM__ */
-  return 0;
+	return 0;
 }
 /*---------------------------------------------------------------------------*/
-void
-cfs_closedir(struct cfs_dir *p)
+void cfs_closedir(struct cfs_dir *p)
 {
-  struct cfs_posix_dir *dir = (struct cfs_posix_dir *)p;
+	struct cfs_posix_dir *dir = (struct cfs_posix_dir *)p;
 
-  if(dir->dirp != NULL) {
-    closedir(dir->dirp);
-  }
+	if (dir->dirp != NULL) {
+		closedir(dir->dirp);
+	}
 }
 /*---------------------------------------------------------------------------*/

@@ -6,15 +6,18 @@ extern "C" {
 }
 
 class DeviceTreeRWTest : public ::testing::Test {
-protected:
-	void SetUp() {
+    protected:
+	void SetUp()
+	{
 	}
 
-	void TearDown() {
+	void TearDown()
+	{
 	}
 };
 
-TEST_F(DeviceTreeRWTest, insert_node){
+TEST_F(DeviceTreeRWTest, insert_node)
+{
 	char buf[512];
 	char buf2[512];
 	int val = 1234;
@@ -45,7 +48,8 @@ TEST_F(DeviceTreeRWTest, insert_node){
 	EXPECT_EQ(fdt_get_int_or_default(buf2, node, "newprop", -1), 123);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();
 }

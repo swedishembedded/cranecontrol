@@ -1,7 +1,8 @@
 #include <stm32f30x_tim.h>
 #include "stm32_enc_out.h"
 
-void stm32_enc_out_init(void){
+void stm32_enc_out_init(void)
+{
 	TIM_TypeDef *hw = TIM2;
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
@@ -16,7 +17,7 @@ void stm32_enc_out_init(void){
 	tim.TIM_RepetitionCounter = 0;
 	TIM_TimeBaseInit(hw, &tim);
 
-/*
+	/*
 	TIM_OCInitTypeDef oc;
 	TIM_OCStructInit(&oc);
 	oc.TIM_OCMode = TIM_OCMode_Toggle; // start in timing mode (disabled outputs)
@@ -59,18 +60,19 @@ void stm32_enc_out_init(void){
 	NVIC_Init(&nvic);
 }
 
-void TIM2_IRQHandler(void){
-	static const uint8_t enca[4] = {0, 0, 1, 1};
-	static const uint8_t encb[4] = {0, 1, 1, 0};
+void TIM2_IRQHandler(void)
+{
+	static const uint8_t enca[4] = { 0, 0, 1, 1 };
+	static const uint8_t encb[4] = { 0, 1, 1, 0 };
 	static uint8_t pos = 0;
 
-	if(TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET){
+	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-		if(enca[pos])
+		if (enca[pos])
 			GPIO_SetBits(GPIOA, GPIO_Pin_0);
 		else
 			GPIO_ResetBits(GPIOA, GPIO_Pin_0);
-		if(encb[pos])
+		if (encb[pos])
 			GPIO_SetBits(GPIOA, GPIO_Pin_1);
 		else
 			GPIO_ResetBits(GPIOA, GPIO_Pin_1);
@@ -78,8 +80,9 @@ void TIM2_IRQHandler(void){
 	}
 }
 
-void stm32_enc_out_set_counts_per_sec(uint32_t counts){
-	if(!counts)
+void stm32_enc_out_set_counts_per_sec(uint32_t counts)
+{
+	if (!counts)
 		TIM2->ARR = 0;
 	else
 		TIM2->ARR = (uint16_t)(1000000 / counts / 2);

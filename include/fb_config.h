@@ -21,24 +21,14 @@
 #define FB_AXIS_LEFTRIGHT 1
 #define FB_AXIS_COUNT 2
 
-enum {
-	FB_PRESET_HOME = 0,
-	FB_PRESET_1,
-	FB_PRESET_2,
-	FB_PRESET_3,
-	FB_PRESET_4,
-	FB_PRESET_COUNT
-};
+enum { FB_PRESET_HOME = 0, FB_PRESET_1, FB_PRESET_2, FB_PRESET_3, FB_PRESET_4, FB_PRESET_COUNT };
 
 struct fb_analog_limit {
 	float min, max;
 	float omin, omax;
 };
 
-typedef enum {
-	FB_CONTROL_POS_UNITS_DEFAULT,
-	FB_CONTROL_POS_UNITS_RAD
-} fb_control_pos_units_t;
+typedef enum { FB_CONTROL_POS_UNITS_DEFAULT, FB_CONTROL_POS_UNITS_RAD } fb_control_pos_units_t;
 
 struct fb_config_filter {
 	float a0, a1;
@@ -86,5 +76,4 @@ struct fb_config {
 };
 
 void fb_config_init(struct fb_config *self);
-void fb_config_set_preset(struct fb_config *self, unsigned preset, float pitch,
-                          float yaw);
+void fb_config_set_preset(struct fb_config *self, unsigned preset, float pitch, float yaw);

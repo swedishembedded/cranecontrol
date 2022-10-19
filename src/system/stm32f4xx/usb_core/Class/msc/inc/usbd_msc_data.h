@@ -17,7 +17,7 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 
@@ -30,69 +30,66 @@
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
   */
-  
+
 /** @defgroup USB_INFO
   * @brief general defines for the usb device library file
   * @{
-  */ 
+  */
 
 /** @defgroup USB_INFO_Exported_Defines
   * @{
-  */ 
-#define MODE_SENSE6_LEN			 8
-#define MODE_SENSE10_LEN		 8
-#define LENGTH_INQUIRY_PAGE00		 7
-#define LENGTH_FORMAT_CAPACITIES    	20
+  */
+#define MODE_SENSE6_LEN 8
+#define MODE_SENSE10_LEN 8
+#define LENGTH_INQUIRY_PAGE00 7
+#define LENGTH_FORMAT_CAPACITIES 20
 
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup USBD_INFO_Exported_TypesDefinitions
   * @{
   */
 /**
   * @}
-  */ 
-
-
+  */
 
 /** @defgroup USBD_INFO_Exported_Macros
   * @{
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBD_INFO_Exported_Variables
   * @{
-  */ 
-extern const uint8_t MSC_Page00_Inquiry_Data[];  
+  */
+extern const uint8_t MSC_Page00_Inquiry_Data[];
 extern const uint8_t MSC_Mode_Sense6_data[];
-extern const uint8_t MSC_Mode_Sense10_data[] ;
+extern const uint8_t MSC_Mode_Sense10_data[];
 
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBD_INFO_Exported_FunctionsPrototype
   * @{
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 #endif /* _USBD_MSC_DATA_H_ */
 
 /**
   * @}
-  */ 
+  */
 
 /**
 * @}
-*/ 
+*/
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

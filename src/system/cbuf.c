@@ -13,13 +13,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "libfirmware/types/cbuf.h"
+#include <libfirmware/types/cbuf.h>
 #include <string.h>
 
-void cbuf_init(struct cbuf *self, void *data, size_t item_size, size_t nitems) {
+void cbuf_init(struct cbuf *self, void *data, size_t item_size, size_t nitems)
+{
 	memset(self, 0, sizeof(*self));
 	self->head = self->tail = 0;
 	self->data = data;
@@ -28,65 +28,72 @@ void cbuf_init(struct cbuf *self, void *data, size_t item_size, size_t nitems) {
 	self->full = false;
 }
 
-void cbuf_clear(struct cbuf *self) {
+void cbuf_clear(struct cbuf *self)
+{
 	self->head = self->tail = 0;
 	self->full = false;
 }
 
-static void cbuf_advance(struct cbuf *self) {
-	if(self->full)
+static void cbuf_advance(struct cbuf *self)
+{
+	if (self->full)
 		self->tail = (self->tail + 1) % self->nitems;
 	self->head = (self->head + 1) % self->nitems;
 	self->full = self->head == self->tail;
 }
 
-static void cbuf_retreat(struct cbuf *self) {
+static void cbuf_retreat(struct cbuf *self)
+{
 	self->full = false;
 	self->tail = (self->tail + 1) % self->nitems;
 }
 
-int cbuf_put(struct cbuf *self, const void *item) {
+int cbuf_put(struct cbuf *self, const void *item)
+{
 	bool full = self->full;
-	memcpy(((uint8_t *)self->data) + (self->item_size * self->head), item,
-	       self->item_size);
+	memcpy(((uint8_t *)self->data) + (self->item_size * self->head), item, self->item_size);
 	cbuf_advance(self);
 	return full;
 }
 
-int cbuf_put_unless_full(struct cbuf *self, const void *item) {
-	if(self->full)
+int cbuf_put_unless_full(struct cbuf *self, const void *item)
+{
+	if (self->full)
 		return -1;
-	memcpy(((uint8_t *)self->data) + (self->item_size * self->head), item,
-	       self->item_size);
+	memcpy(((uint8_t *)self->data) + (self->item_size * self->head), item, self->item_size);
 	cbuf_advance(self);
 	return 0;
 }
 
-int cbuf_get(struct cbuf *self, void *item) {
-	if(cbuf_empty(self))
+int cbuf_get(struct cbuf *self, void *item)
+{
+	if (cbuf_empty(self))
 		return 0;
-	memcpy(item, (uint8_t *)self->data + (self->item_size * self->tail),
-	       self->item_size);
+	memcpy(item, (uint8_t *)self->data + (self->item_size * self->tail), self->item_size);
 	cbuf_retreat(self);
 	return 1;
 }
 
-bool cbuf_full(struct cbuf *self) {
+bool cbuf_full(struct cbuf *self)
+{
 	return self->full;
 }
 
-bool cbuf_empty(struct cbuf *self) {
+bool cbuf_empty(struct cbuf *self)
+{
 	return !self->full && (self->head == self->tail);
 }
 
-size_t cbuf_capacity(struct cbuf *self) {
+size_t cbuf_capacity(struct cbuf *self)
+{
 	return self->nitems;
 }
 
-size_t cbuf_size(struct cbuf *self) {
-	if(self->full)
+size_t cbuf_size(struct cbuf *self)
+{
+	if (self->full)
 		return self->nitems;
-	if(self->head >= self->tail)
+	if (self->head >= self->tail)
 		return self->head - self->tail;
 	return self->nitems + self->head - self->tail;
 }

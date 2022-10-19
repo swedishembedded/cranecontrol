@@ -91,14 +91,14 @@
 /** @defgroup IWDG 
   * @brief IWDG driver modules
   * @{
-  */ 
+  */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
 /* KR register bit mask */
-#define KR_KEY_RELOAD    ((uint16_t)0xAAAA)
-#define KR_KEY_ENABLE    ((uint16_t)0xCCCC)
+#define KR_KEY_RELOAD ((uint16_t)0xAAAA)
+#define KR_KEY_ENABLE ((uint16_t)0xCCCC)
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -131,9 +131,9 @@
   */
 void IWDG_WriteAccessCmd(uint16_t IWDG_WriteAccess)
 {
-  /* Check the parameters */
-  assert_param(IS_IWDG_WRITE_ACCESS(IWDG_WriteAccess));
-  IWDG->KR = IWDG_WriteAccess;
+	/* Check the parameters */
+	assert_param(IS_IWDG_WRITE_ACCESS(IWDG_WriteAccess));
+	IWDG->KR = IWDG_WriteAccess;
 }
 
 /**
@@ -151,9 +151,9 @@ void IWDG_WriteAccessCmd(uint16_t IWDG_WriteAccess)
   */
 void IWDG_SetPrescaler(uint8_t IWDG_Prescaler)
 {
-  /* Check the parameters */
-  assert_param(IS_IWDG_PRESCALER(IWDG_Prescaler));
-  IWDG->PR = IWDG_Prescaler;
+	/* Check the parameters */
+	assert_param(IS_IWDG_PRESCALER(IWDG_Prescaler));
+	IWDG->PR = IWDG_Prescaler;
 }
 
 /**
@@ -164,9 +164,9 @@ void IWDG_SetPrescaler(uint8_t IWDG_Prescaler)
   */
 void IWDG_SetReload(uint16_t Reload)
 {
-  /* Check the parameters */
-  assert_param(IS_IWDG_RELOAD(Reload));
-  IWDG->RLR = Reload;
+	/* Check the parameters */
+	assert_param(IS_IWDG_RELOAD(Reload));
+	IWDG->RLR = Reload;
 }
 
 /**
@@ -177,7 +177,7 @@ void IWDG_SetReload(uint16_t Reload)
   */
 void IWDG_ReloadCounter(void)
 {
-  IWDG->KR = KR_KEY_RELOAD;
+	IWDG->KR = KR_KEY_RELOAD;
 }
 
 /**
@@ -203,7 +203,7 @@ void IWDG_ReloadCounter(void)
   */
 void IWDG_Enable(void)
 {
-  IWDG->KR = KR_KEY_ENABLE;
+	IWDG->KR = KR_KEY_ENABLE;
 }
 
 /**
@@ -232,19 +232,16 @@ void IWDG_Enable(void)
   */
 FlagStatus IWDG_GetFlagStatus(uint16_t IWDG_FLAG)
 {
-  FlagStatus bitstatus = RESET;
-  /* Check the parameters */
-  assert_param(IS_IWDG_FLAG(IWDG_FLAG));
-  if ((IWDG->SR & IWDG_FLAG) != (uint32_t)RESET)
-  {
-    bitstatus = SET;
-  }
-  else
-  {
-    bitstatus = RESET;
-  }
-  /* Return the flag status */
-  return bitstatus;
+	FlagStatus bitstatus = RESET;
+	/* Check the parameters */
+	assert_param(IS_IWDG_FLAG(IWDG_FLAG));
+	if ((IWDG->SR & IWDG_FLAG) != (uint32_t)RESET) {
+		bitstatus = SET;
+	} else {
+		bitstatus = RESET;
+	}
+	/* Return the flag status */
+	return bitstatus;
 }
 
 /**

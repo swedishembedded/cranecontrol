@@ -45,10 +45,14 @@
 #define BMP085_REGREADPRESSURE 0x34 //read pressure
 
 //modes
-#define BMP085_MODEULTRALOWPOWER 0 //oversampling=0, internalsamples=1, maxconvtimepressure=4.5ms, avgcurrent=3uA, RMSnoise_hPA=0.06, RMSnoise_m=0.5
-#define BMP085_MODESTANDARD 1 //oversampling=1, internalsamples=2, maxconvtimepressure=7.5ms, avgcurrent=5uA, RMSnoise_hPA=0.05, RMSnoise_m=0.4
-#define BMP085_MODEHIGHRES 2 //oversampling=2, internalsamples=4, maxconvtimepressure=13.5ms, avgcurrent=7uA, RMSnoise_hPA=0.04, RMSnoise_m=0.3
-#define BMP085_MODEULTRAHIGHRES 3 //oversampling=3, internalsamples=8, maxconvtimepressure=25.5ms, avgcurrent=12uA, RMSnoise_hPA=0.03, RMSnoise_m=0.25
+#define BMP085_MODEULTRALOWPOWER                                                                   \
+	0 //oversampling=0, internalsamples=1, maxconvtimepressure=4.5ms, avgcurrent=3uA, RMSnoise_hPA=0.06, RMSnoise_m=0.5
+#define BMP085_MODESTANDARD                                                                        \
+	1 //oversampling=1, internalsamples=2, maxconvtimepressure=7.5ms, avgcurrent=5uA, RMSnoise_hPA=0.05, RMSnoise_m=0.4
+#define BMP085_MODEHIGHRES                                                                         \
+	2 //oversampling=2, internalsamples=4, maxconvtimepressure=13.5ms, avgcurrent=7uA, RMSnoise_hPA=0.04, RMSnoise_m=0.3
+#define BMP085_MODEULTRAHIGHRES                                                                    \
+	3 //oversampling=3, internalsamples=8, maxconvtimepressure=25.5ms, avgcurrent=12uA, RMSnoise_hPA=0.03, RMSnoise_m=0.25
 
 //autoupdate temperature enabled
 #define BMP085_AUTOUPDATETEMP 1 //autoupdate temperature every read
@@ -67,23 +71,24 @@ static unsigned int self->regac4, self->regac5, self->regac6;
 static long bmp085_rawtemperature, bmp085_rawpressure;
 */
 
-static void bmp085_writemem(struct bmp085 *self, uint8_t reg, uint8_t value) {
+static void bmp085_writemem(struct bmp085 *self, uint8_t reg, uint8_t value)
+{
 	//uart0_printf("BMP: writing reg %d: %d .. ", reg, value);
-	uint8_t buf[2] = {reg, value};
+	uint8_t buf[2] = { reg, value };
 	i2c_start_write(self->i2c, self->addr, buf, 2);
-	i2c_stop(self->i2c); 
+	i2c_stop(self->i2c);
 }
 
 /*
  * i2c read
  */
-static void bmp085_readmem(struct bmp085 *self, uint8_t reg, uint8_t *buff, uint8_t bytes) {
+static void bmp085_readmem(struct bmp085 *self, uint8_t reg, uint8_t *buff, uint8_t bytes)
+{
 	i2c_start_write(self->i2c, self->addr, &reg, 1);
 	delay_us(10);
 	i2c_start_read(self->i2c, self->addr, buff, bytes);
-	i2c_stop(self->i2c); 
+	i2c_stop(self->i2c);
 }
-
 
 #if BMP085_FILTERPRESSURE == 1
 #define BMP085_AVARAGECOEF 21
@@ -106,41 +111,43 @@ long bmp085_avaragefilter(long input) {
 /*
  * read calibration registers
  */
-static void bmp085_getcalibration(struct bmp085 *self) {
+static void bmp085_getcalibration(struct bmp085 *self)
+{
 	uint8_t buff[4];
 	memset(buff, 0, sizeof(buff));
 
 	bmp085_readmem(self, BMP085_REGAC1, buff, 2);
-	self->regac1 = ((int)buff[0] <<8 | ((int)buff[1]));
+	self->regac1 = ((int)buff[0] << 8 | ((int)buff[1]));
 	bmp085_readmem(self, BMP085_REGAC2, buff, 2);
-	self->regac2 = ((int)buff[0] <<8 | ((int)buff[1]));
+	self->regac2 = ((int)buff[0] << 8 | ((int)buff[1]));
 	bmp085_readmem(self, BMP085_REGAC3, buff, 2);
-	self->regac3 = ((int)buff[0] <<8 | ((int)buff[1]));
+	self->regac3 = ((int)buff[0] << 8 | ((int)buff[1]));
 	bmp085_readmem(self, BMP085_REGAC4, buff, 2);
-	self->regac4 = ((unsigned int)buff[0] <<8 | ((unsigned int)buff[1]));
+	self->regac4 = ((unsigned int)buff[0] << 8 | ((unsigned int)buff[1]));
 	bmp085_readmem(self, BMP085_REGAC5, buff, 2);
-	self->regac5 = ((unsigned int)buff[0] <<8 | ((unsigned int)buff[1]));
+	self->regac5 = ((unsigned int)buff[0] << 8 | ((unsigned int)buff[1]));
 	bmp085_readmem(self, BMP085_REGAC6, buff, 2);
-	self->regac6 = ((unsigned int)buff[0] <<8 | ((unsigned int)buff[1]));
+	self->regac6 = ((unsigned int)buff[0] << 8 | ((unsigned int)buff[1]));
 	bmp085_readmem(self, BMP085_REGB1, buff, 2);
-	self->regb1 = ((int)buff[0] <<8 | ((int)buff[1]));
+	self->regb1 = ((int)buff[0] << 8 | ((int)buff[1]));
 	bmp085_readmem(self, BMP085_REGB2, buff, 2);
-	self->regb2 = ((int)buff[0] <<8 | ((int)buff[1]));
+	self->regb2 = ((int)buff[0] << 8 | ((int)buff[1]));
 	bmp085_readmem(self, BMP085_REGMB, buff, 2);
-	self->regmb = ((int)buff[0] <<8 | ((int)buff[1]));
+	self->regmb = ((int)buff[0] << 8 | ((int)buff[1]));
 	bmp085_readmem(self, BMP085_REGMC, buff, 2);
-	self->regmc = ((int)buff[0] <<8 | ((int)buff[1]));
+	self->regmc = ((int)buff[0] << 8 | ((int)buff[1]));
 	bmp085_readmem(self, BMP085_REGMD, buff, 2);
-	self->regmd = ((int)buff[0] <<8 | ((int)buff[1]));
+	self->regmd = ((int)buff[0] << 8 | ((int)buff[1]));
 }
 
 /*
  * get raw temperature as read by registers, and do some calculation to convert it
  */
-static long bmp085_getrawtemperature(struct bmp085 *self) {
+static long bmp085_getrawtemperature(struct bmp085 *self)
+{
 	uint8_t buff[2];
 	memset(buff, 0, sizeof(buff));
-	long ut,x1,x2;
+	long ut, x1, x2;
 
 	//read raw temperature
 	bmp085_writemem(self, BMP085_REGCONTROL, BMP085_REGREADTEMPERATURE);
@@ -157,23 +164,25 @@ static long bmp085_getrawtemperature(struct bmp085 *self) {
 /*
  * get raw pressure as read by registers, and do some calculation to convert it
  */
-static long bmp085_getrawpressure(struct bmp085 *self) {
+static long bmp085_getrawpressure(struct bmp085 *self)
+{
 	uint8_t buff[3];
 	memset(buff, 0, sizeof(buff));
-	long up,x1,x2,x3,b3,b6,p;
-	unsigned long b4,b7;
+	long up, x1, x2, x3, b3, b6, p;
+	unsigned long b4, b7;
 
 	long temperature = bmp085_getrawtemperature(self);
-	
+
 	//read raw pressure
-	bmp085_writemem(self, BMP085_REGCONTROL, BMP085_REGREADPRESSURE+(BMP085_MODE << 6));
-	delay_us((2 + (3<<BMP085_MODE)) * 1000L);
+	bmp085_writemem(self, BMP085_REGCONTROL, BMP085_REGREADPRESSURE + (BMP085_MODE << 6));
+	delay_us((2 + (3 << BMP085_MODE)) * 1000L);
 	bmp085_readmem(self, BMP085_REGCONTROLOUTPUT, buff, 3);
-	up = ((((long)buff[0] <<16) | ((long)buff[1] <<8) | ((long)buff[2])) >> (8-BMP085_MODE)); // uncompensated pressure value
+	up = ((((long)buff[0] << 16) | ((long)buff[1] << 8) | ((long)buff[2])) >>
+	      (8 - BMP085_MODE)); // uncompensated pressure value
 
 	//calculate raw pressure
 	b6 = temperature - 4000;
-	x1 = (self->regb2* (b6 * b6) >> 12) >> 11;
+	x1 = (self->regb2 * (b6 * b6) >> 12) >> 11;
 	x2 = (self->regac2 * b6) >> 11;
 	x3 = x1 + x2;
 	b3 = (((((long)self->regac1) * 4 + x3) << BMP085_MODE) + 2) >> 2;
@@ -189,23 +198,27 @@ static long bmp085_getrawpressure(struct bmp085 *self) {
 	return p + ((x1 + x2 + 3791) >> 4);
 }
 
-float bmp085_read_temperature(struct bmp085 *self) {
+float bmp085_read_temperature(struct bmp085 *self)
+{
 	long temperature = bmp085_getrawtemperature(self);
 	return ((temperature + 8) / 16.4) / 10.0;
 }
 
-long bmp085_read_pressure(struct bmp085 *self) {
+long bmp085_read_pressure(struct bmp085 *self)
+{
 	long pressure = bmp085_getrawpressure(self);
 	return (pressure + BMP085_UNITPAOFFSET);
 }
 
-float bmp085_read_altitude(struct bmp085 *self) {
+float bmp085_read_altitude(struct bmp085 *self)
+{
 	long pressure = bmp085_getrawpressure(self);
-	return ((1 - pow(pressure/(double)101325, 0.1903 )) / 0.0000225577) + BMP085_UNITMOFFSET; 
+	return ((1 - pow(pressure / (double)101325, 0.1903)) / 0.0000225577) + BMP085_UNITMOFFSET;
 }
 
-void bmp085_init(struct bmp085 *self, i2c_dev_t i2c, uint8_t addr) {
+void bmp085_init(struct bmp085 *self, i2c_dev_t i2c, uint8_t addr)
+{
 	self->i2c = i2c;
-	self->addr = addr; 
+	self->addr = addr;
 	bmp085_getcalibration(self); //get calibration data
 }

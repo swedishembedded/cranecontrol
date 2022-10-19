@@ -20,33 +20,38 @@ extern "C" {
 }
 
 class CbufTest : public ::testing::Test {
-protected:
+    protected:
 	struct cbuf cbuf;
 	char data[16];
-	void SetUp() {
+	void SetUp()
+	{
 		cbuf_init(&cbuf, data, 1, sizeof(data));
 	}
 
-	void TearDown() {
+	void TearDown()
+	{
 	}
 };
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();
 }
 
-TEST_F(CbufTest, initial_state){
+TEST_F(CbufTest, initial_state)
+{
 	EXPECT_TRUE(cbuf_empty(&cbuf));
 	EXPECT_EQ(cbuf_size(&cbuf), 0);
 	EXPECT_EQ(cbuf_capacity(&cbuf), sizeof(data));
 }
 
-TEST_F(CbufTest, read_write){
+TEST_F(CbufTest, read_write)
+{
 	char ch = 'A';
 	EXPECT_EQ(cbuf_put(&cbuf, &ch), 0);
 	EXPECT_FALSE(cbuf_empty(&cbuf));
-	for(unsigned c = 0; c < sizeof(data) - 2; c++){
+	for (unsigned c = 0; c < sizeof(data) - 2; c++) {
 		ch = 'B' + c;
 		EXPECT_EQ(cbuf_put(&cbuf, &ch), 0);
 	}
@@ -80,7 +85,7 @@ TEST_F(CbufTest, read_write){
 	// now read back all the lements in the buffer
 	EXPECT_EQ(cbuf_get(&cbuf, &ch), 1);
 	EXPECT_EQ(ch, 'D');
-	for(unsigned c = 0; c < sizeof(data) - 5; c++){
+	for (unsigned c = 0; c < sizeof(data) - 5; c++) {
 		EXPECT_EQ(cbuf_get(&cbuf, &ch), 1);
 		EXPECT_EQ(ch, 'E' + c);
 	}
@@ -102,11 +107,12 @@ TEST_F(CbufTest, read_write){
 	EXPECT_EQ(cbuf_get(&cbuf, NULL), 0);
 }
 
-TEST_F(CbufTest, write_past_end){
+TEST_F(CbufTest, write_past_end)
+{
 	char ch = 'A';
 	// this tests writing past end where head and tail become reversed
 	// fill the buffer leaving one character left
-	for(unsigned c = 0; c < sizeof(data) - 1; c++){
+	for (unsigned c = 0; c < sizeof(data) - 1; c++) {
 		EXPECT_EQ(cbuf_put(&cbuf, &ch), 0);
 	}
 	EXPECT_EQ(cbuf_size(&cbuf), sizeof(data) - 1);
@@ -125,7 +131,8 @@ TEST_F(CbufTest, write_past_end){
 	EXPECT_EQ(cbuf_size(&cbuf), sizeof(data));
 }
 
-TEST_F(CbufTest, clear){
+TEST_F(CbufTest, clear)
+{
 	char ch = 'A';
 	EXPECT_TRUE(cbuf_empty(&cbuf));
 	EXPECT_EQ(cbuf_put(&cbuf, &ch), 0);

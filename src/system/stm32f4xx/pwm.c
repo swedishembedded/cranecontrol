@@ -4,7 +4,8 @@
 #include "stm32f4xx_tim.h"
 #include "pwm.h"
 
-static void _led_pwm_init(void){
+static void _led_pwm_init(void)
+{
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	/* Clock for GPIOD */
@@ -28,7 +29,7 @@ static void _led_pwm_init(void){
 
 	/* Enable clock for TIM4 */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-/*
+	/*
 	TIM4 is connected to APB1 bus, which has on F407 device 42MHz clock
 	But, timer has internal PLL, which double this frequency for timer, up to 84MHz
 	Remember: Not each timer is connected to APB1, there are also timers connected
@@ -48,7 +49,7 @@ static void _led_pwm_init(void){
 	TIM_BaseStruct.TIM_Prescaler = 0;
 	/* Count up */
 	TIM_BaseStruct.TIM_CounterMode = TIM_CounterMode_Up;
-/*
+	/*
 	Set timer period when it have reset
 	First you have to know max value for timer
 	In our case it is 16bit = 65535
@@ -83,7 +84,8 @@ static void _led_pwm_init(void){
 	TIM_ARRPreloadConfig(TIM4, ENABLE);
 }
 
-void _motor_pwm_init(void){
+void _motor_pwm_init(void)
+{
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
@@ -122,15 +124,17 @@ void _motor_pwm_init(void){
 	//TIM_ARRPreloadConfig(TIM3, ENABLE);
 }
 
-void pwm_init(void) {
+void pwm_init(void)
+{
 	_led_pwm_init();
 	_motor_pwm_init();
-	for(uint8_t c = 0; c < 8; c++){
+	for (uint8_t c = 0; c < 8; c++) {
 		pwm_set_duty(c, 0);
 	}
 }
 
-int pwm_set_duty(uint8_t chan, uint8_t duty){
+int pwm_set_duty(uint8_t chan, uint8_t duty)
+{
 	TIM_OCInitTypeDef TIM_OCStruct;
 
 	TIM_OCStruct.TIM_OCMode = TIM_OCMode_PWM2;
@@ -139,34 +143,33 @@ int pwm_set_duty(uint8_t chan, uint8_t duty){
 
 	TIM_OCStruct.TIM_Pulse = ((uint32_t)8399 * duty) / 100;
 
-	switch(chan){
-		case 0:
-			TIM_OC1Init(TIM4, &TIM_OCStruct);
-			break;
-		case 1:
-			TIM_OC2Init(TIM4, &TIM_OCStruct);
-			break;
-		case 2:
-			TIM_OC3Init(TIM4, &TIM_OCStruct);
-			break;
-		case 3:
-			TIM_OC4Init(TIM4, &TIM_OCStruct);
-			break;
-		case 4:
-			TIM_OC1Init(TIM3, &TIM_OCStruct);
-			break;
-		case 5:
-			TIM_OC2Init(TIM3, &TIM_OCStruct);
-			break;
-		case 6:
-			TIM_OC3Init(TIM3, &TIM_OCStruct);
-			break;
-		case 7:
-			TIM_OC4Init(TIM3, &TIM_OCStruct);
-			break;
-		default:
-			return -1;
+	switch (chan) {
+	case 0:
+		TIM_OC1Init(TIM4, &TIM_OCStruct);
+		break;
+	case 1:
+		TIM_OC2Init(TIM4, &TIM_OCStruct);
+		break;
+	case 2:
+		TIM_OC3Init(TIM4, &TIM_OCStruct);
+		break;
+	case 3:
+		TIM_OC4Init(TIM4, &TIM_OCStruct);
+		break;
+	case 4:
+		TIM_OC1Init(TIM3, &TIM_OCStruct);
+		break;
+	case 5:
+		TIM_OC2Init(TIM3, &TIM_OCStruct);
+		break;
+	case 6:
+		TIM_OC3Init(TIM3, &TIM_OCStruct);
+		break;
+	case 7:
+		TIM_OC4Init(TIM3, &TIM_OCStruct);
+		break;
+	default:
+		return -1;
 	}
 	return 0;
 }
-

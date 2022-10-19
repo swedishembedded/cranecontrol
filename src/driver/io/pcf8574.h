@@ -7,14 +7,13 @@ Released under GPLv3.
 Please refer to LICENSE file for licensing information.
 */
 
-
 #ifndef PCF8574_H_
 #define PCF8574_H_
 
 struct pcf8574 {
 	i2c_dev_t i2c;
 	uint8_t device_id;
-	uint8_t in_reg, out_reg; 
+	uint8_t in_reg, out_reg;
 };
 
 void pcf8574_init(struct pcf8574 *self, i2c_dev_t i2c, uint8_t device_id);

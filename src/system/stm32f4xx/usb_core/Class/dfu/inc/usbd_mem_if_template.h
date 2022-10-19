@@ -25,16 +25,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #ifdef STM32F2XX
-  #include "stm32f2xx.h"
+#include "stm32f2xx.h"
 #endif /* STM32F2XX */
 #include "usbd_dfu_mal.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-#define MEM_START_ADD                 0x00000000 /* Dummy start address */
-#define MEM_END_ADD                   (uint32_t)(MEM_START_ADD + (5 * 1024)) /* Dummy Size = 5KB */
+#define MEM_START_ADD 0x00000000 /* Dummy start address */
+#define MEM_END_ADD (uint32_t)(MEM_START_ADD + (5 * 1024)) /* Dummy Size = 5KB */
 
-#define MEM_IF_STRING                 "@Dummy Memory   /0x00000000/01*002Kg,03*001Kg"
+#define MEM_IF_STRING "@Dummy Memory   /0x00000000/01*002Kg,03*001Kg"
 
 extern DFU_MAL_Prop_TypeDef DFU_Mem_cb;
 

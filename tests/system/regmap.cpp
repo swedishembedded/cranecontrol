@@ -9,7 +9,8 @@ extern "C" {
 #include "regmap.h"
 void regmap_ko();
 
-int printk(const char *fmt, ...) {
+int printk(const char *fmt, ...)
+{
 	static char buf[80];
 
 	va_list argptr;
@@ -24,9 +25,10 @@ int printk(const char *fmt, ...) {
 }
 
 class RegmapTest : public ::testing::Test {
-protected:
-    virtual void SetUp() {
-    }
+    protected:
+	virtual void SetUp()
+	{
+	}
 };
 
 struct test_obj {
@@ -34,40 +36,42 @@ struct test_obj {
 	char mem[64];
 };
 
-ssize_t _regmap_read(regmap_range_t range, uint32_t id, regmap_value_type_t type, void *value, size_t size){
+ssize_t _regmap_read(regmap_range_t range, uint32_t id, regmap_value_type_t type, void *value,
+		     size_t size)
+{
 	struct test_obj *self = container_of(range, struct test_obj, range.ops);
 	printf("read: %02x\n", id);
-	switch(id){
-		case 0x10ff: {
-			memcpy(value, self->mem, size);
-			return size;
-		}
+	switch (id) {
+	case 0x10ff: {
+		memcpy(value, self->mem, size);
+		return size;
+	}
 	}
 	return -EINVAL;
 }
 
-ssize_t _regmap_write(regmap_range_t range, uint32_t id, regmap_value_type_t type, const void *value, size_t size){
+ssize_t _regmap_write(regmap_range_t range, uint32_t id, regmap_value_type_t type,
+		      const void *value, size_t size)
+{
 	struct test_obj *self = container_of(range, struct test_obj, range.ops);
 	printf("write: %02x\n", id);
-	switch(id){
-		case 0x10ff: {
-			memcpy(self->mem, value, size);
-			return size;
-		}
+	switch (id) {
+	case 0x10ff: {
+		memcpy(self->mem, value, size);
+		return size;
+	}
 	}
 	return -EINVAL;
 }
 
-TEST_F(RegmapTest, init){
+TEST_F(RegmapTest, init)
+{
 	struct regmap *regmap = regmap_new();
 
 	EXPECT_NE(regmap, nullptr);
 
 	struct test_obj obj;
-	static struct regmap_range_ops ops = {
-		.read = _regmap_read,
-		.write = _regmap_write
-	};
+	static struct regmap_range_ops ops = { .read = _regmap_read, .write = _regmap_write };
 
 	regmap_range_init(&obj.range, 0x1000, 0x2000, &ops);
 	EXPECT_EQ(regmap_add_range(regmap, &obj.range), 0);
@@ -81,7 +85,8 @@ TEST_F(RegmapTest, init){
 	regmap_delete(regmap);
 }
 
-TEST_F(RegmapTest, init_driver){
+TEST_F(RegmapTest, init_driver)
+{
 	char dtb[512];
 
 	// a simple device tree to instantiate the driver
@@ -94,7 +99,8 @@ TEST_F(RegmapTest, init_driver){
 	fdt_finish(dtb);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();
 }

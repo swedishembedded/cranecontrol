@@ -8,7 +8,6 @@
  **/
 
 extern "C" {
-
 }
 
 #include "mock/timestamp.cpp"
@@ -17,21 +16,25 @@ extern "C" {
 #include "mock/gpio.cpp"
 
 class MPU6050Test : public ::testing::Test {
-	protected:
-	void SetUp() {
+    protected:
+	void SetUp()
+	{
 		//fb_init(&fb);
 	}
-	void TearDown() {
+	void TearDown()
+	{
 	}
-	void clock(unsigned cycles) {
-
+	void clock(unsigned cycles)
+	{
 	}
 };
 
-TEST_F(MPU6050Test, check_init) {
+TEST_F(MPU6050Test, check_init)
+{
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();
 }

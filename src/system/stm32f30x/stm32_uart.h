@@ -7,7 +7,7 @@
 
 struct stm32_uart {
 	// leave this at the top!
-	const struct serial_ops* serial_ops;
+	const struct serial_ops *serial_ops;
 
 	void *driver_data;
 };

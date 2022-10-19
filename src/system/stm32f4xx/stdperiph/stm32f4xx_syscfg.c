@@ -57,30 +57,29 @@
 /** @defgroup SYSCFG 
   * @brief SYSCFG driver modules
   * @{
-  */ 
+  */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* ------------ RCC registers bit address in the alias region ----------- */
-#define SYSCFG_OFFSET             (SYSCFG_BASE - PERIPH_BASE)
-/* ---  MEMRMP Register ---*/ 
-/* Alias word address of UFB_MODE bit */ 
-#define MEMRMP_OFFSET             SYSCFG_OFFSET 
-#define UFB_MODE_BitNumber        ((uint8_t)0x8) 
-#define UFB_MODE_BB               (PERIPH_BB_BASE + (MEMRMP_OFFSET * 32) + (UFB_MODE_BitNumber * 4)) 
+#define SYSCFG_OFFSET (SYSCFG_BASE - PERIPH_BASE)
+/* ---  MEMRMP Register ---*/
+/* Alias word address of UFB_MODE bit */
+#define MEMRMP_OFFSET SYSCFG_OFFSET
+#define UFB_MODE_BitNumber ((uint8_t)0x8)
+#define UFB_MODE_BB (PERIPH_BB_BASE + (MEMRMP_OFFSET * 32) + (UFB_MODE_BitNumber * 4))
 
+/* ---  PMC Register ---*/
+/* Alias word address of MII_RMII_SEL bit */
+#define PMC_OFFSET (SYSCFG_OFFSET + 0x04)
+#define MII_RMII_SEL_BitNumber ((uint8_t)0x17)
+#define PMC_MII_RMII_SEL_BB (PERIPH_BB_BASE + (PMC_OFFSET * 32) + (MII_RMII_SEL_BitNumber * 4))
 
-/* ---  PMC Register ---*/ 
-/* Alias word address of MII_RMII_SEL bit */ 
-#define PMC_OFFSET                (SYSCFG_OFFSET + 0x04) 
-#define MII_RMII_SEL_BitNumber    ((uint8_t)0x17) 
-#define PMC_MII_RMII_SEL_BB       (PERIPH_BB_BASE + (PMC_OFFSET * 32) + (MII_RMII_SEL_BitNumber * 4)) 
-
-/* ---  CMPCR Register ---*/ 
-/* Alias word address of CMP_PD bit */ 
-#define CMPCR_OFFSET              (SYSCFG_OFFSET + 0x20) 
-#define CMP_PD_BitNumber          ((uint8_t)0x00) 
-#define CMPCR_CMP_PD_BB           (PERIPH_BB_BASE + (CMPCR_OFFSET * 32) + (CMP_PD_BitNumber * 4)) 
+/* ---  CMPCR Register ---*/
+/* Alias word address of CMP_PD bit */
+#define CMPCR_OFFSET (SYSCFG_OFFSET + 0x20)
+#define CMP_PD_BitNumber ((uint8_t)0x00)
+#define CMPCR_CMP_PD_BB (PERIPH_BB_BASE + (CMPCR_OFFSET * 32) + (CMP_PD_BitNumber * 4))
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -89,7 +88,7 @@
 
 /** @defgroup SYSCFG_Private_Functions
   * @{
-  */ 
+  */
 
 /**
   * @brief  Deinitializes the Alternate Functions (remap and EXTI configuration)
@@ -99,8 +98,8 @@
   */
 void SYSCFG_DeInit(void)
 {
-   RCC_APB2PeriphResetCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-   RCC_APB2PeriphResetCmd(RCC_APB2Periph_SYSCFG, DISABLE);
+	RCC_APB2PeriphResetCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+	RCC_APB2PeriphResetCmd(RCC_APB2Periph_SYSCFG, DISABLE);
 }
 
 /**
@@ -117,10 +116,10 @@ void SYSCFG_DeInit(void)
   */
 void SYSCFG_MemoryRemapConfig(uint8_t SYSCFG_MemoryRemap)
 {
-  /* Check the parameters */
-  assert_param(IS_SYSCFG_MEMORY_REMAP_CONFING(SYSCFG_MemoryRemap));
+	/* Check the parameters */
+	assert_param(IS_SYSCFG_MEMORY_REMAP_CONFING(SYSCFG_MemoryRemap));
 
-  SYSCFG->MEMRMP = SYSCFG_MemoryRemap;
+	SYSCFG->MEMRMP = SYSCFG_MemoryRemap;
 }
 
 /**
@@ -138,10 +137,10 @@ void SYSCFG_MemoryRemapConfig(uint8_t SYSCFG_MemoryRemap)
   */
 void SYSCFG_MemorySwappingBank(FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  *(__IO uint32_t *) UFB_MODE_BB = (uint32_t)NewState;
+	*(__IO uint32_t *)UFB_MODE_BB = (uint32_t)NewState;
 }
 
 /**
@@ -161,15 +160,16 @@ void SYSCFG_MemorySwappingBank(FunctionalState NewState)
   */
 void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex)
 {
-  uint32_t tmp = 0x00;
+	uint32_t tmp = 0x00;
 
-  /* Check the parameters */
-  assert_param(IS_EXTI_PORT_SOURCE(EXTI_PortSourceGPIOx));
-  assert_param(IS_EXTI_PIN_SOURCE(EXTI_PinSourcex));
+	/* Check the parameters */
+	assert_param(IS_EXTI_PORT_SOURCE(EXTI_PortSourceGPIOx));
+	assert_param(IS_EXTI_PIN_SOURCE(EXTI_PinSourcex));
 
-  tmp = ((uint32_t)0x0F) << (0x04 * (EXTI_PinSourcex & (uint8_t)0x03));
-  SYSCFG->EXTICR[EXTI_PinSourcex >> 0x02] &= ~tmp;
-  SYSCFG->EXTICR[EXTI_PinSourcex >> 0x02] |= (((uint32_t)EXTI_PortSourceGPIOx) << (0x04 * (EXTI_PinSourcex & (uint8_t)0x03)));
+	tmp = ((uint32_t)0x0F) << (0x04 * (EXTI_PinSourcex & (uint8_t)0x03));
+	SYSCFG->EXTICR[EXTI_PinSourcex >> 0x02] &= ~tmp;
+	SYSCFG->EXTICR[EXTI_PinSourcex >> 0x02] |=
+		(((uint32_t)EXTI_PortSourceGPIOx) << (0x04 * (EXTI_PinSourcex & (uint8_t)0x03)));
 }
 
 /**
@@ -180,11 +180,11 @@ void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex
   *            @arg SYSCFG_ETH_MediaInterface_RMII: RMII mode selected 
   * @retval None 
   */
-void SYSCFG_ETH_MediaInterfaceConfig(uint32_t SYSCFG_ETH_MediaInterface) 
-{ 
-  assert_param(IS_SYSCFG_ETH_MEDIA_INTERFACE(SYSCFG_ETH_MediaInterface)); 
-  /* Configure MII_RMII selection bit */ 
-  *(__IO uint32_t *) PMC_MII_RMII_SEL_BB = SYSCFG_ETH_MediaInterface; 
+void SYSCFG_ETH_MediaInterfaceConfig(uint32_t SYSCFG_ETH_MediaInterface)
+{
+	assert_param(IS_SYSCFG_ETH_MEDIA_INTERFACE(SYSCFG_ETH_MediaInterface));
+	/* Configure MII_RMII selection bit */
+	*(__IO uint32_t *)PMC_MII_RMII_SEL_BB = SYSCFG_ETH_MediaInterface;
 }
 
 /**
@@ -199,10 +199,10 @@ void SYSCFG_ETH_MediaInterfaceConfig(uint32_t SYSCFG_ETH_MediaInterface)
   */
 void SYSCFG_CompensationCellCmd(FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  *(__IO uint32_t *) CMPCR_CMP_PD_BB = (uint32_t)NewState;
+	*(__IO uint32_t *)CMPCR_CMP_PD_BB = (uint32_t)NewState;
 }
 
 /**
@@ -212,17 +212,14 @@ void SYSCFG_CompensationCellCmd(FunctionalState NewState)
   */
 FlagStatus SYSCFG_GetCompensationCellStatus(void)
 {
-  FlagStatus bitstatus = RESET;
-    
-  if ((SYSCFG->CMPCR & SYSCFG_CMPCR_READY ) != (uint32_t)RESET)
-  {
-    bitstatus = SET;
-  }
-  else
-  {
-    bitstatus = RESET;
-  }
-  return bitstatus;
+	FlagStatus bitstatus = RESET;
+
+	if ((SYSCFG->CMPCR & SYSCFG_CMPCR_READY) != (uint32_t)RESET) {
+		bitstatus = SET;
+	} else {
+		bitstatus = RESET;
+	}
+	return bitstatus;
 }
 
 /**
@@ -237,4 +234,4 @@ FlagStatus SYSCFG_GetCompensationCellStatus(void)
   * @}
   */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/   
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

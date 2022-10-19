@@ -79,108 +79,115 @@ static float azold = 0;
 static uint8_t firstread = 1;
 #endif
 
-void mma7455_init(struct mma7455 *self, i2c_device_t i2c, uint8_t addr, uint8_t mode) {
+void mma7455_init(struct mma7455 *self, i2c_device_t i2c, uint8_t addr, uint8_t mode)
+{
 	self->i2c = i2c;
 	self->addr = addr;
 	self->mode = mode;
-	
-    uint8_t data = MMA7455_RANGE;
-    i2c_write_reg(i2c, addr, 0x16, &data, 1);
+
+	uint8_t data = MMA7455_RANGE;
+	i2c_write_reg(i2c, addr, 0x16, &data, 1);
 }
 
 #if MMA7455_GETATTITUDE == 1
 /*
  * estimate pitch and row using euleros angles
  */
-void mma7455_getpitchroll(struct mma7455 *self, float ax, float ay, float az, float *pitch, float *roll) {
+void mma7455_getpitchroll(struct mma7455 *self, float ax, float ay, float az, float *pitch,
+			  float *roll)
+{
 	float magnitude = sqrt((ax * ax) + (ay * ay) + (az * az));
 	ax = ax / magnitude;
 	ay = ay / magnitude;
 	az = az / magnitude;
-	*pitch = -atan2(ax, sqrt(pow(ay,2) + pow(az, 2)));
+	*pitch = -atan2(ax, sqrt(pow(ay, 2) + pow(az, 2)));
 	*roll = atan2(ay, az);
 }
 #endif
 
-static uint8_t mma7455_read_reg(struct mma7455 *self, uint8_t reg){
-	uint8_t data; 
-    i2c_read_reg(self->i2c, self->addr, reg, &data, 1);
-	return data; 
+static uint8_t mma7455_read_reg(struct mma7455 *self, uint8_t reg)
+{
+	uint8_t data;
+	i2c_read_reg(self->i2c, self->addr, reg, &data, 1);
+	return data;
 }
 
 /*
  * wait for xyz data to be ready
  */
-static int8_t mma7455_waitfordataready(struct mma7455 *self) {
+static int8_t mma7455_waitfordataready(struct mma7455 *self)
+{
 	//wait until data is ready
-	uint32_t timeout = 100000; 
-	while(!(mma7455_read_reg(self, 0x09) & 0x01)){
+	uint32_t timeout = 100000;
+	while (!(mma7455_read_reg(self, 0x09) & 0x01)) {
 		timeout--;
-		if(timeout == 0) return -1; 
+		if (timeout == 0)
+			return -1;
 		thread_sleep_ms(1);
 	}
-	return 0; 
+	return 0;
 }
 
 /*
  * get xyz accellerometer values
  */
-void mma7455_getdata(struct mma7455 *self, float *ax, float *ay, float *az) {
-
-	#if MMA7455_MODE == MMA7455_MODE8BIT
+void mma7455_getdata(struct mma7455 *self, float *ax, float *ay, float *az)
+{
+#if MMA7455_MODE == MMA7455_MODE8BIT
 	int8_t axraw = 0;
 	int8_t ayraw = 0;
 	int8_t azraw = 0;
-	#elif MMA7455_MODE == MMA7455_MODE10BIT
+#elif MMA7455_MODE == MMA7455_MODE10BIT
 	int16_t axraw = 0;
 	int16_t ayraw = 0;
 	int16_t azraw = 0;
-	#endif
+#endif
 
 	//wait for data
 	mma7455_waitfordataready(self);
-	switch(self->mode) {
-	#if MMA7455_MODE == MMA7455_MODE8BIT
-		case MMA7455_MODE8BIT:
-			axraw = (int8_t)mma7455_read_reg(self, 0x06);
-			ayraw = (int8_t)mma7455_read_reg(self, 0x07);
-			azraw = (int8_t)mma7455_read_reg(self, 0x08);
-			break;
-	#elif MMA7455_MODE == MMA7455_MODE10BIT
-		case MMA7455_MODE10BIT:
-			axraw = (int16_t)(mma7455_read_reg(self, 0x00) + (mma7455_read_reg(self, 0x01) << 8));
-			ayraw = (int16_t)(mma7455_read_reg(self, 0x02) + (mma7455_read_reg(self, 0x03) << 8));
-			azraw = (int16_t)(mma7455_read_reg(self, 0x04) + (mma7455_read_reg(self, 0x05) << 8));
-			break;
-    #endif
+	switch (self->mode) {
+#if MMA7455_MODE == MMA7455_MODE8BIT
+	case MMA7455_MODE8BIT:
+		axraw = (int8_t)mma7455_read_reg(self, 0x06);
+		ayraw = (int8_t)mma7455_read_reg(self, 0x07);
+		azraw = (int8_t)mma7455_read_reg(self, 0x08);
+		break;
+#elif MMA7455_MODE == MMA7455_MODE10BIT
+	case MMA7455_MODE10BIT:
+		axraw = (int16_t)(mma7455_read_reg(self, 0x00) +
+				  (mma7455_read_reg(self, 0x01) << 8));
+		ayraw = (int16_t)(mma7455_read_reg(self, 0x02) +
+				  (mma7455_read_reg(self, 0x03) << 8));
+		azraw = (int16_t)(mma7455_read_reg(self, 0x04) +
+				  (mma7455_read_reg(self, 0x05) << 8));
+		break;
+#endif
 	}
-	
-	//transform raw data to g data
-	//axisg = mx + b
-	//m is the scaling factor (g/counts), x is the sensor output (counts), and b is the count offset.
-	#if MMA7455_CALIBRATED == 1
-	*ax = (axraw/(float)MMA7455_CALRANGEVALX) + (float)MMA7455_CALOFFSETX;
-	*ay = (ayraw/(float)MMA7455_CALRANGEVALY) + (float)MMA7455_CALOFFSETY;
-	*az = (azraw/(float)MMA7455_CALRANGEVALZ) + (float)MMA7455_CALOFFSETZ;
-	#else
-	*ax = (axraw/(float)MMA7455_RANGEVAL);
-	*ay = (ayraw/(float)MMA7455_RANGEVAL);
-	*az = (azraw/(float)MMA7455_RANGEVAL);
-	#endif
 
-	//this is a simple low pass filter
-	#if MMA7455_LOWPASSENABLED == 1
-	if(!firstread)
-		*ax = (0.75)*(axold) + (0.25)*(*ax);
+//transform raw data to g data
+//axisg = mx + b
+//m is the scaling factor (g/counts), x is the sensor output (counts), and b is the count offset.
+#if MMA7455_CALIBRATED == 1
+	*ax = (axraw / (float)MMA7455_CALRANGEVALX) + (float)MMA7455_CALOFFSETX;
+	*ay = (ayraw / (float)MMA7455_CALRANGEVALY) + (float)MMA7455_CALOFFSETY;
+	*az = (azraw / (float)MMA7455_CALRANGEVALZ) + (float)MMA7455_CALOFFSETZ;
+#else
+	*ax = (axraw / (float)MMA7455_RANGEVAL);
+	*ay = (ayraw / (float)MMA7455_RANGEVAL);
+	*az = (azraw / (float)MMA7455_RANGEVAL);
+#endif
+
+//this is a simple low pass filter
+#if MMA7455_LOWPASSENABLED == 1
+	if (!firstread)
+		*ax = (0.75) * (axold) + (0.25) * (*ax);
 	axold = *ax;
-	if(!firstread)
-		*ay = (0.75)*(ayold) + (0.25)*(*ay);
+	if (!firstread)
+		*ay = (0.75) * (ayold) + (0.25) * (*ay);
 	ayold = *ay;
-	if(!firstread)
-		*az = (0.75)*(azold) + (0.25)*(*az);
+	if (!firstread)
+		*az = (0.75) * (azold) + (0.25) * (*az);
 	azold = *az;
 	firstread = 0;
-	#endif
+#endif
 }
-
-

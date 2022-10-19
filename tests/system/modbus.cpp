@@ -14,50 +14,55 @@ extern "C" {
 #include "linux/linux_serial.h"
 }
 
-#define MODBUS_FC_READ_COILS                0x01
-#define MODBUS_FC_READ_DISCRETE_INPUTS      0x02
-#define MODBUS_FC_READ_HOLDING_REGISTERS    0x03
-#define MODBUS_FC_READ_INPUT_REGISTERS      0x04
-#define MODBUS_FC_WRITE_SINGLE_COIL         0x05
-#define MODBUS_FC_WRITE_SINGLE_REGISTER     0x06
-#define MODBUS_FC_READ_EXCEPTION_STATUS     0x07
-#define MODBUS_FC_WRITE_MULTIPLE_COILS      0x0F
-#define MODBUS_FC_WRITE_MULTIPLE_REGISTERS  0x10
-#define MODBUS_FC_REPORT_SLAVE_ID           0x11
-#define MODBUS_FC_MASK_WRITE_REGISTER       0x16
-#define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
+#define MODBUS_FC_READ_COILS 0x01
+#define MODBUS_FC_READ_DISCRETE_INPUTS 0x02
+#define MODBUS_FC_READ_HOLDING_REGISTERS 0x03
+#define MODBUS_FC_READ_INPUT_REGISTERS 0x04
+#define MODBUS_FC_WRITE_SINGLE_COIL 0x05
+#define MODBUS_FC_WRITE_SINGLE_REGISTER 0x06
+#define MODBUS_FC_READ_EXCEPTION_STATUS 0x07
+#define MODBUS_FC_WRITE_MULTIPLE_COILS 0x0F
+#define MODBUS_FC_WRITE_MULTIPLE_REGISTERS 0x10
+#define MODBUS_FC_REPORT_SLAVE_ID 0x11
+#define MODBUS_FC_MASK_WRITE_REGISTER 0x16
+#define MODBUS_FC_WRITE_AND_READ_REGISTERS 0x17
 
 class ModbusTest : public ::testing::Test {
-protected:
-    virtual void SetUp() {
-
-    }
+    protected:
+	virtual void SetUp()
+	{
+	}
 };
 
 static uint16_t _reg = 0;
-ssize_t _regmap_read(regmap_range_t range, uint32_t id, regmap_value_type_t type, void *value, size_t size){
+ssize_t _regmap_read(regmap_range_t range, uint32_t id, regmap_value_type_t type, void *value,
+		     size_t size)
+{
 	printf("read: %02x\n", id);
-	switch(id){
-		case 0x10ff: {
-			memcpy(value, &_reg, size);
-			return size;
-		}
+	switch (id) {
+	case 0x10ff: {
+		memcpy(value, &_reg, size);
+		return size;
+	}
 	}
 	return -EINVAL;
 }
 
-ssize_t _regmap_write(regmap_range_t range, uint32_t id, regmap_value_type_t type, const void *value, size_t size){
+ssize_t _regmap_write(regmap_range_t range, uint32_t id, regmap_value_type_t type,
+		      const void *value, size_t size)
+{
 	printf("write: %02x\n", id);
-	switch(id){
-		case 0x10ff: {
-			memcpy(&_reg, value, sizeof(_reg));
-			return size;
-		}
+	switch (id) {
+	case 0x10ff: {
+		memcpy(&_reg, value, sizeof(_reg));
+		return size;
+	}
 	}
 	return -EINVAL;
 }
 
-TEST_F(ModbusTest, check_request){
+TEST_F(ModbusTest, check_request)
+{
 	struct regmap *regmap = regmap_new();
 	struct modbus_server *srv = modbus_server_new();
 
@@ -65,10 +70,7 @@ TEST_F(ModbusTest, check_request){
 	modbus_server_set_address(srv, 1);
 
 	struct regmap_range rm;
-	static struct regmap_range_ops ops = {
-		.read = _regmap_read,
-		.write = _regmap_write
-	};
+	static struct regmap_range_ops ops = { .read = _regmap_read, .write = _regmap_write };
 
 	regmap_range_init(&rm, 0x1000, 0x2000, &ops);
 
@@ -101,7 +103,8 @@ TEST_F(ModbusTest, check_request){
 	EXPECT_EQ(result[4], 0x34); // lo
 }
 
-TEST_F(ModbusTest, check_read_slave_id){
+TEST_F(ModbusTest, check_read_slave_id)
+{
 	struct modbus_server *server = modbus_server_new();
 	unsigned txi = 0;
 	uint8_t tx[16];
@@ -116,7 +119,8 @@ TEST_F(ModbusTest, check_read_slave_id){
 
 	modbus_server_set_address(server, 0x05);
 	modbus_server_set_slave_id(server, 0xaa);
-	EXPECT_EQ(modbus_server_do_request(server, tx, txi, rx, sizeof(rx)), 6); // return is return size or < 0
+	EXPECT_EQ(modbus_server_do_request(server, tx, txi, rx, sizeof(rx)),
+		  6); // return is return size or < 0
 
 	EXPECT_EQ(rx[0], 0x05); // address
 	EXPECT_EQ(rx[1], 0x11); // function
@@ -128,7 +132,8 @@ TEST_F(ModbusTest, check_read_slave_id){
 	EXPECT_EQ(check >> 8, rx[5]);
 }
 
-TEST_F(ModbusTest, check_client){
+TEST_F(ModbusTest, check_client)
+{
 	struct linux_uart *uart = linux_uart_new();
 	struct linux_serial *serial = linux_serial_new();
 	struct modbus_server *srv = modbus_server_new();
@@ -158,10 +163,7 @@ TEST_F(ModbusTest, check_client){
 
 	modbus_server_set_address(srv, 0x01);
 	struct regmap_range rm;
-	static struct regmap_range_ops ops = {
-		.read = _regmap_read,
-		.write = _regmap_write
-	};
+	static struct regmap_range_ops ops = { .read = _regmap_read, .write = _regmap_write };
 
 	regmap_range_init(&rm, 0x1000, 0x2000, &ops);
 
@@ -179,7 +181,8 @@ TEST_F(ModbusTest, check_client){
 	EXPECT_EQ(val, 0x1234);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();
 }

@@ -69,12 +69,12 @@
 
 #include "FreeRTOSConfig.h"
 
-#define portCONTEXT_SIZE                160
-#define portEPC_STACK_LOCATION          152
-#define portSTATUS_STACK_LOCATION       156
-#define portFPCSR_STACK_LOCATION        0
-#define portTASK_HAS_FPU_STACK_LOCATION     0
-#define portFPU_CONTEXT_SIZE            264
+#define portCONTEXT_SIZE 160
+#define portEPC_STACK_LOCATION 152
+#define portSTATUS_STACK_LOCATION 156
+#define portFPCSR_STACK_LOCATION 0
+#define portTASK_HAS_FPU_STACK_LOCATION 0
+#define portFPU_CONTEXT_SIZE 264
 
 /******************************************************************/
 .macro  portSAVE_FPU_REGS    offset, base
@@ -167,7 +167,7 @@
 	mfc0		k0, _CP0_CAUSE
 	addiu		sp, sp, -portCONTEXT_SIZE
 
-	#if ( __mips_hard_float == 1 ) && ( configUSE_TASK_FPU_SUPPORT == 1 )
+#if (__mips_hard_float == 1) && (configUSE_TASK_FPU_SUPPORT == 1)
 		/* Test if we are already using the system stack. Only tasks may use the
 		FPU so if we are already in a nested interrupt then the FPU context does
 		not require saving. */
@@ -190,7 +190,7 @@
 		sw			k1, portTASK_HAS_FPU_STACK_LOCATION(sp)
 
 	2:
-	#endif
+#endif
 
 	mfc0		k1, _CP0_STATUS
 
@@ -285,8 +285,8 @@
 	mflo		s6, $ac0
 	sw			s6, 8(s5)
 
-	/* Save the FPU context if the nesting count was zero. */
-	#if ( __mips_hard_float == 1 ) && ( configUSE_TASK_FPU_SUPPORT == 1 )
+/* Save the FPU context if the nesting count was zero. */
+#if (__mips_hard_float == 1) && (configUSE_TASK_FPU_SUPPORT == 1)
 		la			s6, uxInterruptNesting
 		lw			s6, 0(s6)
 		addiu		s6, s6, -1
@@ -306,7 +306,7 @@
 		sw			s6, (portCONTEXT_SIZE + portFPCSR_STACK_LOCATION)(s5)
 
 		1:
-	#endif
+#endif
 
 	/* Update the task stack pointer value if nesting is zero. */
 	la			s6, uxInterruptNesting
@@ -334,7 +334,7 @@
 	la			s6, uxSavedTaskStackPointer
 	lw			s5, (s6)
 
-    #if ( __mips_hard_float == 1 ) && ( configUSE_TASK_FPU_SUPPORT == 1 )
+#if (__mips_hard_float == 1) && (configUSE_TASK_FPU_SUPPORT == 1)
 		/* Restore the FPU context if required. */
 		lw			s6, portTASK_HAS_FPU_STACK_LOCATION(s5)
 		beq			s6, zero, 1f
@@ -346,7 +346,7 @@
 		/* Restore the FPU status register. */
 		lw			s6, ( portCONTEXT_SIZE + portFPCSR_STACK_LOCATION )(s5)
 		ctc1		s6, $f31
-   	#endif
+#endif
 
 1:
 
@@ -409,7 +409,7 @@
 	addiu		k1, k1, -1
 	sw			k1, 0(k0)
 
-	#if ( __mips_hard_float == 1 ) && ( configUSE_TASK_FPU_SUPPORT == 1 )
+#if (__mips_hard_float == 1) && (configUSE_TASK_FPU_SUPPORT == 1)
 		/* If the nesting count is now zero then the FPU context may be restored. */
 		bne			k1, zero, 1f
 		nop
@@ -449,7 +449,7 @@
 		2:  /* Adjust the stack pointer */
 		addiu		sp, sp, portCONTEXT_SIZE
 
-	#else
+#else
 
 		/* Restore the frame when there is no hardware FP support. */
 		lw			k0, portSTATUS_STACK_LOCATION(s5)
@@ -462,7 +462,7 @@
 
 		addiu		sp, sp,	portCONTEXT_SIZE
 
-	#endif // ( __mips_hard_float == 1 ) && ( configUSE_TASK_FPU_SUPPORT == 1 )
+#endif // ( __mips_hard_float == 1 ) && ( configUSE_TASK_FPU_SUPPORT == 1 )
 
 	mtc0		k0, _CP0_STATUS
 	mtc0 		k1, _CP0_EPC
@@ -471,4 +471,3 @@
 	nop
 
 	.endm
-

@@ -1,6 +1,6 @@
 /dts-v1/;
 
-//!+HOST: arm-none-eabi
+//!+HOST: arm-zephyr-eabi
 //!+TARGET: stm32f429zet6
 //:ROM 512k :RAM 192k :LOAD_ADDR 0x08000000
 //!+DEPENDS: libfirmware libdriver

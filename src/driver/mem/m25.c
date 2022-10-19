@@ -45,29 +45,29 @@
 #include <libfdt/libfdt.h>
 
 /* Instruction Set */
-#define M25_CMD_WREN 0x06      /* Write Enable */
-#define M25_CMD_WRDI 0x04      /* Write Disable */
-#define M25_CMD_RDID 0x9F      /* Read Identification */
-#define M25_CMD_RDSR 0x05      /* Read Status Register */
-#define M25_CMD_WRSR 0x01      /* Write Status Register */
-#define M25_CMD_READ 0x03      /* Read Data Bytes */
+#define M25_CMD_WREN 0x06 /* Write Enable */
+#define M25_CMD_WRDI 0x04 /* Write Disable */
+#define M25_CMD_RDID 0x9F /* Read Identification */
+#define M25_CMD_RDSR 0x05 /* Read Status Register */
+#define M25_CMD_WRSR 0x01 /* Write Status Register */
+#define M25_CMD_READ 0x03 /* Read Data Bytes */
 #define M25_CMD_FAST_READ 0x0B /* Read Data Bytes at Higher Speed */
-#define M25_CMD_PAGE_PROGRAM 0x02        /* Page Program */
+#define M25_CMD_PAGE_PROGRAM 0x02 /* Page Program */
 #define M25_CMD_SECTOR_ERASE 0x20
-#define M25_CMD_BLOCK_ERASE_32K 0x52        /* Sector Erase */
-#define M25_CMD_BLOCK_ERASE_64K 0xD8        /* Sector Erase */
-#define M25_CMD_BULK_ERASE 0xC7        /* Bulk Erase */
-#define M25_CMD_DP 0xB9        /* Deep Power-down */
-#define M25_CMD_RES 0xAB       /* Release from Deep Power-down */
+#define M25_CMD_BLOCK_ERASE_32K 0x52 /* Sector Erase */
+#define M25_CMD_BLOCK_ERASE_64K 0xD8 /* Sector Erase */
+#define M25_CMD_BULK_ERASE 0xC7 /* Bulk Erase */
+#define M25_CMD_DP 0xB9 /* Deep Power-down */
+#define M25_CMD_RES 0xAB /* Release from Deep Power-down */
 
 /* Status Register Bits */
 #define M25_SR_BIT_SRWD 0x80 /* Status Register Write Disable */
-#define M25_SR_BIT_BP2 0x10  /* Block Protect 2 */
-#define M25_SR_BIT_BP1 0x08  /* Block Protect 1 */
-#define M25_SR_BIT_BP0 0x04  /* Block Protect 0 */
-#define M25_SR_BIT_BP 0x1C   /* All Block Protect Bits */
-#define M25_SR_BIT_WEL 0x02  /* Write Enable Latch */
-#define M25_SR_BIT_BUSY 0x01  /* Write in Progress */
+#define M25_SR_BIT_BP2 0x10 /* Block Protect 2 */
+#define M25_SR_BIT_BP1 0x08 /* Block Protect 1 */
+#define M25_SR_BIT_BP0 0x04 /* Block Protect 0 */
+#define M25_SR_BIT_BP 0x1C /* All Block Protect Bits */
+#define M25_SR_BIT_WEL 0x02 /* Write Enable Latch */
+#define M25_SR_BIT_BUSY 0x01 /* Write in Progress */
 
 /* Do we use READ or FAST_READ to read? Fast by default */
 #ifdef M25P16_CONF_READ_FAST
@@ -173,46 +173,51 @@ void m25_sector_erase(struct m25 *self, uint8_t s) {
 }
 #endif
 
-static int _m25_spi_transfer(struct m25 *self, const uint8_t *tx, uint8_t *rx, size_t size){
-	if(spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, size, M25_SPI_TIMEOUT) < 0){
+static int _m25_spi_transfer(struct m25 *self, const uint8_t *tx, uint8_t *rx, size_t size)
+{
+	if (spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, size, M25_SPI_TIMEOUT) < 0) {
 		return -EIO;
 	}
 	return (int)size;
 }
 
-static uint32_t _m25_read_id(struct m25 *self){
-	uint8_t tx[4] = {M25_CMD_RDID, 0, 0, 0};
-	uint8_t rx[4] = {0, 0, 0, 0};
+static uint32_t _m25_read_id(struct m25 *self)
+{
+	uint8_t tx[4] = { M25_CMD_RDID, 0, 0, 0 };
+	uint8_t rx[4] = { 0, 0, 0, 0 };
 
-	if(_m25_spi_transfer(self, tx, rx, 4) < 0){
+	if (_m25_spi_transfer(self, tx, rx, 4) < 0) {
 		return 0;
 	}
 
 	return (uint32_t)(rx[1] << 24 | rx[2] << 16 | rx[3] << 8);
 }
 
-static uint8_t _m25_read_status(struct m25 *self) {
-	uint8_t tx[2] = {M25_CMD_RDSR, 0};
-	uint8_t rx[2] = {0, 0};
+static uint8_t _m25_read_status(struct m25 *self)
+{
+	uint8_t tx[2] = { M25_CMD_RDSR, 0 };
+	uint8_t rx[2] = { 0, 0 };
 
-	if(_m25_spi_transfer(self, tx, rx, 2) < 0){
+	if (_m25_spi_transfer(self, tx, rx, 2) < 0) {
 		return 0;
 	}
 
 	return rx[1];
 }
 
-static void _m25_wr_en(struct m25 *self, bool write) {
-	uint8_t tx[1] = {(write)?M25_CMD_WREN:M25_CMD_WRDI};
-	uint8_t rx[1] = {0};
+static void _m25_wr_en(struct m25 *self, bool write)
+{
+	uint8_t tx[1] = { (write) ? M25_CMD_WREN : M25_CMD_WRDI };
+	uint8_t rx[1] = { 0 };
 
 	_m25_spi_transfer(self, tx, rx, 1);
 }
 
-static int _m25_wait_done(struct m25 *self) {
-	for(unsigned c = 0; c < 2000; c++){
+static int _m25_wait_done(struct m25 *self)
+{
+	for (unsigned c = 0; c < 2000; c++) {
 		uint8_t sts = _m25_read_status(self);
-		if(!(sts & M25_SR_BIT_BUSY)){
+		if (!(sts & M25_SR_BIT_BUSY)) {
 			return 0;
 		}
 		thread_sleep_ms(1);
@@ -232,18 +237,16 @@ static int _m25_bulk_erase(struct m25 *self) {
 	return 0;
 }
 */
-static int _m25_read(struct m25 *self, size_t ad, uint8_t *data, size_t len){
+static int _m25_read(struct m25 *self, size_t ad, uint8_t *data, size_t len)
+{
 	static const size_t sz = 8;
-	for(size_t off = 0; off < len; off += sz){
+	for (size_t off = 0; off < len; off += sz) {
 		size_t rdad = ad + off;
-		size_t rdsz = ((off + sz) > len)?(len - off):sz;
-		uint8_t buf[8 + 4] = {
-			M25_CMD_READ,
-			(rdad >> 16) & 0xff,
-			(rdad >> 8) & 0xff,
-			(rdad >> 0) & 0xff};
+		size_t rdsz = ((off + sz) > len) ? (len - off) : sz;
+		uint8_t buf[8 + 4] = { M25_CMD_READ, (rdad >> 16) & 0xff, (rdad >> 8) & 0xff,
+				       (rdad >> 0) & 0xff };
 		memset(buf + 4, 0xFF, rdsz);
-		if(_m25_spi_transfer(self, buf, buf, rdsz + 4) < 0){
+		if (_m25_spi_transfer(self, buf, buf, rdsz + 4) < 0) {
 			printk("m25: could not verify write at %08x\n", off);
 			return -1;
 		}
@@ -253,26 +256,24 @@ static int _m25_read(struct m25 *self, size_t ad, uint8_t *data, size_t len){
 	return (int)len;
 }
 
-static int _m25_write(struct m25 *self, size_t ad, const uint8_t *data, size_t len){
+static int _m25_write(struct m25 *self, size_t ad, const uint8_t *data, size_t len)
+{
 	static const size_t sz = 8;
-	for(size_t off = 0; off < len; off += sz){
+	for (size_t off = 0; off < len; off += sz) {
 		size_t wrad = ad + off;
-		size_t wrsz = ((off + sz) > len)?(len - off):sz;
-		uint8_t buf[8 + 4] = {
-			M25_CMD_PAGE_PROGRAM,
-			(wrad >> 16) & 0xff,
-			(wrad >> 8) & 0xff,
-			(wrad >> 0) & 0xff};
+		size_t wrsz = ((off + sz) > len) ? (len - off) : sz;
+		uint8_t buf[8 + 4] = { M25_CMD_PAGE_PROGRAM, (wrad >> 16) & 0xff,
+				       (wrad >> 8) & 0xff, (wrad >> 0) & 0xff };
 		memcpy(buf + 4, &data[off], wrsz);
 
 		_m25_wr_en(self, true);
 
-		if(_m25_spi_transfer(self, buf, buf, wrsz + 4) < 0){
+		if (_m25_spi_transfer(self, buf, buf, wrsz + 4) < 0) {
 			printk("m25: could not write at %08x\n", off);
 			return -1;
 		}
 
-		if(_m25_wait_done(self) < 0){
+		if (_m25_wait_done(self) < 0) {
 			printk("m25: write failed!\n");
 			break;
 		}
@@ -282,17 +283,14 @@ static int _m25_write(struct m25 *self, size_t ad, const uint8_t *data, size_t l
 	return (int)len;
 }
 
-static int _m25_sector_erase(struct m25 *self, size_t addr){
-	uint8_t buf[] = {
-		M25_CMD_SECTOR_ERASE,
-		(addr >> 16) & 0xff,
-		(addr >> 8) & 0xff,
-		(addr >> 0) & 0xff
-	};
+static int _m25_sector_erase(struct m25 *self, size_t addr)
+{
+	uint8_t buf[] = { M25_CMD_SECTOR_ERASE, (addr >> 16) & 0xff, (addr >> 8) & 0xff,
+			  (addr >> 0) & 0xff };
 
 	_m25_wr_en(self, true);
 
-	if(_m25_spi_transfer(self, buf, buf, sizeof(buf)) < 0){
+	if (_m25_spi_transfer(self, buf, buf, sizeof(buf)) < 0) {
 		printk("m25: could not erase sector at %08x\n", addr);
 		return -1;
 	}
@@ -304,28 +302,33 @@ static int _m25_sector_erase(struct m25 *self, size_t addr){
 	return (int)self->info.erasesize;
 }
 
-static int _m25_memory_write(memory_device_t dev, size_t offset, const void *data, size_t len){
-	struct m25 *self = (struct m25*)container_of(dev, struct m25, dev.ops);
+static int _m25_memory_write(memory_device_t dev, size_t offset, const void *data, size_t len)
+{
+	struct m25 *self = (struct m25 *)container_of(dev, struct m25, dev.ops);
 
-	const uint8_t *dat = (const uint8_t*)data;
-	for(size_t ptr = 0; ptr < len;){
+	const uint8_t *dat = (const uint8_t *)data;
+	for (size_t ptr = 0; ptr < len;) {
 		uint32_t off = (uint32_t)(offset + ptr);
 		uint32_t sectoraddr = off & ~(self->info.erasesize - 1);
 		uint32_t sectoroff = off & (self->info.erasesize - 1);
-		uint32_t sectorwrsz = (uint32_t)(((self->info.erasesize - sectoroff) > (len - ptr))?(len - ptr):(self->info.erasesize - sectoroff));
+		uint32_t sectorwrsz =
+			(uint32_t)(((self->info.erasesize - sectoroff) > (len - ptr)) ?
+					   (len - ptr) :
+					   (self->info.erasesize - sectoroff));
 		//uint32_t pageaddr = off & ~(self->info.writesize - 1);
 
 		// load the whole sector into memory
-		if(_m25_read(self, sectoraddr, self->sector, self->info.erasesize) != (int)self->info.erasesize){
+		if (_m25_read(self, sectoraddr, self->sector, self->info.erasesize) !=
+		    (int)self->info.erasesize) {
 			printk("m25: read failed at %08x\n", sectoraddr);
 			return -1;
 		}
 
 		// check if sector needs an erase
-		for(size_t p = 0; p < sectorwrsz; p++){
+		for (size_t p = 0; p < sectorwrsz; p++) {
 			uint8_t sd = self->sector[sectoroff + p];
 			uint8_t id = dat[ptr + p];
-			if((sd | id) != sd){
+			if ((sd | id) != sd) {
 				printk("m25: erase sector at %08x\n", offset + ptr);
 				_m25_sector_erase(self, offset + ptr);
 				break;
@@ -337,7 +340,8 @@ static int _m25_memory_write(memory_device_t dev, size_t offset, const void *dat
 
 		// write sector to flash
 		printk("m25: write sector at %08x, size: %u\n", offset + ptr, sectorwrsz);
-		if(_m25_write(self, offset + ptr, &self->sector[sectoroff], sectorwrsz) != (int)sectorwrsz){
+		if (_m25_write(self, offset + ptr, &self->sector[sectoroff], sectorwrsz) !=
+		    (int)sectorwrsz) {
 			printk("m25: write failed at %08x\n", offset + ptr);
 			return -1;
 		}
@@ -347,32 +351,32 @@ static int _m25_memory_write(memory_device_t dev, size_t offset, const void *dat
 	return (int)len;
 }
 
-static int _m25_memory_read(memory_device_t dev, size_t offset, void *data, size_t len){
-	struct m25 *self = (struct m25*)container_of(dev, struct m25, dev.ops);
+static int _m25_memory_read(memory_device_t dev, size_t offset, void *data, size_t len)
+{
+	struct m25 *self = (struct m25 *)container_of(dev, struct m25, dev.ops);
 	return _m25_read(self, offset, data, len);
 }
 
-static struct memory_device_ops _m25_memory_ops = {
-	.write = _m25_memory_write,
-	.read = _m25_memory_read
-};
+static struct memory_device_ops _m25_memory_ops = { .write = _m25_memory_write,
+						    .read = _m25_memory_read };
 
-int _m25_probe(void *fdt, int fdt_node){
+int _m25_probe(void *fdt, int fdt_node)
+{
 	spi_device_t spi = spi_find_by_ref(fdt, fdt_node, "spi");
 	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
 	int cs_pin = fdt_get_int_or_default(fdt, fdt_node, "cs_pin", -1);
 
-	if(!spi){
+	if (!spi) {
 		printk("m25: missing spi device!\n");
 		return -1;
 	}
 
-	if(!gpio){
+	if (!gpio) {
 		printk("m25: missing gpio device!\n");
 		return -1;
 	}
 
-	if(cs_pin < 0){
+	if (cs_pin < 0) {
 		printk("m25: missing cs_pin!\n");
 		return -1;
 	}
@@ -391,18 +395,16 @@ int _m25_probe(void *fdt, int fdt_node){
 	self->info.erasesize = 4096;
 	self->info.writesize = 256;
 
-	printk("m25: MFR %02x, TYPE: %02x, CAPACITY: %02x\n",
-				 self->info.manufacturer,
-				 self->info.type,
-				 self->info.size);
+	printk("m25: MFR %02x, TYPE: %02x, CAPACITY: %02x\n", self->info.manufacturer,
+	       self->info.type, self->info.size);
 
-	switch(self->info.manufacturer){
-		case 0xef:
-			printk("m25: found Winband flash!\n");
-			break;
-		default:
-			printk("m25: unknown device!\n");
-			return -1;
+	switch (self->info.manufacturer) {
+	case 0xef:
+		printk("m25: found Winband flash!\n");
+		break;
+	default:
+		printk("m25: unknown device!\n");
+		return -1;
 	}
 
 	memory_device_init(&self->dev, fdt, fdt_node, &_m25_memory_ops);
@@ -411,7 +413,8 @@ int _m25_probe(void *fdt, int fdt_node){
 	return 0;
 }
 
-int _m25_remove(void *fdt, int fdt_node){
+int _m25_remove(void *fdt, int fdt_node)
+{
 	return 0;
 }
 

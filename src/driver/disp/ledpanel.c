@@ -30,29 +30,30 @@ struct ledpanel {
 	uint16_t fb_width;
 };
 
-void _ledpanel_task(void *data) {
+void _ledpanel_task(void *data)
+{
 	struct ledpanel *self = (struct ledpanel *)data;
 	int scroll = 0, scroll_cnt = 0;
-	while(1) {
-		for(int line = 0; line < self->height; line++) {
-			if(line & 0x01)
+	while (1) {
+		for (int line = 0; line < self->height; line++) {
+			if (line & 0x01)
 				gpio_set(self->gpio, LEDPANEL_PIN_A);
 			else
 				gpio_reset(self->gpio, LEDPANEL_PIN_A);
-			if(line & 0x02)
+			if (line & 0x02)
 				gpio_set(self->gpio, LEDPANEL_PIN_B);
 			else
 				gpio_reset(self->gpio, LEDPANEL_PIN_B);
-			if(line & 0x04)
+			if (line & 0x04)
 				gpio_set(self->gpio, LEDPANEL_PIN_C);
 			else
 				gpio_reset(self->gpio, LEDPANEL_PIN_C);
-			if(line & 0x08)
+			if (line & 0x08)
 				gpio_set(self->gpio, LEDPANEL_PIN_D);
 			else
 				gpio_reset(self->gpio, LEDPANEL_PIN_D);
 
-			for(int c = scroll; c < self->width + scroll; c++) {
+			for (int c = scroll; c < self->width + scroll; c++) {
 				int x = c % self->fb_width;
 				int base = line * (self->fb_width * self->bpp) + x * self->bpp;
 				int byte = base / 8;
@@ -62,12 +63,12 @@ void _ledpanel_task(void *data) {
 				byte = base / 8;
 				bit = base & 0x07;
 				bool g = self->framebuffer[byte] & (1 << bit);
-				if(r)
+				if (r)
 					gpio_reset(self->gpio, LEDPANEL_PIN_RED);
 				else
 					gpio_set(self->gpio, LEDPANEL_PIN_RED);
 
-				if(g)
+				if (g)
 					gpio_reset(self->gpio, LEDPANEL_PIN_GREEN);
 				else
 					gpio_set(self->gpio, LEDPANEL_PIN_GREEN);
@@ -81,7 +82,7 @@ void _ledpanel_task(void *data) {
 
 			gpio_reset(self->gpio, LEDPANEL_PIN_OE);
 			int time = 500;
-			while(--time)
+			while (--time)
 				asm volatile("nop");
 			gpio_set(self->gpio, LEDPANEL_PIN_OE);
 
@@ -89,23 +90,24 @@ void _ledpanel_task(void *data) {
 			// thread_sleeP_Ms(1);
 		}
 		scroll_cnt = (scroll_cnt + 1);
-		if(scroll_cnt % 5 == 0)
+		if (scroll_cnt % 5 == 0)
 			scroll = (scroll + 1) % self->fb_width;
 	}
 	thread_sleep_ms(10);
 }
 
-int _ledpanel_write_pixel(display_device_t dev, int x, int y, color_t color) {
+int _ledpanel_write_pixel(display_device_t dev, int x, int y, color_t color)
+{
 	struct ledpanel *self = container_of(dev, struct ledpanel, dev.ops);
 
-	if(x < 0 || x >= self->fb_width || y < 0 || y >= self->height)
+	if (x < 0 || x >= self->fb_width || y < 0 || y >= self->height)
 		return -1;
 
-	for(int c = 0; c < 2; c++) {
+	for (int c = 0; c < 2; c++) {
 		int base = y * (self->fb_width * self->bpp) + x * self->bpp + c;
 		int byte = base / 8;
 		int bit = base & 0x7;
-		if(color & (uint32_t)(1 << c)) {
+		if (color & (uint32_t)(1 << c)) {
 			self->framebuffer[byte] = (uint8_t)(self->framebuffer[byte] | (1 << bit));
 		} else {
 			self->framebuffer[byte] = (uint8_t)(self->framebuffer[byte] & ~(1 << bit));
@@ -114,19 +116,19 @@ int _ledpanel_write_pixel(display_device_t dev, int x, int y, color_t color) {
 	return 0;
 }
 
-static const struct display_device_ops _display_ops = {.write_pixel =
-                                                           _ledpanel_write_pixel};
+static const struct display_device_ops _display_ops = { .write_pixel = _ledpanel_write_pixel };
 
-int _ledpanel_probe(void *fdt, int fdt_node) {
+int _ledpanel_probe(void *fdt, int fdt_node)
+{
 	// find the gpio device for pins
 	int node = fdt_find_node_by_ref(fdt, fdt_node, "pins");
-	if(node < 0) {
+	if (node < 0) {
 		dbg_printk("ledpanel: nopins!\n");
 		return -EINVAL;
 	}
 
 	gpio_device_t gpio = gpio_find_by_node(fdt, node);
-	if(!gpio) {
+	if (!gpio) {
 		dbg_printk("ledpanel: nogpio!\n");
 		return -EINVAL;
 	}
@@ -148,7 +150,7 @@ int _ledpanel_probe(void *fdt, int fdt_node) {
 	gpio_reset(gpio, LEDPANEL_PIN_OE);
 
 	struct ledpanel *self = kzmalloc(sizeof(struct ledpanel));
-	if(!self)
+	if (!self)
 		return -ENOMEM;
 
 	display_device_init(&self->dev, fdt, fdt_node, &_display_ops);
@@ -161,7 +163,7 @@ int _ledpanel_probe(void *fdt, int fdt_node) {
 	self->bpp = (uint8_t)bpp;
 	self->fb_width = (uint16_t)fb_width;
 
-	if(!self->framebuffer) {
+	if (!self->framebuffer) {
 		dbg_printk("ledpanel: fbfail\n");
 		kfree(self);
 		return -1;
@@ -173,14 +175,15 @@ int _ledpanel_probe(void *fdt, int fdt_node) {
 	    _ledpanel_write(self, 1, str2, (int)strlen(str), 3);
 	    //_ledpanel_write_bitmap(self, 256, 0, _smiley, 16, 16);
 	*/
-	if(thread_create(_ledpanel_task, "lp", 180, self, 1, NULL) < 0)
+	if (thread_create(_ledpanel_task, "lp", 180, self, 1, NULL) < 0)
 		dbg_printk("ledpanel: taskfail\n");
 	else
 		dbg_printk("ledpanel: ok\n");
 	return 0;
 }
 
-int _ledpanel_remove(void *fdt, int node) {
+int _ledpanel_remove(void *fdt, int node)
+{
 	return -1;
 }
 

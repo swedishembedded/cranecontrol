@@ -1,0 +1,48 @@
+#!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2022 Martin Schröder <info@swedishembedded.com>
+# Consulting: https://swedishembedded.com/go
+# Training: https://swedishembedded.com/tag/training
+
+ROOT="$(realpath $(dirname $BASH_SOURCE)/..)"
+
+set -e
+
+. ${ROOT}/../zephyr/zephyr-env.sh
+
+echo "Zephyr tests are currently disabled since we are not running on zephyr"
+exit 0
+
+# Build applications and samples
+$ROOT/../zephyr/scripts/twister \
+	--integration \
+	--coverage \
+	--coverage-platform native_posix \
+	-c \
+	-O build-tests \
+	-v \
+	-i \
+	-A boards \
+	-T tests || {
+	echo "Error while trying to build project"
+	exit 1
+}
+
+./scripts/coverage build-tests
+
+# Check that all files have coverage
+diff \
+	<(find lib drivers -name "*.c" | sort) \
+	<(lcov \
+		--rc lcov_branch_coverage=1 \
+		--list-full-path \
+		--list build-tests/coverage-project.info | \
+			grep $ROOT | \
+			awk -F '|' '{print $1;}' | \
+			xargs realpath --relative-to=$ROOT | \
+			sort
+	) || {
+	echo "Some files in the project do not have coverage data!"
+	exit 1
+}
+

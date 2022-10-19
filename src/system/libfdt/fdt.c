@@ -48,11 +48,10 @@
  *     OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  *     EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "libfdt_env.h"
-//#include "fdt.h"
-#include "libfdt.h"
+#include <libfdt/libfdt_env.h>
+#include <libfdt/libfdt.h>
 
-#include "libfdt_internal.h"
+#include "libfdt/libfdt_internal.h"
 
 int fdt_check_header(const void *fdt)
 {
@@ -77,17 +76,15 @@ const void *fdt_offset_ptr(const void *fdt, int offset, int len)
 {
 	int absoffset = offset + (int)fdt_off_dt_struct(fdt);
 
-	if ((absoffset < offset)
-	    || ((absoffset + len) < absoffset)
-	    || (absoffset + len) > (int)fdt_totalsize(fdt))
+	if ((absoffset < offset) || ((absoffset + len) < absoffset) ||
+	    (absoffset + len) > (int)fdt_totalsize(fdt))
 		return NULL;
 
 	if (fdt_version(fdt) >= 0x11)
-		if (((offset + len) < offset)
-		    || ((offset + len) > (int)fdt_size_dt_struct(fdt)))
+		if (((offset + len) < offset) || ((offset + len) > (int)fdt_size_dt_struct(fdt)))
 			return NULL;
 
-	return (void*)fdt_offset_ptr_(fdt, offset);
+	return (void *)fdt_offset_ptr_(fdt, offset);
 }
 
 uint32_t fdt_next_tag(const void *fdt, int startoffset, int *nextoffset)
@@ -120,7 +117,8 @@ uint32_t fdt_next_tag(const void *fdt, int startoffset, int *nextoffset)
 		if (!lenp)
 			return FDT_END; /* premature end */
 		/* skip-name offset, length and value */
-		offset += (int)sizeof(struct fdt_property) - (int)FDT_TAGSIZE + (int)fdt32_to_cpu(*lenp);
+		offset += (int)sizeof(struct fdt_property) - (int)FDT_TAGSIZE +
+			  (int)fdt32_to_cpu(*lenp);
 		break;
 
 	case FDT_END:
@@ -141,8 +139,8 @@ uint32_t fdt_next_tag(const void *fdt, int startoffset, int *nextoffset)
 
 int fdt_check_node_offset_(const void *fdt, int offset)
 {
-	if ((offset < 0) || (offset % (int)FDT_TAGSIZE)
-	    || (fdt_next_tag(fdt, offset, &offset) != FDT_BEGIN_NODE))
+	if ((offset < 0) || (offset % (int)FDT_TAGSIZE) ||
+	    (fdt_next_tag(fdt, offset, &offset) != FDT_BEGIN_NODE))
 		return -FDT_ERR_BADOFFSET;
 
 	return offset;
@@ -150,8 +148,8 @@ int fdt_check_node_offset_(const void *fdt, int offset)
 
 int fdt_check_prop_offset_(const void *fdt, int offset)
 {
-	if ((offset < 0) || (offset % (int)FDT_TAGSIZE)
-	    || (fdt_next_tag(fdt, offset, &offset) != FDT_PROP))
+	if ((offset < 0) || (offset % (int)FDT_TAGSIZE) ||
+	    (fdt_next_tag(fdt, offset, &offset) != FDT_PROP))
 		return -FDT_ERR_BADOFFSET;
 
 	return offset;
@@ -186,8 +184,7 @@ int fdt_next_node(const void *fdt, int offset, int *depth)
 			break;
 
 		case FDT_END:
-			if ((nextoffset >= 0)
-			    || ((nextoffset == -FDT_ERR_TRUNCATED) && !depth))
+			if ((nextoffset >= 0) || ((nextoffset == -FDT_ERR_TRUNCATED) && !depth))
 				return -FDT_ERR_NOTFOUND;
 			else
 				return nextoffset;
@@ -248,33 +245,41 @@ int fdt_move(const void *fdt, void *buf, int bufsize)
 	return 0;
 }
 
-int fdt_get_int_or_default(const void *fdt, int node, const char *name, int def){
+int fdt_get_int_or_default(const void *fdt, int node, const char *name, int def)
+{
 	int len = 0;
-	if(!fdt) return def;
+	if (!fdt)
+		return def;
 	const fdt32_t *val;
-	val = (const fdt32_t*)fdt_getprop(fdt, node, name, &len);
-	if(!val || len != sizeof(int)) return def;
+	val = (const fdt32_t *)fdt_getprop(fdt, node, name, &len);
+	if (!val || len != sizeof(int))
+		return def;
 	return (int)fdt32_to_cpu(*val);
 }
 
-const char* fdt_get_string_or_default(const void *fdt, int node, const char *name, const char *def){
+const char *fdt_get_string_or_default(const void *fdt, int node, const char *name, const char *def)
+{
 	int len = 0;
-	if(!fdt) return def;
+	if (!fdt)
+		return def;
 	const fdt32_t *val = fdt_getprop(fdt, node, name, &len);
-	if(!val) return def;
-	return (const char*)val;
+	if (!val)
+		return def;
+	return (const char *)val;
 }
 
-int fdt_find_node_by_ref(void *fdt, int fdt_node, const char *prop_ref){
+int fdt_find_node_by_ref(void *fdt, int fdt_node, const char *prop_ref)
+{
 	/* Find the node referenced by pins label and then parse out the pins of that node for gpio references */
 	int len = 0;
-	const fdt32_t *val = (const fdt32_t*)fdt_getprop(fdt, fdt_node, prop_ref, &len);
-	if(len != 4) return -1;
+	const fdt32_t *val = (const fdt32_t *)fdt_getprop(fdt, fdt_node, prop_ref, &len);
+	if (len != 4)
+		return -1;
 
 	uint32_t pins_handle = (uint32_t)fdt32_to_cpu(*val);
 
 	int node = fdt_node_offset_by_phandle(fdt, pins_handle);
-	if(node < 0) return -1;
+	if (node < 0)
+		return -1;
 	return node;
 }
-

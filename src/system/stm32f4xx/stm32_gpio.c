@@ -156,13 +156,15 @@ uint16_t pin){ memset(self, 0, sizeof(*self)); self->port = port; self->pin = pi
 }
 */
 
-static inline __attribute__((always_inline)) void
-_handle_irq(uint32_t lines, struct list_head *list) {
+static inline __attribute__((always_inline)) void _handle_irq(uint32_t lines,
+							      struct list_head *list)
+{
 	struct irq *self;
 	int wake = 0;
-	list_for_each_entry(self, list, list) {
-		if(self->handler) {
-			if(self->handler(self, &wake) == IRQ_HANDLED) {
+	list_for_each_entry(self, list, list)
+	{
+		if (self->handler) {
+			if (self->handler(self, &wake) == IRQ_HANDLED) {
 				// TODO: this is not currently entirely correct because we also want to
 				// support shared irqs. Need to store line number in irq struct!
 				EXTI_ClearITPendingBit(lines);
@@ -173,52 +175,59 @@ _handle_irq(uint32_t lines, struct list_head *list) {
 	// portEND_SWITCHING_ISR(wake);
 }
 
-void EXTI0_IRQHandler(void) {
-	if(EXTI_GetITStatus(EXTI_Line0) == RESET)
+void EXTI0_IRQHandler(void)
+{
+	if (EXTI_GetITStatus(EXTI_Line0) == RESET)
 		return;
 	_handle_irq(EXTI_Line0, &ext0_list);
 }
 
-void EXTI1_IRQHandler(void) {
-	if(EXTI_GetITStatus(EXTI_Line1) == RESET)
+void EXTI1_IRQHandler(void)
+{
+	if (EXTI_GetITStatus(EXTI_Line1) == RESET)
 		return;
 	_handle_irq(EXTI_Line1, &ext1_list);
 }
 
-void EXTI2_IRQHandler(void) {
-	if(EXTI_GetITStatus(EXTI_Line2) == RESET)
+void EXTI2_IRQHandler(void)
+{
+	if (EXTI_GetITStatus(EXTI_Line2) == RESET)
 		return;
 	_handle_irq(EXTI_Line2, &ext2_list);
 }
 
-void EXTI3_IRQHandler(void) {
-	if(EXTI_GetITStatus(EXTI_Line3) == RESET)
+void EXTI3_IRQHandler(void)
+{
+	if (EXTI_GetITStatus(EXTI_Line3) == RESET)
 		return;
 	_handle_irq(EXTI_Line3, &ext3_list);
 }
 
-void EXTI4_IRQHandler(void) {
-	if(EXTI_GetITStatus(EXTI_Line4) == RESET)
+void EXTI4_IRQHandler(void)
+{
+	if (EXTI_GetITStatus(EXTI_Line4) == RESET)
 		return;
 	_handle_irq(EXTI_Line4, &ext4_list);
 }
 
-void EXTI9_5_IRQHandler(void) {
-	_handle_irq(EXTI_Line5 | EXTI_Line6 | EXTI_Line7 | EXTI_Line8 | EXTI_Line9,
-	            &ext9_5_list);
+void EXTI9_5_IRQHandler(void)
+{
+	_handle_irq(EXTI_Line5 | EXTI_Line6 | EXTI_Line7 | EXTI_Line8 | EXTI_Line9, &ext9_5_list);
 }
 
-void EXTI15_10_IRQHandler(void) {
+void EXTI15_10_IRQHandler(void)
+{
 	_handle_irq(EXTI_Line10 | EXTI_Line11 | EXTI_Line12 | EXTI_Line13 | EXTI_Line14 |
-	                EXTI_Line15,
-	            &ext15_10_list);
+			    EXTI_Line15,
+		    &ext15_10_list);
 }
 
-static int _stm32_gpio_write_pin(gpio_device_t dev, uint32_t pin, bool value) {
+static int _stm32_gpio_write_pin(gpio_device_t dev, uint32_t pin, bool value)
+{
 	struct stm32_gpio *self = container_of(dev, struct stm32_gpio, dev.ops);
-	if(pin >= self->npins)
+	if (pin >= self->npins)
 		return -EINVAL;
-	if(value) {
+	if (value) {
 		GPIO_SetBits(self->pins[pin].gpio, self->pins[pin].pin);
 	} else {
 		GPIO_ResetBits(self->pins[pin].gpio, self->pins[pin].pin);
@@ -226,29 +235,30 @@ static int _stm32_gpio_write_pin(gpio_device_t dev, uint32_t pin, bool value) {
 	return 0;
 }
 
-static int _stm32_gpio_read_pin(gpio_device_t dev, uint32_t pin, bool *value) {
+static int _stm32_gpio_read_pin(gpio_device_t dev, uint32_t pin, bool *value)
+{
 	struct stm32_gpio *self = container_of(dev, struct stm32_gpio, dev.ops);
-	if(pin >= self->npins)
+	if (pin >= self->npins)
 		return -EINVAL;
 	*value = (bool)GPIO_ReadInputDataBit(self->pins[pin].gpio, self->pins[pin].pin);
 	return 0;
 }
 
-static const struct gpio_device_ops _gpio_ops = {.read_pin = _stm32_gpio_read_pin,
-                                                 .write_pin = _stm32_gpio_write_pin};
+static const struct gpio_device_ops _gpio_ops = { .read_pin = _stm32_gpio_read_pin,
+						  .write_pin = _stm32_gpio_write_pin };
 
-static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
+static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node)
+{
 	int len = 0, defs_len = 0;
 	const fdt32_t *val = (const fdt32_t *)fdt_getprop(fdt, fdt_node, "pinctrl", &len);
-	const fdt32_t *defs =
-	    (const fdt32_t *)fdt_getprop(fdt, fdt_node, "defaults", &defs_len);
+	const fdt32_t *defs = (const fdt32_t *)fdt_getprop(fdt, fdt_node, "defaults", &defs_len);
 
-	if(defs && (len != (defs_len * 3))) {
+	if (defs && (len != (defs_len * 3))) {
 		printk("gpio: defaults not supplied for all pins\n");
 		return -1;
 	}
 
-	if(len == 0 || !val) {
+	if (len == 0 || !val) {
 		printk("gpio: no pinctrl parameter\n");
 		return -1;
 	}
@@ -258,7 +268,7 @@ static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
 	struct stm32_gpio *self = kzmalloc(sizeof(struct stm32_gpio));
 	self->pins = kzmalloc(sizeof(struct stm32_gpio_pin) * (unsigned)pin_count);
 
-	if(!self || !self->pins) {
+	if (!self || !self->pins) {
 		printk("gpio: nomem\n");
 		return -ENOMEM;
 	}
@@ -266,7 +276,7 @@ static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
 	gpio_device_init(&self->dev, fdt, fdt_node, &_gpio_ops);
 	self->npins = (uint8_t)pin_count;
 
-	for(int c = 0; c < pin_count; c++) {
+	for (int c = 0; c < pin_count; c++) {
 		const fdt32_t *base = val + (3 * c);
 		GPIO_TypeDef *GPIOx = (GPIO_TypeDef *)fdt32_to_cpu(*(base));
 		uint16_t pin = (uint16_t)fdt32_to_cpu(*(base + 1));
@@ -285,9 +295,9 @@ static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
 		GPIO_Init(GPIOx, &gpio);
 
 		uint16_t idx = (uint16_t)ffs(pin);
-		if(gpio.GPIO_Mode == GPIO_Mode_AF && idx != 0) {
+		if (gpio.GPIO_Mode == GPIO_Mode_AF && idx != 0) {
 			GPIO_PinAFConfig(GPIOx, (uint16_t)(idx - 1), (opts & 0xf));
-		} else if(gpio.GPIO_Mode == GPIO_Mode_OUT && defs) {
+		} else if (gpio.GPIO_Mode == GPIO_Mode_OUT && defs) {
 			uint16_t en = (uint16_t)fdt32_to_cpu(*(defs + c));
 			GPIO_WriteBit(GPIOx, pin, en);
 		}
@@ -298,7 +308,8 @@ static int _stm32_gpio_setup_subnode(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_gpio_probe(void *fdt, int fdt_node) {
+static int _stm32_gpio_probe(void *fdt, int fdt_node)
+{
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
@@ -310,16 +321,17 @@ static int _stm32_gpio_probe(void *fdt, int fdt_node) {
 	// check if we directly have a pinmux here
 	int len = 0;
 	const fdt32_t *val = (const fdt32_t *)fdt_getprop(fdt, fdt_node, "pinctrl", &len);
-	if(val && len > 0) {
-		if(_stm32_gpio_setup_subnode(fdt, fdt_node) < 0) {
+	if (val && len > 0) {
+		if (_stm32_gpio_setup_subnode(fdt, fdt_node) < 0) {
 			return -1;
 		}
 	}
 
 	// otherwise scan all children
 	int node;
-	fdt_for_each_subnode(node, fdt, fdt_node) {
-		if(_stm32_gpio_setup_subnode(fdt, node) < 0) {
+	fdt_for_each_subnode(node, fdt, fdt_node)
+	{
+		if (_stm32_gpio_setup_subnode(fdt, node) < 0) {
 			return -1;
 		}
 	}
@@ -327,7 +339,8 @@ static int _stm32_gpio_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_gpio_remove(void *fdt, int fdt_node) {
+static int _stm32_gpio_remove(void *fdt, int fdt_node)
+{
 	// TODO
 	return -1;
 }

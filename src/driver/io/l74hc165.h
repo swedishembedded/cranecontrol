@@ -26,14 +26,14 @@
 #define L74HC165_H_
 
 struct l74hc165 {
-	pio_dev_t port; 
+	pio_dev_t port;
 	gpio_pin_t clock_pin;
 	gpio_pin_t load_pin;
-	gpio_pin_t data_pin; 
+	gpio_pin_t data_pin;
 };
 
-void l74hc165_init(struct l74hc165 *self, pio_dev_t port,
-		gpio_pin_t clock_pin, gpio_pin_t load_pin, gpio_pin_t data_pin);
+void l74hc165_init(struct l74hc165 *self, pio_dev_t port, gpio_pin_t clock_pin, gpio_pin_t load_pin,
+		   gpio_pin_t data_pin);
 void l74hc165_read(struct l74hc165 *self, uint8_t *data, uint8_t count);
 
 #endif

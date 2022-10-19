@@ -39,7 +39,8 @@ struct linux_vcan {
 	struct can_dispatcher dispatcher;
 };
 
-static int _can_recv(can_device_t dev, struct can_message *can_msg){
+static int _can_recv(can_device_t dev, struct can_message *can_msg)
+{
 	struct linux_vcan *self = container_of(dev, struct linux_vcan, dev.ops);
 
 	struct msghdr msg;
@@ -59,7 +60,7 @@ static int _can_recv(can_device_t dev, struct can_message *can_msg){
 	msg.msg_iovlen = 1;
 	msg.msg_control = &ctrlmsg;
 	msg.msg_namelen = sizeof(self->addr);
-	msg.msg_controllen = sizeof(ctrlmsg);  
+	msg.msg_controllen = sizeof(ctrlmsg);
 	msg.msg_flags = 0;
 
 	fd_set rdfs;
@@ -88,10 +89,10 @@ static int _can_recv(can_device_t dev, struct can_message *can_msg){
 	can_msg->len = frame.can_dlc;
 	memcpy(can_msg->data, frame.data, can_msg->len);
 
-	if(self->debug){
+	if (self->debug) {
 		pthread_mutex_lock(&self->lock);
 		printf("MSGIN can_id: %08x, data: ", can_msg->id);
-		for(int c = 0; c < can_msg->len; c++){
+		for (int c = 0; c < can_msg->len; c++) {
 			printf("%02x ", can_msg->data[c]);
 		}
 		printf("\n");
@@ -102,7 +103,8 @@ static int _can_recv(can_device_t dev, struct can_message *can_msg){
 	return 1;
 }
 
-static int _can_send(can_device_t port, const struct can_message *msg, uint32_t timeout_ms){
+static int _can_send(can_device_t port, const struct can_message *msg, uint32_t timeout_ms)
+{
 	struct linux_vcan *self = container_of(port, struct linux_vcan, dev.ops);
 	struct can_frame frame;
 	memset(&frame, 0, sizeof(frame));
@@ -112,9 +114,9 @@ static int _can_send(can_device_t port, const struct can_message *msg, uint32_t 
 	memcpy(frame.data, msg->data, msg->len);
 
 	pthread_mutex_lock(&self->lock);
-	if(self->debug){
+	if (self->debug) {
 		printf("MSGOUT can_id: %08x, data: ", msg->id);
-		for(int c = 0; c < msg->len; c++){
+		for (int c = 0; c < msg->len; c++) {
 			printf("%02x ", msg->data[c]);
 		}
 		printf("\n");
@@ -122,7 +124,7 @@ static int _can_send(can_device_t port, const struct can_message *msg, uint32_t 
 	}
 	pthread_mutex_unlock(&self->lock);
 
-	if(write(self->sock, &frame, CAN_MTU) < 0){
+	if (write(self->sock, &frame, CAN_MTU) < 0) {
 		perror("write");
 		return -1;
 	}
@@ -130,18 +132,17 @@ static int _can_send(can_device_t port, const struct can_message *msg, uint32_t 
 	return 1;
 }
 
-static int _can_subscribe(can_device_t port, struct can_listener *listener){
+static int _can_subscribe(can_device_t port, struct can_listener *listener)
+{
 	struct linux_vcan *self = container_of(port, struct linux_vcan, dev.ops);
 	can_dispatcher_add_listener(&self->dispatcher, listener);
 	return 0;
 }
 
-static const struct can_device_ops _can_ops = {
-	.send = _can_send,
-	.subscribe = _can_subscribe
-};
+static const struct can_device_ops _can_ops = { .send = _can_send, .subscribe = _can_subscribe };
 
-void linux_vcan_init(struct linux_vcan *self, const char *device){
+void linux_vcan_init(struct linux_vcan *self, const char *device)
+{
 	memset(self, 0, sizeof(*self));
 
 	self->sock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
@@ -170,14 +171,16 @@ void linux_vcan_init(struct linux_vcan *self, const char *device){
 	}
 }
 
-void linux_vcan_destroy(struct linux_vcan *self){
+void linux_vcan_destroy(struct linux_vcan *self)
+{
 	self->shutdown = true;
 	pthread_join(self->thread, NULL);
 	close(self->sock);
 }
 
-static int _linux_vcan_probe(void *fdt, int fdt_node){
-	const char* device = fdt_get_string_or_default(fdt, (int)fdt_node, "interface", "can0");
+static int _linux_vcan_probe(void *fdt, int fdt_node)
+{
+	const char *device = fdt_get_string_or_default(fdt, (int)fdt_node, "interface", "can0");
 
 	printf("linux_vcan: initializing device %s..\n", device);
 
@@ -192,16 +195,17 @@ static int _linux_vcan_probe(void *fdt, int fdt_node){
 	return 0;
 }
 
-static int _linux_vcan_remove(void *fdt, int fdt_node){
+static int _linux_vcan_remove(void *fdt, int fdt_node)
+{
 	can_device_t port = can_find_by_node(fdt, fdt_node);
-	if(!port) return -1;
-	printf("linux_vcan: removing %s, %p\n", fdt_get_name(fdt, fdt_node, NULL), (void*)port);
+	if (!port)
+		return -1;
+	printf("linux_vcan: removing %s, %p\n", fdt_get_name(fdt, fdt_node, NULL), (void *)port);
 	struct linux_vcan *self = container_of(port, struct linux_vcan, dev.ops);
 	can_device_unregister(&self->dev);
 	linux_vcan_destroy(self);
 	kfree(self);
-    return 0;
+	return 0;
 }
 
 DEVICE_DRIVER(linux_vcan, "gnu,linux_vcan", _linux_vcan_probe, _linux_vcan_remove)
-

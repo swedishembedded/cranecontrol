@@ -68,12 +68,12 @@ typedef CFS_CONF_OFFSET_TYPE cfs_offset_t;
 #endif
 
 struct cfs_dir {
-  char dummy_space[32];
+	char dummy_space[32];
 };
 
 struct cfs_dirent {
-  char name[32];
-  cfs_offset_t size;
+	char name[32];
+	cfs_offset_t size;
 };
 
 /**
@@ -87,7 +87,7 @@ struct cfs_dirent {
  * \sa cfs_open()
  */
 #ifndef CFS_READ
-#define CFS_READ  1
+#define CFS_READ 1
 #endif
 
 /**

@@ -34,21 +34,21 @@
 #define mp_prof_is_executing MP_STATE_THREAD(prof_callback_is_executing)
 
 typedef struct _mp_obj_code_t {
-    mp_obj_base_t base;
-    const mp_raw_code_t *rc;
-    mp_obj_dict_t *dict_locals;
-    mp_obj_t lnotab;
+	mp_obj_base_t base;
+	const mp_raw_code_t *rc;
+	mp_obj_dict_t *dict_locals;
+	mp_obj_t lnotab;
 } mp_obj_code_t;
 
 typedef struct _mp_obj_frame_t {
-    mp_obj_base_t base;
-    const mp_code_state_t *code_state;
-    struct _mp_obj_frame_t *back;
-    mp_obj_t callback;
-    mp_obj_code_t *code;
-    mp_uint_t lasti;
-    mp_uint_t lineno;
-    bool trace_opcodes;
+	mp_obj_base_t base;
+	const mp_code_state_t *code_state;
+	struct _mp_obj_frame_t *back;
+	mp_obj_t callback;
+	mp_obj_code_t *code;
+	mp_uint_t lasti;
+	mp_uint_t lineno;
+	bool trace_opcodes;
 } mp_obj_frame_t;
 
 void mp_prof_extract_prelude(const byte *bytecode, mp_bytecode_prelude_t *prelude);

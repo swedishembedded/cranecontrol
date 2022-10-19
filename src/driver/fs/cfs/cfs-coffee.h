@@ -50,7 +50,7 @@
  *
  * \sa cfs_coffee_set_io_semantics()
  */
-#define CFS_COFFEE_IO_FLASH_AWARE	0x1
+#define CFS_COFFEE_IO_FLASH_AWARE 0x1
 
 /**
  * Instruct Coffee not to attempt to extend the file when there is
@@ -61,7 +61,7 @@
  *
  * \sa cfs_coffee_set_io_semantics()
  */
-#define CFS_COFFEE_IO_FIRM_SIZE		0x2
+#define CFS_COFFEE_IO_FIRM_SIZE 0x2
 
 /**
  * \file
@@ -98,8 +98,7 @@ int cfs_coffee_reserve(const char *name, cfs_offset_t size);
  * parameters--the log size and the log entry size--can be modified 
  * through the cfs_coffee_configure_log function.
  */
-int cfs_coffee_configure_log(const char *file, unsigned log_size,
-                             unsigned log_entry_size);
+int cfs_coffee_configure_log(const char *file, unsigned log_size, unsigned log_entry_size);
 
 /**
  * \brief Set the I/O semantics for accessing a file.

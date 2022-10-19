@@ -42,7 +42,7 @@
  * es. 488 = (1000000 / 8) / 256
  *     1 / 488 = 0.002s
  */
-#define TIMER0_PRESCALER (1<<CS01) //prescaler 8
+#define TIMER0_PRESCALER (1 << CS01) //prescaler 8
 #define TIMER0_MSREPEATMS 2 //2ms
 #define TIMER0_FS300ARESET 500 //1 / 0.002 = 500
 

@@ -13,11 +13,12 @@
 
 static struct stm32_spi *_spi2 = 0;
 
-void SPI2_IRQHandler(void){
+void SPI2_IRQHandler(void)
+{
 	int32_t wake = 0;
-	if(SPI_I2S_GetITStatus(SPI2, SPI_I2S_IT_RXNE) != RESET){
+	if (SPI_I2S_GetITStatus(SPI2, SPI_I2S_IT_RXNE) != RESET) {
 		//SPI_ClearITPendingBit(SPI2, SPI_I2S_IT_RXNE);
-		if(_spi2){
+		if (_spi2) {
 			//uint8_t data = (uint8_t)SPI2->DR;
 			//thread_queue_send_from_isr(&_spi2->rx_queue, &data, &wake);
 		}
@@ -25,16 +26,17 @@ void SPI2_IRQHandler(void){
 	thread_yield_from_isr(wake);
 }
 
-void EXTI15_10_IRQHandler(void){
+void EXTI15_10_IRQHandler(void)
+{
 	int32_t wake = 0;
-	if(EXTI_GetITStatus(EXTI_Line12) != RESET){
+	if (EXTI_GetITStatus(EXTI_Line12) != RESET) {
 		EXTI_ClearITPendingBit(EXTI_Line12);
-		if(_spi2){
+		if (_spi2) {
 			//char *wr_addr = self->rx_dma + (uint32_t)(SPI_DMA_RX_SIZE - (uint32_t)DMA1_Channel4->CNDTR);
 			// reset dma (must disbale first before setting values)
 			//DMA_ClearFlag(DMA1_FLAG_GL4);
 			//DMA_Cmd(DMA1_Channel4, DISABLE);
-/*
+			/*
 			struct spi_message *msg = 0;
 			thread_queue_recv_from_isr(&_spi2->free_queue, &msg, &wake);
 
@@ -45,7 +47,7 @@ void EXTI15_10_IRQHandler(void){
 			}
 */
 			//DMA1_Channel4->CNDTR = buf_size;
-			
+
 			// reset tx dma
 			DMA_ClearFlag(DMA1_FLAG_GL5);
 			DMA_Cmd(DMA1_Channel5, DISABLE);
@@ -61,7 +63,8 @@ void EXTI15_10_IRQHandler(void){
 	thread_yield_from_isr(wake);
 }
 
-static void _spi_init_slave(struct stm32_spi *self){
+static void _spi_init_slave(struct stm32_spi *self)
+{
 	GPIO_InitTypeDef gpio;
 
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
@@ -154,25 +157,28 @@ static void _spi_init_slave(struct stm32_spi *self){
 	NVIC_Init(&nvic);
 }
 
-int stm32_spi_init(struct stm32_spi *self, spi_mode_t mode, uint32_t speed){
+int stm32_spi_init(struct stm32_spi *self, spi_mode_t mode, uint32_t speed)
+{
 	memset(self, 0, sizeof(*self));
 	self->rd_addr = self->rx_dma;
 
-	switch(mode){
-		case SPI_MODE_MASTER: break;
-		case SPI_MODE_SLAVE: {
-			_spi_init_slave(self);
-			_spi2 = self;
-		} break;
+	switch (mode) {
+	case SPI_MODE_MASTER:
+		break;
+	case SPI_MODE_SLAVE: {
+		_spi_init_slave(self);
+		_spi2 = self;
+	} break;
 	}
 
 	return 0;
 }
 
-int stm32_spi_read(struct stm32_spi *self, void *buf, size_t size, uint32_t timeout_ms){
+int stm32_spi_read(struct stm32_spi *self, void *buf, size_t size, uint32_t timeout_ms)
+{
 	size_t cnt = 0;
 	char *wr_addr = self->rx_dma + (uint32_t)(SPI_DMA_RX_SIZE - (uint32_t)DMA1_Channel4->CNDTR);
-	char *dst = (char*)buf;
+	char *dst = (char *)buf;
 	// TODO: this is a very stupid way to implement this kind of thing. Argh...
 	/*
 	while(timeout_ms && self->rd_addr == wr_addr){
@@ -180,12 +186,15 @@ int stm32_spi_read(struct stm32_spi *self, void *buf, size_t size, uint32_t time
 		timeout_ms--;
 	}
 	*/
-	while((self->rd_addr != wr_addr) && (cnt < size)){
+	while ((self->rd_addr != wr_addr) && (cnt < size)) {
 		*dst = *self->rd_addr;
-		cnt++; dst++; self->rd_addr++;
-		if(self->rd_addr == (self->rx_dma + SPI_DMA_RX_SIZE)) self->rd_addr = self->rx_dma;
+		cnt++;
+		dst++;
+		self->rd_addr++;
+		if (self->rd_addr == (self->rx_dma + SPI_DMA_RX_SIZE))
+			self->rd_addr = self->rx_dma;
 	}
-	if(cnt == 0) return -EAGAIN;
+	if (cnt == 0)
+		return -EAGAIN;
 	return (int)cnt;
 }
-

@@ -48,10 +48,10 @@
 #define DS18B20_CMD_ALARMSEARCH 0xec
 
 //decimal conversion table
-#define DS18B20_DECIMALSTEPS_9BIT  5000 //0.5
+#define DS18B20_DECIMALSTEPS_9BIT 5000 //0.5
 #define DS18B20_DECIMALSTEPS_10BIT 2500 //0.25
 #define DS18B20_DECIMALSTEPS_11BIT 1250 //0.125
-#define DS18B20_DECIMALSTEPS_12BIT 625  //0.0625
+#define DS18B20_DECIMALSTEPS_12BIT 625 //0.0625
 #define DS18B20_DECIMALSTEPS DS18B20_DECIMALSTEPS_12BIT
 
 struct ds18b20 {
@@ -59,8 +59,7 @@ struct ds18b20 {
 	gpio_pin_t data_pin;
 };
 
-void ds18b20_init(struct ds18b20 *self,
-	pio_dev_t gpio, gpio_pin_t data_pin); 
+void ds18b20_init(struct ds18b20 *self, pio_dev_t gpio, gpio_pin_t data_pin);
 double ds18b20_read_temperature(struct ds18b20 *self);
 
 #endif

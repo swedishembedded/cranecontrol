@@ -10,7 +10,7 @@
 
 #include <stdbool.h>
 
-struct fb_can{
+struct fb_can {
 	bool timed_out;
 };
 

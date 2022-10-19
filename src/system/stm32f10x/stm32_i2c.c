@@ -33,7 +33,9 @@
 
 #define I2C_DEFAULT_TIMEOUT 50
 
-#define i2c_debug(...) do {} while(0)
+#define i2c_debug(...)                                                                             \
+	do {                                                                                       \
+	} while (0)
 //#define i2c_debug dbg_printk
 
 #if 0

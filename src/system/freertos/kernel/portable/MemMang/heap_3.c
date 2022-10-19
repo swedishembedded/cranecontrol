@@ -67,7 +67,6 @@
     1 tab == 4 spaces!
 */
 
-
 /*
  * Implementation of pvPortMalloc() and vPortFree() that relies on the
  * compilers own malloc() and free() implementations.
@@ -91,49 +90,44 @@ task.h is included from an application file. */
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
-#if( configSUPPORT_DYNAMIC_ALLOCATION == 0 )
-	#error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
+#if (configSUPPORT_DYNAMIC_ALLOCATION == 0)
+#error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
 #endif
 
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc( size_t xWantedSize )
+void *pvPortMalloc(size_t xWantedSize)
 {
-void *pvReturn;
+	void *pvReturn;
 
 	vTaskSuspendAll();
 	{
-		pvReturn = malloc( xWantedSize );
-		traceMALLOC( pvReturn, xWantedSize );
+		pvReturn = malloc(xWantedSize);
+		traceMALLOC(pvReturn, xWantedSize);
 	}
-	( void ) xTaskResumeAll();
+	(void)xTaskResumeAll();
 
-	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
+#if (configUSE_MALLOC_FAILED_HOOK == 1)
 	{
-		if( pvReturn == NULL )
-		{
-			extern void vApplicationMallocFailedHook( void );
+		if (pvReturn == NULL) {
+			extern void vApplicationMallocFailedHook(void);
 			vApplicationMallocFailedHook();
 		}
 	}
-	#endif
+#endif
 
 	return pvReturn;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void *pv )
+void vPortFree(void *pv)
 {
-	if( pv )
-	{
+	if (pv) {
 		vTaskSuspendAll();
 		{
-			free( pv );
-			traceFREE( pv, 0 );
+			free(pv);
+			traceFREE(pv, 0);
 		}
-		( void ) xTaskResumeAll();
+		(void)xTaskResumeAll();
 	}
 }
-
-
-

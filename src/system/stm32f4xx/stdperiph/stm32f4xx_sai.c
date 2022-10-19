@@ -120,7 +120,7 @@
   * limitations under the License.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_sai.h"
@@ -133,15 +133,15 @@
 /** @defgroup SAI 
   * @brief SAI driver modules
   * @{
-  */ 
+  */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
 /* *SAI registers Masks */
-#define CR1_CLEAR_MASK            ((uint32_t)0xFF07C010)
-#define FRCR_CLEAR_MASK           ((uint32_t)0xFFF88000)
-#define SLOTR_CLEAR_MASK          ((uint32_t)0x0000F020)
+#define CR1_CLEAR_MASK ((uint32_t)0xFF07C010)
+#define FRCR_CLEAR_MASK ((uint32_t)0xFFF88000)
+#define SLOTR_CLEAR_MASK ((uint32_t)0x0000F020)
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -179,16 +179,16 @@
   *                     
   * @retval None
   */
-void SAI_DeInit(SAI_TypeDef* SAIx)
+void SAI_DeInit(SAI_TypeDef *SAIx)
 {
 	(void)SAIx;
-  /* Check the parameters */
-  assert_param(IS_SAI_PERIPH(SAIx));
+	/* Check the parameters */
+	assert_param(IS_SAI_PERIPH(SAIx));
 
-  /* Enable SAI1 reset state */
-  RCC_APB2PeriphResetCmd(RCC_APB2Periph_SAI1, ENABLE);
-  /* Release SAI1 from reset state */
-  RCC_APB2PeriphResetCmd(RCC_APB2Periph_SAI1, DISABLE);  
+	/* Enable SAI1 reset state */
+	RCC_APB2PeriphResetCmd(RCC_APB2Periph_SAI1, ENABLE);
+	/* Release SAI1 from reset state */
+	RCC_APB2PeriphResetCmd(RCC_APB2Periph_SAI1, DISABLE);
 }
 
 /**
@@ -203,59 +203,59 @@ void SAI_DeInit(SAI_TypeDef* SAIx)
   *         contains the configuration information for the specified SAI Block peripheral.             
   * @retval None
   */
-void SAI_Init(SAI_Block_TypeDef* SAI_Block_x, SAI_InitTypeDef* SAI_InitStruct)
+void SAI_Init(SAI_Block_TypeDef *SAI_Block_x, SAI_InitTypeDef *SAI_InitStruct)
 {
-  uint32_t tmpreg = 0;
-  
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  
-  /* Check the SAI Block parameters */
-  assert_param(IS_SAI_BLOCK_MODE(SAI_InitStruct->SAI_AudioMode));
-  assert_param(IS_SAI_BLOCK_PROTOCOL(SAI_InitStruct->SAI_Protocol));
-  assert_param(IS_SAI_BLOCK_DATASIZE(SAI_InitStruct->SAI_DataSize));
-  assert_param(IS_SAI_BLOCK_FIRST_BIT(SAI_InitStruct->SAI_FirstBit));
-  assert_param(IS_SAI_BLOCK_CLOCK_STROBING(SAI_InitStruct->SAI_ClockStrobing));
-  assert_param(IS_SAI_BLOCK_SYNCHRO(SAI_InitStruct->SAI_Synchro));
-  assert_param(IS_SAI_BLOCK_OUTPUT_DRIVE(SAI_InitStruct->SAI_OUTDRIV));
-  assert_param(IS_SAI_BLOCK_NODIVIDER(SAI_InitStruct->SAI_NoDivider));
-  assert_param(IS_SAI_BLOCK_MASTER_DIVIDER(SAI_InitStruct->SAI_MasterDivider));
-  assert_param(IS_SAI_BLOCK_FIFO_THRESHOLD(SAI_InitStruct->SAI_FIFOThreshold));
+	uint32_t tmpreg = 0;
 
-  /* SAI Block_x CR1 Configuration */
-  /* Get the SAI Block_x CR1 value */
-  tmpreg = SAI_Block_x->CR1;
-  /* Clear MODE, PRTCFG, DS, LSBFIRST, CKSTR, SYNCEN, OUTDRIV, NODIV, and MCKDIV bits */
-  tmpreg &= CR1_CLEAR_MASK;
-  /* Configure SAI_Block_x: Audio mode, Protocol, Data Size, first transmitted bit, Clock strobing 
-     edge, Synchronization mode, Output drive, Master Divider and FIFO level */  
-  /* Set MODE bits according to SAI_AudioMode value       */
-  /* Set PRTCFG bits according to SAI_Protocol value      */
-  /* Set DS bits according to SAI_DataSize value          */
-  /* Set LSBFIRST bit according to SAI_FirstBit value     */
-  /* Set CKSTR bit according to SAI_ClockStrobing value   */
-  /* Set SYNCEN bit according to SAI_Synchro value        */
-  /* Set OUTDRIV bit according to SAI_OUTDRIV value       */
-  /* Set NODIV bit according to SAI_NoDivider value       */
-  /* Set MCKDIV bits according to SAI_MasterDivider value */
-  tmpreg |= (uint32_t)(SAI_InitStruct->SAI_AudioMode     | SAI_InitStruct->SAI_Protocol  |
-                       SAI_InitStruct->SAI_DataSize      | SAI_InitStruct->SAI_FirstBit  |  
-                       SAI_InitStruct->SAI_ClockStrobing | SAI_InitStruct->SAI_Synchro   |  
-                       SAI_InitStruct->SAI_OUTDRIV       | SAI_InitStruct->SAI_NoDivider | 
-                       (uint32_t)((SAI_InitStruct->SAI_MasterDivider) << 20));
-  /* Write to SAI_Block_x CR1 */
-  SAI_Block_x->CR1 = tmpreg;
-  
-  /* SAI Block_x CR2 Configuration */
-  /* Get the SAIBlock_x CR2 value */
-  tmpreg = SAI_Block_x->CR2;
-  /* Clear FTH bits */
-  tmpreg &= ~(SAI_xCR2_FTH);
-  /* Configure the FIFO Level */
-  /* Set FTH bits according to SAI_FIFOThreshold value */ 
-  tmpreg |= (uint32_t)(SAI_InitStruct->SAI_FIFOThreshold);
-  /* Write to SAI_Block_x CR2 */
-  SAI_Block_x->CR2 = tmpreg;
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+
+	/* Check the SAI Block parameters */
+	assert_param(IS_SAI_BLOCK_MODE(SAI_InitStruct->SAI_AudioMode));
+	assert_param(IS_SAI_BLOCK_PROTOCOL(SAI_InitStruct->SAI_Protocol));
+	assert_param(IS_SAI_BLOCK_DATASIZE(SAI_InitStruct->SAI_DataSize));
+	assert_param(IS_SAI_BLOCK_FIRST_BIT(SAI_InitStruct->SAI_FirstBit));
+	assert_param(IS_SAI_BLOCK_CLOCK_STROBING(SAI_InitStruct->SAI_ClockStrobing));
+	assert_param(IS_SAI_BLOCK_SYNCHRO(SAI_InitStruct->SAI_Synchro));
+	assert_param(IS_SAI_BLOCK_OUTPUT_DRIVE(SAI_InitStruct->SAI_OUTDRIV));
+	assert_param(IS_SAI_BLOCK_NODIVIDER(SAI_InitStruct->SAI_NoDivider));
+	assert_param(IS_SAI_BLOCK_MASTER_DIVIDER(SAI_InitStruct->SAI_MasterDivider));
+	assert_param(IS_SAI_BLOCK_FIFO_THRESHOLD(SAI_InitStruct->SAI_FIFOThreshold));
+
+	/* SAI Block_x CR1 Configuration */
+	/* Get the SAI Block_x CR1 value */
+	tmpreg = SAI_Block_x->CR1;
+	/* Clear MODE, PRTCFG, DS, LSBFIRST, CKSTR, SYNCEN, OUTDRIV, NODIV, and MCKDIV bits */
+	tmpreg &= CR1_CLEAR_MASK;
+	/* Configure SAI_Block_x: Audio mode, Protocol, Data Size, first transmitted bit, Clock strobing 
+     edge, Synchronization mode, Output drive, Master Divider and FIFO level */
+	/* Set MODE bits according to SAI_AudioMode value       */
+	/* Set PRTCFG bits according to SAI_Protocol value      */
+	/* Set DS bits according to SAI_DataSize value          */
+	/* Set LSBFIRST bit according to SAI_FirstBit value     */
+	/* Set CKSTR bit according to SAI_ClockStrobing value   */
+	/* Set SYNCEN bit according to SAI_Synchro value        */
+	/* Set OUTDRIV bit according to SAI_OUTDRIV value       */
+	/* Set NODIV bit according to SAI_NoDivider value       */
+	/* Set MCKDIV bits according to SAI_MasterDivider value */
+	tmpreg |= (uint32_t)(SAI_InitStruct->SAI_AudioMode | SAI_InitStruct->SAI_Protocol |
+			     SAI_InitStruct->SAI_DataSize | SAI_InitStruct->SAI_FirstBit |
+			     SAI_InitStruct->SAI_ClockStrobing | SAI_InitStruct->SAI_Synchro |
+			     SAI_InitStruct->SAI_OUTDRIV | SAI_InitStruct->SAI_NoDivider |
+			     (uint32_t)((SAI_InitStruct->SAI_MasterDivider) << 20));
+	/* Write to SAI_Block_x CR1 */
+	SAI_Block_x->CR1 = tmpreg;
+
+	/* SAI Block_x CR2 Configuration */
+	/* Get the SAIBlock_x CR2 value */
+	tmpreg = SAI_Block_x->CR2;
+	/* Clear FTH bits */
+	tmpreg &= ~(SAI_xCR2_FTH);
+	/* Configure the FIFO Level */
+	/* Set FTH bits according to SAI_FIFOThreshold value */
+	tmpreg |= (uint32_t)(SAI_InitStruct->SAI_FIFOThreshold);
+	/* Write to SAI_Block_x CR2 */
+	SAI_Block_x->CR2 = tmpreg;
 }
 
 /**
@@ -270,40 +270,40 @@ void SAI_Init(SAI_Block_TypeDef* SAI_Block_x, SAI_InitTypeDef* SAI_InitStruct)
   *         contains the configuration of audio frame for a specified SAI Block                       
   * @retval None
   */
-void SAI_FrameInit(SAI_Block_TypeDef* SAI_Block_x, SAI_FrameInitTypeDef* SAI_FrameInitStruct)
+void SAI_FrameInit(SAI_Block_TypeDef *SAI_Block_x, SAI_FrameInitTypeDef *SAI_FrameInitStruct)
 {
-  uint32_t tmpreg = 0;
-  
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  
-  /* Check the SAI Block frame parameters */
-  assert_param(IS_SAI_BLOCK_FRAME_LENGTH(SAI_FrameInitStruct->SAI_FrameLength));
-  assert_param(IS_SAI_BLOCK_ACTIVE_FRAME(SAI_FrameInitStruct->SAI_ActiveFrameLength));
-  assert_param(IS_SAI_BLOCK_FS_DEFINITION(SAI_FrameInitStruct->SAI_FSDefinition));
-  assert_param(IS_SAI_BLOCK_FS_POLARITY(SAI_FrameInitStruct->SAI_FSPolarity));
-  assert_param(IS_SAI_BLOCK_FS_OFFSET(SAI_FrameInitStruct->SAI_FSOffset));
+	uint32_t tmpreg = 0;
 
-  /* SAI Block_x FRCR Configuration */
-  /* Get the SAI Block_x FRCR value */
-  tmpreg = SAI_Block_x->FRCR;
-  /* Clear FRL, FSALL, FSDEF, FSPOL, FSOFF bits */
-  tmpreg &= FRCR_CLEAR_MASK;
-  /* Configure SAI_Block_x Frame: Frame Length, Active Frame Length, Frame Synchronization
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+
+	/* Check the SAI Block frame parameters */
+	assert_param(IS_SAI_BLOCK_FRAME_LENGTH(SAI_FrameInitStruct->SAI_FrameLength));
+	assert_param(IS_SAI_BLOCK_ACTIVE_FRAME(SAI_FrameInitStruct->SAI_ActiveFrameLength));
+	assert_param(IS_SAI_BLOCK_FS_DEFINITION(SAI_FrameInitStruct->SAI_FSDefinition));
+	assert_param(IS_SAI_BLOCK_FS_POLARITY(SAI_FrameInitStruct->SAI_FSPolarity));
+	assert_param(IS_SAI_BLOCK_FS_OFFSET(SAI_FrameInitStruct->SAI_FSOffset));
+
+	/* SAI Block_x FRCR Configuration */
+	/* Get the SAI Block_x FRCR value */
+	tmpreg = SAI_Block_x->FRCR;
+	/* Clear FRL, FSALL, FSDEF, FSPOL, FSOFF bits */
+	tmpreg &= FRCR_CLEAR_MASK;
+	/* Configure SAI_Block_x Frame: Frame Length, Active Frame Length, Frame Synchronization
      Definition, Frame Synchronization Polarity and Frame Synchronization Polarity */
-  /* Set FRL bits according to SAI_FrameLength value         */
-  /* Set FSALL bits according to SAI_ActiveFrameLength value */
-  /* Set FSDEF bit according to SAI_FSDefinition value       */
-  /* Set FSPOL bit according to SAI_FSPolarity value         */
-  /* Set FSOFF bit according to SAI_FSOffset value           */
-  tmpreg |= (uint32_t)((uint32_t)(SAI_FrameInitStruct->SAI_FrameLength - 1)  | 
-                       SAI_FrameInitStruct->SAI_FSOffset     | 
-                       SAI_FrameInitStruct->SAI_FSDefinition |    
-                       SAI_FrameInitStruct->SAI_FSPolarity   |                        
-                       (uint32_t)((SAI_FrameInitStruct->SAI_ActiveFrameLength - 1) << 8));
-                       
-  /* Write to SAI_Block_x FRCR */
-  SAI_Block_x->FRCR = tmpreg;
+	/* Set FRL bits according to SAI_FrameLength value         */
+	/* Set FSALL bits according to SAI_ActiveFrameLength value */
+	/* Set FSDEF bit according to SAI_FSDefinition value       */
+	/* Set FSPOL bit according to SAI_FSPolarity value         */
+	/* Set FSOFF bit according to SAI_FSOffset value           */
+	tmpreg |= (uint32_t)((uint32_t)(SAI_FrameInitStruct->SAI_FrameLength - 1) |
+			     SAI_FrameInitStruct->SAI_FSOffset |
+			     SAI_FrameInitStruct->SAI_FSDefinition |
+			     SAI_FrameInitStruct->SAI_FSPolarity |
+			     (uint32_t)((SAI_FrameInitStruct->SAI_ActiveFrameLength - 1) << 8));
+
+	/* Write to SAI_Block_x FRCR */
+	SAI_Block_x->FRCR = tmpreg;
 }
 
 /**
@@ -318,37 +318,36 @@ void SAI_FrameInit(SAI_Block_TypeDef* SAI_Block_x, SAI_FrameInitTypeDef* SAI_Fra
   *         contains the configuration of audio slot for a specified SAI Block                      
   * @retval None
   */
-void SAI_SlotInit(SAI_Block_TypeDef* SAI_Block_x, SAI_SlotInitTypeDef* SAI_SlotInitStruct)
+void SAI_SlotInit(SAI_Block_TypeDef *SAI_Block_x, SAI_SlotInitTypeDef *SAI_SlotInitStruct)
 {
-  uint32_t tmpreg = 0;
-  
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  
-  /* Check the SAI Block Slot parameters */
-  assert_param(IS_SAI_BLOCK_FIRSTBIT_OFFSET(SAI_SlotInitStruct->SAI_FirstBitOffset));
-  assert_param(IS_SAI_BLOCK_SLOT_SIZE(SAI_SlotInitStruct->SAI_SlotSize));
-  assert_param(IS_SAI_BLOCK_SLOT_NUMBER(SAI_SlotInitStruct->SAI_SlotNumber));
-  assert_param(IS_SAI_SLOT_ACTIVE(SAI_SlotInitStruct->SAI_SlotActive));
+	uint32_t tmpreg = 0;
 
-  /* SAI Block_x SLOTR Configuration */
-  /* Get the SAI Block_x SLOTR value */
-  tmpreg = SAI_Block_x->SLOTR;
-  /* Clear FBOFF, SLOTSZ, NBSLOT, SLOTEN bits */
-  tmpreg &= SLOTR_CLEAR_MASK;
-  /* Configure SAI_Block_x Slot: First bit offset, Slot size, Number of Slot in  
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+
+	/* Check the SAI Block Slot parameters */
+	assert_param(IS_SAI_BLOCK_FIRSTBIT_OFFSET(SAI_SlotInitStruct->SAI_FirstBitOffset));
+	assert_param(IS_SAI_BLOCK_SLOT_SIZE(SAI_SlotInitStruct->SAI_SlotSize));
+	assert_param(IS_SAI_BLOCK_SLOT_NUMBER(SAI_SlotInitStruct->SAI_SlotNumber));
+	assert_param(IS_SAI_SLOT_ACTIVE(SAI_SlotInitStruct->SAI_SlotActive));
+
+	/* SAI Block_x SLOTR Configuration */
+	/* Get the SAI Block_x SLOTR value */
+	tmpreg = SAI_Block_x->SLOTR;
+	/* Clear FBOFF, SLOTSZ, NBSLOT, SLOTEN bits */
+	tmpreg &= SLOTR_CLEAR_MASK;
+	/* Configure SAI_Block_x Slot: First bit offset, Slot size, Number of Slot in  
      audio frame and slots activated in audio frame */
-  /* Set FBOFF bits according to SAI_FirstBitOffset value  */
-  /* Set SLOTSZ bits according to SAI_SlotSize value       */
-  /* Set NBSLOT bits according to SAI_SlotNumber value     */
-  /* Set SLOTEN bits according to SAI_SlotActive value     */
-  tmpreg |= (uint32_t)(SAI_SlotInitStruct->SAI_FirstBitOffset | 
-                       SAI_SlotInitStruct->SAI_SlotSize       | 
-                       SAI_SlotInitStruct->SAI_SlotActive     |    
-                       (uint32_t)((SAI_SlotInitStruct->SAI_SlotNumber - 1) <<  8));
-                       
-  /* Write to SAI_Block_x SLOTR */
-  SAI_Block_x->SLOTR = tmpreg;
+	/* Set FBOFF bits according to SAI_FirstBitOffset value  */
+	/* Set SLOTSZ bits according to SAI_SlotSize value       */
+	/* Set NBSLOT bits according to SAI_SlotNumber value     */
+	/* Set SLOTEN bits according to SAI_SlotActive value     */
+	tmpreg |= (uint32_t)(SAI_SlotInitStruct->SAI_FirstBitOffset |
+			     SAI_SlotInitStruct->SAI_SlotSize | SAI_SlotInitStruct->SAI_SlotActive |
+			     (uint32_t)((SAI_SlotInitStruct->SAI_SlotNumber - 1) << 8));
+
+	/* Write to SAI_Block_x SLOTR */
+	SAI_Block_x->SLOTR = tmpreg;
 }
 
 /**
@@ -357,29 +356,29 @@ void SAI_SlotInit(SAI_Block_TypeDef* SAI_Block_x, SAI_SlotInitTypeDef* SAI_SlotI
   *         be initialized.  
   * @retval None
   */
-void SAI_StructInit(SAI_InitTypeDef* SAI_InitStruct)
+void SAI_StructInit(SAI_InitTypeDef *SAI_InitStruct)
 {
-  /* Reset SAI init structure parameters values */
-  /* Initialize the SAI_AudioMode member */
-  SAI_InitStruct->SAI_AudioMode = SAI_Mode_MasterTx;
-  /* Initialize the SAI_Protocol member */
-  SAI_InitStruct->SAI_Protocol = SAI_Free_Protocol;
-  /* Initialize the SAI_DataSize member */
-  SAI_InitStruct->SAI_DataSize = SAI_DataSize_8b;
-  /* Initialize the SAI_FirstBit member */
-  SAI_InitStruct->SAI_FirstBit = SAI_FirstBit_MSB;
-  /* Initialize the SAI_ClockStrobing member */
-  SAI_InitStruct->SAI_ClockStrobing = SAI_ClockStrobing_FallingEdge;
-  /* Initialize the SAI_Synchro member */
-  SAI_InitStruct->SAI_Synchro = SAI_Asynchronous;
-  /* Initialize the SAI_OUTDRIV member */
-  SAI_InitStruct->SAI_OUTDRIV = SAI_OutputDrive_Disabled;
-  /* Initialize the SAI_NoDivider member */
-  SAI_InitStruct->SAI_NoDivider = SAI_MasterDivider_Enabled;
-  /* Initialize the SAI_MasterDivider member */
-  SAI_InitStruct->SAI_MasterDivider = 0;
-  /* Initialize the SAI_FIFOThreshold member */
-  SAI_InitStruct->SAI_FIFOThreshold = SAI_Threshold_FIFOEmpty;
+	/* Reset SAI init structure parameters values */
+	/* Initialize the SAI_AudioMode member */
+	SAI_InitStruct->SAI_AudioMode = SAI_Mode_MasterTx;
+	/* Initialize the SAI_Protocol member */
+	SAI_InitStruct->SAI_Protocol = SAI_Free_Protocol;
+	/* Initialize the SAI_DataSize member */
+	SAI_InitStruct->SAI_DataSize = SAI_DataSize_8b;
+	/* Initialize the SAI_FirstBit member */
+	SAI_InitStruct->SAI_FirstBit = SAI_FirstBit_MSB;
+	/* Initialize the SAI_ClockStrobing member */
+	SAI_InitStruct->SAI_ClockStrobing = SAI_ClockStrobing_FallingEdge;
+	/* Initialize the SAI_Synchro member */
+	SAI_InitStruct->SAI_Synchro = SAI_Asynchronous;
+	/* Initialize the SAI_OUTDRIV member */
+	SAI_InitStruct->SAI_OUTDRIV = SAI_OutputDrive_Disabled;
+	/* Initialize the SAI_NoDivider member */
+	SAI_InitStruct->SAI_NoDivider = SAI_MasterDivider_Enabled;
+	/* Initialize the SAI_MasterDivider member */
+	SAI_InitStruct->SAI_MasterDivider = 0;
+	/* Initialize the SAI_FIFOThreshold member */
+	SAI_InitStruct->SAI_FIFOThreshold = SAI_Threshold_FIFOEmpty;
 }
 
 /**
@@ -388,19 +387,19 @@ void SAI_StructInit(SAI_InitTypeDef* SAI_InitStruct)
   *         which will be initialized.                     
   * @retval None
   */
-void SAI_FrameStructInit(SAI_FrameInitTypeDef* SAI_FrameInitStruct)
+void SAI_FrameStructInit(SAI_FrameInitTypeDef *SAI_FrameInitStruct)
 {
-  /* Reset SAI Frame init structure parameters values */
-  /* Initialize the SAI_FrameLength member */
-  SAI_FrameInitStruct->SAI_FrameLength = 8;
-  /* Initialize the SAI_ActiveFrameLength member */
-  SAI_FrameInitStruct->SAI_ActiveFrameLength = 1;
-  /* Initialize the SAI_FSDefinition member */
-  SAI_FrameInitStruct->SAI_FSDefinition = SAI_FS_StartFrame;
-  /* Initialize the SAI_FSPolarity member */
-  SAI_FrameInitStruct->SAI_FSPolarity = SAI_FS_ActiveLow;
-  /* Initialize the SAI_FSOffset member */
-  SAI_FrameInitStruct->SAI_FSOffset = SAI_FS_FirstBit;
+	/* Reset SAI Frame init structure parameters values */
+	/* Initialize the SAI_FrameLength member */
+	SAI_FrameInitStruct->SAI_FrameLength = 8;
+	/* Initialize the SAI_ActiveFrameLength member */
+	SAI_FrameInitStruct->SAI_ActiveFrameLength = 1;
+	/* Initialize the SAI_FSDefinition member */
+	SAI_FrameInitStruct->SAI_FSDefinition = SAI_FS_StartFrame;
+	/* Initialize the SAI_FSPolarity member */
+	SAI_FrameInitStruct->SAI_FSPolarity = SAI_FS_ActiveLow;
+	/* Initialize the SAI_FSOffset member */
+	SAI_FrameInitStruct->SAI_FSOffset = SAI_FS_FirstBit;
 }
 
 /**
@@ -409,18 +408,17 @@ void SAI_FrameStructInit(SAI_FrameInitTypeDef* SAI_FrameInitStruct)
   *         which will be initialized.                     
   * @retval None
   */
-void SAI_SlotStructInit(SAI_SlotInitTypeDef* SAI_SlotInitStruct)
+void SAI_SlotStructInit(SAI_SlotInitTypeDef *SAI_SlotInitStruct)
 {
-  /* Reset SAI Slot init structure parameters values */
-  /* Initialize the SAI_FirstBitOffset member */
-  SAI_SlotInitStruct->SAI_FirstBitOffset = 0;
-  /* Initialize the SAI_SlotSize member */
-  SAI_SlotInitStruct->SAI_SlotSize = SAI_SlotSize_DataSize;
-  /* Initialize the SAI_SlotNumber member */
-  SAI_SlotInitStruct->SAI_SlotNumber = 1;
-  /* Initialize the SAI_SlotActive member */
-  SAI_SlotInitStruct->SAI_SlotActive = SAI_Slot_NotActive;
-
+	/* Reset SAI Slot init structure parameters values */
+	/* Initialize the SAI_FirstBitOffset member */
+	SAI_SlotInitStruct->SAI_FirstBitOffset = 0;
+	/* Initialize the SAI_SlotSize member */
+	SAI_SlotInitStruct->SAI_SlotSize = SAI_SlotSize_DataSize;
+	/* Initialize the SAI_SlotNumber member */
+	SAI_SlotInitStruct->SAI_SlotNumber = 1;
+	/* Initialize the SAI_SlotActive member */
+	SAI_SlotInitStruct->SAI_SlotActive = SAI_Slot_NotActive;
 }
 
 /**
@@ -430,21 +428,18 @@ void SAI_SlotStructInit(SAI_SlotInitTypeDef* SAI_SlotInitStruct)
   *          This parameter can be: ENABLE or DISABLE.
   * @retval None
   */
-void SAI_Cmd(SAI_Block_TypeDef* SAI_Block_x, FunctionalState NewState)
+void SAI_Cmd(SAI_Block_TypeDef *SAI_Block_x, FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
-  if (NewState != DISABLE)
-  {
-    /* Enable the selected SAI peripheral */
-    SAI_Block_x->CR1 |= SAI_xCR1_SAIEN;
-  }
-  else
-  {
-    /* Disable the selected SAI peripheral */
-    SAI_Block_x->CR1 &= ~(SAI_xCR1_SAIEN);
-  }
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
+	if (NewState != DISABLE) {
+		/* Enable the selected SAI peripheral */
+		SAI_Block_x->CR1 |= SAI_xCR1_SAIEN;
+	} else {
+		/* Disable the selected SAI peripheral */
+		SAI_Block_x->CR1 &= ~(SAI_xCR1_SAIEN);
+	}
 }
 
 /**
@@ -459,16 +454,16 @@ void SAI_Cmd(SAI_Block_TypeDef* SAI_Block_x, FunctionalState NewState)
   *            @arg SAI_StreoMode : Set streo audio mode                       
   * @retval None
   */
-void SAI_MonoModeConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_Mono_StreoMode)
+void SAI_MonoModeConfig(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_Mono_StreoMode)
 {
 	(void)SAI_Mono_StreoMode;
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_MONO_STREO_MODE(SAI_MonoMode));
-  /* Clear MONO bit */
-  SAI_Block_x->CR1 &= ~(SAI_xCR1_MONO);
-  /* Set new Mono Mode value */
-  SAI_Block_x->CR1 |= SAI_MonoMode;
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_MONO_STREO_MODE(SAI_MonoMode));
+	/* Clear MONO bit */
+	SAI_Block_x->CR1 &= ~(SAI_xCR1_MONO);
+	/* Set new Mono Mode value */
+	SAI_Block_x->CR1 |= SAI_MonoMode;
 }
 
 /**
@@ -483,17 +478,16 @@ void SAI_MonoModeConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_Mono_StreoM
   *            @arg SAI_Output_Released : SD output line is released (HI-Z)                       
   * @retval None
   */
-void SAI_TRIStateConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_TRIState)
+void SAI_TRIStateConfig(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_TRIState)
 {
 	(void)SAI_TRIState;
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_TRISTATE_MANAGEMENT(SAI_TRIState));
-  /* Clear MONO bit */
-  SAI_Block_x->CR1 &= ~(SAI_xCR1_MONO);
-  /* Set new Mono Mode value */
-  SAI_Block_x->CR1 |= SAI_MonoMode;  
-  
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_TRISTATE_MANAGEMENT(SAI_TRIState));
+	/* Clear MONO bit */
+	SAI_Block_x->CR1 &= ~(SAI_xCR1_MONO);
+	/* Set new Mono Mode value */
+	SAI_Block_x->CR1 |= SAI_MonoMode;
 }
 
 /**
@@ -512,15 +506,15 @@ void SAI_TRIStateConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_TRIState)
   *            @arg SAI_ALaw_2CPL_Companding : Set A law (algorithm 2's complement repesentation)  
   * @retval None
   */
-void SAI_CompandingModeConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_CompandingMode)
+void SAI_CompandingModeConfig(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_CompandingMode)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_COMPANDING_MODE(SAI_CompandingMode));
-  /* Clear Companding Mode bits */
-  SAI_Block_x->CR2 &= ~(SAI_xCR2_COMP);
-  /* Set new Companding Mode value */
-  SAI_Block_x->CR2 |= SAI_CompandingMode;
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_COMPANDING_MODE(SAI_CompandingMode));
+	/* Clear Companding Mode bits */
+	SAI_Block_x->CR2 &= ~(SAI_xCR2_COMP);
+	/* Set new Companding Mode value */
+	SAI_Block_x->CR2 |= SAI_CompandingMode;
 }
 
 /**
@@ -536,21 +530,18 @@ void SAI_CompandingModeConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_Compa
   *          This parameter can be: ENABLE or DISABLE.
   * @retval None
   */
-void SAI_MuteModeCmd(SAI_Block_TypeDef* SAI_Block_x, FunctionalState NewState)
+void SAI_MuteModeCmd(SAI_Block_TypeDef *SAI_Block_x, FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
-  if (NewState != DISABLE)
-  {
-    /* Enable the selected SAI block mute mode */
-    SAI_Block_x->CR2 |= SAI_xCR2_MUTE;
-  }
-  else
-  {
-    /* Disable the selected SAI SS output */
-    SAI_Block_x->CR2 &= ~(SAI_xCR2_MUTE);
-  }
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
+	if (NewState != DISABLE) {
+		/* Enable the selected SAI block mute mode */
+		SAI_Block_x->CR2 |= SAI_xCR2_MUTE;
+	} else {
+		/* Disable the selected SAI SS output */
+		SAI_Block_x->CR2 &= ~(SAI_xCR2_MUTE);
+	}
 }
 
 /**
@@ -567,16 +558,16 @@ void SAI_MuteModeCmd(SAI_Block_TypeDef* SAI_Block_x, FunctionalState NewState)
   *            @arg SAI_LastSentValue : Last value is sent during Mute Mode  
   * @retval None
   */
-void SAI_MuteValueConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_MuteValue)
+void SAI_MuteValueConfig(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_MuteValue)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_MUTE_VALUE(SAI_MuteValue));
-  
-  /* Clear Mute value bits */
-  SAI_Block_x->CR2 &= ~(SAI_xCR2_MUTEVAL);
-  /* Set new Mute value */
-  SAI_Block_x->CR2 |= SAI_MuteValue;
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_MUTE_VALUE(SAI_MuteValue));
+
+	/* Clear Mute value bits */
+	SAI_Block_x->CR2 &= ~(SAI_xCR2_MUTEVAL);
+	/* Set new Mute value */
+	SAI_Block_x->CR2 |= SAI_MuteValue;
 }
 
 /**
@@ -589,16 +580,16 @@ void SAI_MuteValueConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_MuteValue)
  
   * @retval None
   */
-void SAI_MuteFrameCounterConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_MuteCounter)
+void SAI_MuteFrameCounterConfig(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_MuteCounter)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_MUTE_COUNTER(SAI_MuteCounter));
-  
-  /* Clear Mute value bits */
-  SAI_Block_x->CR2 &= ~(SAI_xCR2_MUTECNT);
-  /* Set new Mute value */
-  SAI_Block_x->CR2 |= (SAI_MuteCounter << 7);
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_MUTE_COUNTER(SAI_MuteCounter));
+
+	/* Clear Mute value bits */
+	SAI_Block_x->CR2 &= ~(SAI_xCR2_MUTECNT);
+	/* Set new Mute value */
+	SAI_Block_x->CR2 |= (SAI_MuteCounter << 7);
 }
 
 /**
@@ -612,13 +603,13 @@ void SAI_MuteFrameCounterConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_Mut
   *          This parameter can be: ENABLE or DISABLE.
   * @retval None
   */
-void SAI_FlushFIFO(SAI_Block_TypeDef* SAI_Block_x)
+void SAI_FlushFIFO(SAI_Block_TypeDef *SAI_Block_x)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
 
-  /* FIFO flush */
-  SAI_Block_x->CR2 |= SAI_xCR2_FFLUSH;
+	/* FIFO flush */
+	SAI_Block_x->CR2 |= SAI_xCR2_FFLUSH;
 }
 
 /**
@@ -654,13 +645,13 @@ void SAI_FlushFIFO(SAI_Block_TypeDef* SAI_Block_x)
   *         
   * @retval The value of the received data.
   */
-uint32_t SAI_ReceiveData(SAI_Block_TypeDef* SAI_Block_x)
+uint32_t SAI_ReceiveData(SAI_Block_TypeDef *SAI_Block_x)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  
-  /* Return the data in the DR register */
-  return SAI_Block_x->DR;
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+
+	/* Return the data in the DR register */
+	return SAI_Block_x->DR;
 }
 
 /**
@@ -670,13 +661,13 @@ uint32_t SAI_ReceiveData(SAI_Block_TypeDef* SAI_Block_x)
   * @param  Data: Data to be transmitted.
   * @retval None
   */
-void SAI_SendData(SAI_Block_TypeDef* SAI_Block_x, uint32_t Data)
+void SAI_SendData(SAI_Block_TypeDef *SAI_Block_x, uint32_t Data)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  
-  /* Write in the DR register the data to be sent */
-  SAI_Block_x->DR = Data;
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+
+	/* Write in the DR register the data to be sent */
+	SAI_Block_x->DR = Data;
 }
 
 /**
@@ -702,22 +693,19 @@ void SAI_SendData(SAI_Block_TypeDef* SAI_Block_x, uint32_t Data)
   *          This parameter can be: ENABLE or DISABLE.
   * @retval None
   */
-void SAI_DMACmd(SAI_Block_TypeDef* SAI_Block_x, FunctionalState NewState)
+void SAI_DMACmd(SAI_Block_TypeDef *SAI_Block_x, FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
-  
-  if (NewState != DISABLE)
-  {
-    /* Enable the selected SAI block mute mode */
-    SAI_Block_x->CR1 |= SAI_xCR1_DMAEN;
-  }
-  else
-  {
-    /* Disable the selected SAI SS output */
-    SAI_Block_x->CR1 &= ~(SAI_xCR1_DMAEN);
-  }
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
+
+	if (NewState != DISABLE) {
+		/* Enable the selected SAI block mute mode */
+		SAI_Block_x->CR1 |= SAI_xCR1_DMAEN;
+	} else {
+		/* Disable the selected SAI SS output */
+		SAI_Block_x->CR1 &= ~(SAI_xCR1_DMAEN);
+	}
 }
 
 /**
@@ -846,23 +834,20 @@ void SAI_DMACmd(SAI_Block_TypeDef* SAI_Block_x, FunctionalState NewState)
   *          This parameter can be: ENABLE or DISABLE.
   * @retval None
   */
-void SAI_ITConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_IT, FunctionalState NewState)
-{ 
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
-  assert_param(IS_SAI_BLOCK_CONFIG_IT(SAI_IT));
+void SAI_ITConfig(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_IT, FunctionalState NewState)
+{
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
+	assert_param(IS_SAI_BLOCK_CONFIG_IT(SAI_IT));
 
-  if (NewState != DISABLE)
-  {
-    /* Enable the selected SAI Block interrupt */
-    SAI_Block_x->IMR |= SAI_IT;
-  }
-  else
-  {
-    /* Disable the selected SAI Block interrupt */
-    SAI_Block_x->IMR &= ~(SAI_IT);
-  }
+	if (NewState != DISABLE) {
+		/* Enable the selected SAI Block interrupt */
+		SAI_Block_x->IMR |= SAI_IT;
+	} else {
+		/* Disable the selected SAI Block interrupt */
+		SAI_Block_x->IMR &= ~(SAI_IT);
+	}
 }
 
 /**
@@ -879,27 +864,24 @@ void SAI_ITConfig(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_IT, FunctionalSta
   *            @arg SAI_FLAG_LFSDET: late frame synchronization detection flag.
   * @retval The new state of SAI_FLAG (SET or RESET).
   */
-FlagStatus SAI_GetFlagStatus(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_FLAG)
+FlagStatus SAI_GetFlagStatus(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_FLAG)
 {
-  FlagStatus bitstatus = RESET;
-  
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_GET_FLAG(SAI_FLAG));
-  
-  /* Check the status of the specified SAI flag */
-  if ((SAI_Block_x->SR & SAI_FLAG) != (uint32_t)RESET)
-  {
-    /* SAI_FLAG is set */
-    bitstatus = SET;
-  }
-  else
-  {
-    /* SAI_FLAG is reset */
-    bitstatus = RESET;
-  }
-  /* Return the SAI_FLAG status */
-  return  bitstatus;
+	FlagStatus bitstatus = RESET;
+
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_GET_FLAG(SAI_FLAG));
+
+	/* Check the status of the specified SAI flag */
+	if ((SAI_Block_x->SR & SAI_FLAG) != (uint32_t)RESET) {
+		/* SAI_FLAG is set */
+		bitstatus = SET;
+	} else {
+		/* SAI_FLAG is reset */
+		bitstatus = RESET;
+	}
+	/* Return the SAI_FLAG status */
+	return bitstatus;
 }
 
 /**
@@ -922,14 +904,14 @@ FlagStatus SAI_GetFlagStatus(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_FLAG)
   *  
   * @retval None
   */
-void SAI_ClearFlag(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_FLAG)
+void SAI_ClearFlag(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_FLAG)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_CLEAR_FLAG(SAI_FLAG));
-    
-  /* Clear the selected SAI Block flag */
-  SAI_Block_x->CLRFR |= SAI_FLAG;
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_CLEAR_FLAG(SAI_FLAG));
+
+	/* Clear the selected SAI Block flag */
+	SAI_Block_x->CLRFR |= SAI_FLAG;
 }
 
 /**
@@ -947,31 +929,28 @@ void SAI_ClearFlag(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_FLAG)
   *                
   * @retval The new state of SAI_IT (SET or RESET).
   */
-ITStatus SAI_GetITStatus(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_IT)
+ITStatus SAI_GetITStatus(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_IT)
 {
-  ITStatus bitstatus = RESET;
-  uint32_t  enablestatus = 0;
+	ITStatus bitstatus = RESET;
+	uint32_t enablestatus = 0;
 
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_CONFIG_IT(SAI_IT));
-  
-  /* Get the SAI_IT enable bit status */
-  enablestatus = (SAI_Block_x->IMR & SAI_IT) ;
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_CONFIG_IT(SAI_IT));
 
-  /* Check the status of the specified SAI interrupt */
-  if (((SAI_Block_x->SR & SAI_IT) != (uint32_t)RESET) && (enablestatus != (uint32_t)RESET))
-  {
-    /* SAI_IT is set */
-    bitstatus = SET;
-  }
-  else
-  {
-    /* SAI_IT is reset */
-    bitstatus = RESET;
-  }
-  /* Return the SAI_IT status */
-  return bitstatus;
+	/* Get the SAI_IT enable bit status */
+	enablestatus = (SAI_Block_x->IMR & SAI_IT);
+
+	/* Check the status of the specified SAI interrupt */
+	if (((SAI_Block_x->SR & SAI_IT) != (uint32_t)RESET) && (enablestatus != (uint32_t)RESET)) {
+		/* SAI_IT is set */
+		bitstatus = SET;
+	} else {
+		/* SAI_IT is reset */
+		bitstatus = RESET;
+	}
+	/* Return the SAI_IT status */
+	return bitstatus;
 }
 
 /**
@@ -994,14 +973,14 @@ ITStatus SAI_GetITStatus(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_IT)
   *            
   * @retval None
   */
-void SAI_ClearITPendingBit(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_IT)
+void SAI_ClearITPendingBit(SAI_Block_TypeDef *SAI_Block_x, uint32_t SAI_IT)
 {
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  assert_param(IS_SAI_BLOCK_CONFIG_IT(SAI_IT));
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	assert_param(IS_SAI_BLOCK_CONFIG_IT(SAI_IT));
 
-  /* Clear the selected SAI Block x interrupt pending bit */
-  SAI_Block_x->CLRFR |= SAI_IT; 
+	/* Clear the selected SAI Block x interrupt pending bit */
+	SAI_Block_x->CLRFR |= SAI_IT;
 }
 
 /**
@@ -1016,24 +995,21 @@ void SAI_ClearITPendingBit(SAI_Block_TypeDef* SAI_Block_x, uint32_t SAI_IT)
   *      
   * @retval Current state of the DMAy Streamx (ENABLE or DISABLE).
   */
-FunctionalState SAI_GetCmdStatus(SAI_Block_TypeDef* SAI_Block_x)
+FunctionalState SAI_GetCmdStatus(SAI_Block_TypeDef *SAI_Block_x)
 {
-  FunctionalState state = DISABLE;
+	FunctionalState state = DISABLE;
 
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  if ((SAI_Block_x->CR1 & (uint32_t)SAI_xCR1_SAIEN) != 0)
-  {
-    /* The selected SAI Block x EN bit is set (audio frame transfer is ongoing) */
-    state = ENABLE;
-  }
-  else
-  {
-    /* The selected SAI Block x EN bit is cleared (SAI Block is disabled and 
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+	if ((SAI_Block_x->CR1 & (uint32_t)SAI_xCR1_SAIEN) != 0) {
+		/* The selected SAI Block x EN bit is set (audio frame transfer is ongoing) */
+		state = ENABLE;
+	} else {
+		/* The selected SAI Block x EN bit is cleared (SAI Block is disabled and 
         all transfers are complete) */
-    state = DISABLE;
-  }
-  return state;
+		state = DISABLE;
+	}
+	return state;
 }
 
 /**
@@ -1049,19 +1025,18 @@ FunctionalState SAI_GetCmdStatus(SAI_Block_TypeDef* SAI_Block_x)
   *           - SAI_FIFOStatus_3QuartersFull: if more than 3 quarters-full.
   *           - SAI_FIFOStatus_Full: when FIFO is full
   */
-uint32_t SAI_GetFIFOStatus(SAI_Block_TypeDef* SAI_Block_x)
+uint32_t SAI_GetFIFOStatus(SAI_Block_TypeDef *SAI_Block_x)
 {
-  uint32_t tmpreg = 0;
- 
-  /* Check the parameters */
-  assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
-  
-  /* Get the FIFO level bits */
-  tmpreg = (uint32_t)((SAI_Block_x->SR & SAI_xSR_FLVL));
-  
-  return tmpreg;
-}
+	uint32_t tmpreg = 0;
 
+	/* Check the parameters */
+	assert_param(IS_SAI_BLOCK_PERIPH(SAI_Block_x));
+
+	/* Get the FIFO level bits */
+	tmpreg = (uint32_t)((SAI_Block_x->SR & SAI_xSR_FLVL));
+
+	return tmpreg;
+}
 
 /**
   * @}
@@ -1069,14 +1044,14 @@ uint32_t SAI_GetFIFOStatus(SAI_Block_TypeDef* SAI_Block_x)
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

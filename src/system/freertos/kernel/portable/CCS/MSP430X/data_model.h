@@ -1,4 +1,4 @@
-;/*
+; /*
 ;    FreeRTOS V9.0.0 - Copyright (C) 2016 Real Time Engineers Ltd.
 ;    All rights reserved
 ;	
@@ -52,29 +52,12 @@
 ;    licensing and training services.
 ;*/
 
-	.if $DEFINED( __LARGE_DATA_MODEL__ )
-		.define "pushm.a", pushm_x
-		.define "popm.a", popm_x
-		.define "push.a", push_x
-		.define "pop.a", pop_x
-		.define "mov.a", mov_x
-	.else
-		.define "pushm.w", pushm_x
-		.define "popm.w", popm_x
-		.define "push.w", push_x
-		.define "pop.w", pop_x
-		.define "mov.w", mov_x
-	.endif
-	
-	.if $DEFINED( __LARGE_CODE_MODEL__ )
-		.define "calla", call_x
-		.define "reta", ret_x
-	.else
-		.define "call", call_x
-		.define "ret", ret_x
-	.endif
-	
+.if $DEFINED (__LARGE_DATA_MODEL__).define "pushm.a", pushm_x.define "popm.a",
+	popm_x.define "push.a", push_x.define "pop.a", pop_x.define "mov.a",
+	mov_x.else.define "pushm.w", pushm_x.define "popm.w", popm_x.define "push.w",
+	push_x.define "pop.w", pop_x.define "mov.w",
+	mov_x.endif
 
-
-
-
+		.if $DEFINED (__LARGE_CODE_MODEL__)
+		.define "calla",
+	call_x.define "reta", ret_x.else.define "call", call_x.define "ret", ret_x.endif

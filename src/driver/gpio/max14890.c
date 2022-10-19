@@ -36,38 +36,38 @@
 #define MAX14890_CMD_WRITE_CONFIG (5 << 13)
 #define MAX14890_CMD_FAULT_STATUS (2 << 13)
 
-#define MAX14890_HITH_LOW		(0)
-#define MAX14890_HITH_HIGH		((1 << 12))
+#define MAX14890_HITH_LOW (0)
+#define MAX14890_HITH_HIGH ((1 << 12))
 
-#define MAX14890_MODEA_DHTL		(0)
-#define MAX14890_MODEA_RS422	((1 << 10))
-#define MAX14890_MODEA_SEHTL	((2 << 10))
-#define MAX14890_MODEA_TTL		((3 << 10))
+#define MAX14890_MODEA_DHTL (0)
+#define MAX14890_MODEA_RS422 ((1 << 10))
+#define MAX14890_MODEA_SEHTL ((2 << 10))
+#define MAX14890_MODEA_TTL ((3 << 10))
 
-#define MAX14890_MODEB_DHTL		(0)
-#define MAX14890_MODEB_RS422	((1 << 8))
-#define MAX14890_MODEB_SEHTL	((2 << 8))
-#define MAX14890_MODEB_TTL		((3 << 8))
+#define MAX14890_MODEB_DHTL (0)
+#define MAX14890_MODEB_RS422 ((1 << 8))
+#define MAX14890_MODEB_SEHTL ((2 << 8))
+#define MAX14890_MODEB_TTL ((3 << 8))
 
-#define MAX14890_MODEZ_DHTL		((0))
-#define MAX14890_MODEZ_RS422	((4 << 5))
-#define MAX14890_MODEZ_SEHTL	((2 << 5))
-#define MAX14890_MODEZ_TTL		((6 << 5))
-#define MAX14890_MODEZ_DI		((1 << 5))
+#define MAX14890_MODEZ_DHTL ((0))
+#define MAX14890_MODEZ_RS422 ((4 << 5))
+#define MAX14890_MODEZ_SEHTL ((2 << 5))
+#define MAX14890_MODEZ_TTL ((6 << 5))
+#define MAX14890_MODEZ_DI ((1 << 5))
 
-#define MAX14890_MODEY_RS422 	(0)
-#define MAX14890_MODEY_TTL		((3 << 3))
-#define MAX14890_MODEY_DI		((1 << 3))
+#define MAX14890_MODEY_RS422 (0)
+#define MAX14890_MODEY_TTL ((3 << 3))
+#define MAX14890_MODEY_DI ((1 << 3))
 
-#define MAX14890_MODED2_DI		((1 << 2))
-#define MAX14890_MODED2_TTL		0
-#define MAX14890_MODED3_DI		((1 << 1))
-#define MAX14890_MODED3_TTL		0
+#define MAX14890_MODED2_DI ((1 << 2))
+#define MAX14890_MODED2_TTL 0
+#define MAX14890_MODED3_DI ((1 << 1))
+#define MAX14890_MODED3_TTL 0
 
-#define MAX14890_FILTER_OFF		0
-#define MAX14890_FILTER_ON		((1 << 0))
+#define MAX14890_FILTER_OFF 0
+#define MAX14890_FILTER_ON ((1 << 0))
 
-#define MAX14890_TIMEOUT		10
+#define MAX14890_TIMEOUT 10
 
 struct max14890 {
 	gpio_device_t gpio;
@@ -75,9 +75,10 @@ struct max14890 {
 	uint32_t cs_pin;
 };
 
-static int _max14890_cmd(struct max14890 *self, uint32_t txdata, uint16_t *rxdata){
-	uint8_t tx[2] = {(uint8_t)(txdata >> 8), (uint8_t)txdata};
-	uint8_t rx[2] = {0};
+static int _max14890_cmd(struct max14890 *self, uint32_t txdata, uint16_t *rxdata)
+{
+	uint8_t tx[2] = { (uint8_t)(txdata >> 8), (uint8_t)txdata };
+	uint8_t rx[2] = { 0 };
 
 	thread_sleep_us(50);
 
@@ -93,14 +94,15 @@ static int _max14890_cmd(struct max14890 *self, uint32_t txdata, uint16_t *rxdat
 	return 0;
 }
 
-static int _max14890_probe(void *fdt, int fdt_node){
+static int _max14890_probe(void *fdt, int fdt_node)
+{
 	spi_device_t spi = spi_find_by_ref(fdt, fdt_node, "spi");
-	if(!spi){
+	if (!spi) {
 		printk("max14890: spi error\n");
 		return -1;
 	}
 	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
-	if(!gpio){
+	if (!gpio) {
 		printk("max14890: gpio error\n");
 		return -1;
 	}
@@ -116,20 +118,16 @@ static int _max14890_probe(void *fdt, int fdt_node){
 	// configure mode for pins
 	uint16_t status = 0;
 	_max14890_cmd(self,
-		MAX14890_CMD_WRITE_CONFIG |
-		MAX14890_MODEA_TTL |
-		MAX14890_MODEB_TTL |
-		MAX14890_MODEZ_TTL |
-		MAX14890_MODEY_TTL |
-		MAX14890_MODED2_TTL |
-		MAX14890_MODED3_TTL
-	, &status);
+		      MAX14890_CMD_WRITE_CONFIG | MAX14890_MODEA_TTL | MAX14890_MODEB_TTL |
+			      MAX14890_MODEZ_TTL | MAX14890_MODEY_TTL | MAX14890_MODED2_TTL |
+			      MAX14890_MODED3_TTL,
+		      &status);
 
-	_max14890_cmd(self,
-		MAX14890_CMD_FAULT_STATUS, &status);
+	_max14890_cmd(self, MAX14890_CMD_FAULT_STATUS, &status);
 
-	if((status & 0xe000) != 0x4000){
-		printk(PRINT_ERROR "max14890: fault status (%04x) invalid. Chip unreachable!\n", status);
+	if ((status & 0xe000) != 0x4000) {
+		printk(PRINT_ERROR "max14890: fault status (%04x) invalid. Chip unreachable!\n",
+		       status);
 	} else {
 		printk(PRINT_SUCCESS "max14890: ready (%04x)\n", status);
 	}
@@ -137,9 +135,9 @@ static int _max14890_probe(void *fdt, int fdt_node){
 	return 0;
 }
 
-static int _max14890_remove(void *fdt, int fdt_node){
+static int _max14890_remove(void *fdt, int fdt_node)
+{
 	return -1;
 }
 
 DEVICE_DRIVER(max14890, "fw,max14890", _max14890_probe, _max14890_remove)
-

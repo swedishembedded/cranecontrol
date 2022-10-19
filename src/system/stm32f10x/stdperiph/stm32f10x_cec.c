@@ -40,74 +40,69 @@
   * @}
   */
 
-
 /** @defgroup CEC_Private_Defines
   * @{
-  */ 
+  */
 
 /* ------------ CEC registers bit address in the alias region ----------- */
-#define CEC_OFFSET                (CEC_BASE - PERIPH_BASE)
+#define CEC_OFFSET (CEC_BASE - PERIPH_BASE)
 
 /* --- CFGR Register ---*/
 
 /* Alias word address of PE bit */
-#define CFGR_OFFSET                 (CEC_OFFSET + 0x00)
-#define PE_BitNumber                0x00
-#define CFGR_PE_BB                  (PERIPH_BB_BASE + (CFGR_OFFSET * 32) + (PE_BitNumber * 4))
+#define CFGR_OFFSET (CEC_OFFSET + 0x00)
+#define PE_BitNumber 0x00
+#define CFGR_PE_BB (PERIPH_BB_BASE + (CFGR_OFFSET * 32) + (PE_BitNumber * 4))
 
 /* Alias word address of IE bit */
-#define IE_BitNumber                0x01
-#define CFGR_IE_BB                  (PERIPH_BB_BASE + (CFGR_OFFSET * 32) + (IE_BitNumber * 4))
+#define IE_BitNumber 0x01
+#define CFGR_IE_BB (PERIPH_BB_BASE + (CFGR_OFFSET * 32) + (IE_BitNumber * 4))
 
 /* --- CSR Register ---*/
 
 /* Alias word address of TSOM bit */
-#define CSR_OFFSET                  (CEC_OFFSET + 0x10)
-#define TSOM_BitNumber              0x00
-#define CSR_TSOM_BB                 (PERIPH_BB_BASE + (CSR_OFFSET * 32) + (TSOM_BitNumber * 4))
+#define CSR_OFFSET (CEC_OFFSET + 0x10)
+#define TSOM_BitNumber 0x00
+#define CSR_TSOM_BB (PERIPH_BB_BASE + (CSR_OFFSET * 32) + (TSOM_BitNumber * 4))
 
 /* Alias word address of TEOM bit */
-#define TEOM_BitNumber              0x01
-#define CSR_TEOM_BB                 (PERIPH_BB_BASE + (CSR_OFFSET * 32) + (TEOM_BitNumber * 4))
-  
-#define CFGR_CLEAR_Mask            (uint8_t)(0xF3)        /* CFGR register Mask */
-#define FLAG_Mask                  ((uint32_t)0x00FFFFFF) /* CEC FLAG mask */
- 
+#define TEOM_BitNumber 0x01
+#define CSR_TEOM_BB (PERIPH_BB_BASE + (CSR_OFFSET * 32) + (TEOM_BitNumber * 4))
+
+#define CFGR_CLEAR_Mask (uint8_t)(0xF3) /* CFGR register Mask */
+#define FLAG_Mask ((uint32_t)0x00FFFFFF) /* CEC FLAG mask */
+
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup CEC_Private_Macros
   * @{
-  */ 
+  */
 
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup CEC_Private_Variables
   * @{
-  */ 
+  */
 
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup CEC_Private_FunctionPrototypes
   * @{
   */
- 
+
 /**
   * @}
-  */ 
-
+  */
 
 /** @defgroup CEC_Private_Functions
   * @{
-  */ 
+  */
 
 /**
   * @brief  Deinitializes the CEC peripheral registers to their default reset 
@@ -117,12 +112,11 @@
   */
 void CEC_DeInit(void)
 {
-  /* Enable CEC reset state */
-  RCC_APB1PeriphResetCmd(RCC_APB1Periph_CEC, ENABLE);  
-  /* Release CEC from reset state */
-  RCC_APB1PeriphResetCmd(RCC_APB1Periph_CEC, DISABLE); 
+	/* Enable CEC reset state */
+	RCC_APB1PeriphResetCmd(RCC_APB1Periph_CEC, ENABLE);
+	/* Release CEC from reset state */
+	RCC_APB1PeriphResetCmd(RCC_APB1Periph_CEC, DISABLE);
 }
-
 
 /**
   * @brief  Initializes the CEC peripheral according to the specified 
@@ -132,27 +126,26 @@ void CEC_DeInit(void)
   *         CEC peripheral.
   * @retval None
   */
-void CEC_Init(CEC_InitTypeDef* CEC_InitStruct)
+void CEC_Init(CEC_InitTypeDef *CEC_InitStruct)
 {
-  uint32_t tmpreg = 0;
- 
-  /* Check the parameters */
-  assert_param(IS_CEC_BIT_TIMING_ERROR_MODE(CEC_InitStruct->CEC_BitTimingMode)); 
-  assert_param(IS_CEC_BIT_PERIOD_ERROR_MODE(CEC_InitStruct->CEC_BitPeriodMode));
-     
-  /*---------------------------- CEC CFGR Configuration -----------------*/
-  /* Get the CEC CFGR value */
-  tmpreg = CEC->CFGR;
-  
-  /* Clear BTEM and BPEM bits */
-  tmpreg &= CFGR_CLEAR_Mask;
-  
-  /* Configure CEC: Bit Timing Error and Bit Period Error */
-  tmpreg |= (uint16_t)(CEC_InitStruct->CEC_BitTimingMode | CEC_InitStruct->CEC_BitPeriodMode);
+	uint32_t tmpreg = 0;
 
-  /* Write to CEC CFGR  register*/
-  CEC->CFGR = tmpreg;
-  
+	/* Check the parameters */
+	assert_param(IS_CEC_BIT_TIMING_ERROR_MODE(CEC_InitStruct->CEC_BitTimingMode));
+	assert_param(IS_CEC_BIT_PERIOD_ERROR_MODE(CEC_InitStruct->CEC_BitPeriodMode));
+
+	/*---------------------------- CEC CFGR Configuration -----------------*/
+	/* Get the CEC CFGR value */
+	tmpreg = CEC->CFGR;
+
+	/* Clear BTEM and BPEM bits */
+	tmpreg &= CFGR_CLEAR_Mask;
+
+	/* Configure CEC: Bit Timing Error and Bit Period Error */
+	tmpreg |= (uint16_t)(CEC_InitStruct->CEC_BitTimingMode | CEC_InitStruct->CEC_BitPeriodMode);
+
+	/* Write to CEC CFGR  register*/
+	CEC->CFGR = tmpreg;
 }
 
 /**
@@ -163,18 +156,16 @@ void CEC_Init(CEC_InitTypeDef* CEC_InitStruct)
   */
 void CEC_Cmd(FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  *(__IO uint32_t *) CFGR_PE_BB = (uint32_t)NewState;
+	*(__IO uint32_t *)CFGR_PE_BB = (uint32_t)NewState;
 
-  if(NewState == DISABLE)
-  {
-    /* Wait until the PE bit is cleared by hardware (Idle Line detected) */
-    while((CEC->CFGR & CEC_CFGR_PE) != (uint32_t)RESET)
-    {
-    }  
-  }  
+	if (NewState == DISABLE) {
+		/* Wait until the PE bit is cleared by hardware (Idle Line detected) */
+		while ((CEC->CFGR & CEC_CFGR_PE) != (uint32_t)RESET) {
+		}
+	}
 }
 
 /**
@@ -185,10 +176,10 @@ void CEC_Cmd(FunctionalState NewState)
   */
 void CEC_ITConfig(FunctionalState NewState)
 {
-  /* Check the parameters */
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
+	/* Check the parameters */
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
 
-  *(__IO uint32_t *) CFGR_IE_BB = (uint32_t)NewState;
+	*(__IO uint32_t *)CFGR_IE_BB = (uint32_t)NewState;
 }
 
 /**
@@ -198,11 +189,11 @@ void CEC_ITConfig(FunctionalState NewState)
   */
 void CEC_OwnAddressConfig(uint8_t CEC_OwnAddress)
 {
-  /* Check the parameters */
-  assert_param(IS_CEC_ADDRESS(CEC_OwnAddress));
+	/* Check the parameters */
+	assert_param(IS_CEC_ADDRESS(CEC_OwnAddress));
 
-  /* Set the CEC own address */
-  CEC->OAR = CEC_OwnAddress;
+	/* Set the CEC own address */
+	CEC->OAR = CEC_OwnAddress;
 }
 
 /**
@@ -212,11 +203,11 @@ void CEC_OwnAddressConfig(uint8_t CEC_OwnAddress)
   */
 void CEC_SetPrescaler(uint16_t CEC_Prescaler)
 {
-  /* Check the parameters */
-  assert_param(IS_CEC_PRESCALER(CEC_Prescaler));
+	/* Check the parameters */
+	assert_param(IS_CEC_PRESCALER(CEC_Prescaler));
 
-  /* Set the  Prescaler value*/
-  CEC->PRES = CEC_Prescaler;
+	/* Set the  Prescaler value*/
+	CEC->PRES = CEC_Prescaler;
 }
 
 /**
@@ -225,11 +216,10 @@ void CEC_SetPrescaler(uint16_t CEC_Prescaler)
   * @retval None
   */
 void CEC_SendDataByte(uint8_t Data)
-{  
-  /* Transmit Data */
-  CEC->TXD = Data ;
+{
+	/* Transmit Data */
+	CEC->TXD = Data;
 }
-
 
 /**
   * @brief  Returns the most recent received data by the CEC peripheral.
@@ -238,8 +228,8 @@ void CEC_SendDataByte(uint8_t Data)
   */
 uint8_t CEC_ReceiveDataByte(void)
 {
-  /* Receive Data */
-  return (uint8_t)(CEC->RXD);
+	/* Receive Data */
+	return (uint8_t)(CEC->RXD);
 }
 
 /**
@@ -248,9 +238,9 @@ uint8_t CEC_ReceiveDataByte(void)
   * @retval None
   */
 void CEC_StartOfMessage(void)
-{  
-  /* Starts of new message */
-  *(__IO uint32_t *) CSR_TSOM_BB = (uint32_t)0x1;
+{
+	/* Starts of new message */
+	*(__IO uint32_t *)CSR_TSOM_BB = (uint32_t)0x1;
 }
 
 /**
@@ -260,12 +250,12 @@ void CEC_StartOfMessage(void)
   * @retval None
   */
 void CEC_EndOfMessageCmd(FunctionalState NewState)
-{   
-  /* Check the parameters */
-  assert_param(IS_FUNCTIONAL_STATE(NewState));
-  
-  /* The data byte will be transmitted with or without an EOM bit*/
-  *(__IO uint32_t *) CSR_TEOM_BB = (uint32_t)NewState;
+{
+	/* Check the parameters */
+	assert_param(IS_FUNCTIONAL_STATE(NewState));
+
+	/* The data byte will be transmitted with or without an EOM bit*/
+	*(__IO uint32_t *)CSR_TEOM_BB = (uint32_t)NewState;
 }
 
 /**
@@ -288,50 +278,44 @@ void CEC_EndOfMessageCmd(FunctionalState NewState)
   *     @arg CEC_FLAG_RBTF: Rx Byte/Block Transfer Finished
   * @retval The new state of CEC_FLAG (SET or RESET)
   */
-FlagStatus CEC_GetFlagStatus(uint32_t CEC_FLAG) 
+FlagStatus CEC_GetFlagStatus(uint32_t CEC_FLAG)
 {
-  FlagStatus bitstatus = RESET;
-  uint32_t cecreg = 0, cecbase = 0;
-  
-  /* Check the parameters */
-  assert_param(IS_CEC_GET_FLAG(CEC_FLAG));
- 
-  /* Get the CEC peripheral base address */
-  cecbase = (uint32_t)(CEC_BASE);
-  
-  /* Read flag register index */
-  cecreg = CEC_FLAG >> 28;
-  
-  /* Get bit[23:0] of the flag */
-  CEC_FLAG &= FLAG_Mask;
-  
-  if(cecreg != 0)
-  {
-    /* Flag in CEC ESR Register */
-    CEC_FLAG = (uint32_t)(CEC_FLAG >> 16);
-    
-    /* Get the CEC ESR register address */
-    cecbase += 0xC;
-  }
-  else
-  {
-    /* Get the CEC CSR register address */
-    cecbase += 0x10;
-  }
-  
-  if(((*(__IO uint32_t *)cecbase) & CEC_FLAG) != (uint32_t)RESET)
-  {
-    /* CEC_FLAG is set */
-    bitstatus = SET;
-  }
-  else
-  {
-    /* CEC_FLAG is reset */
-    bitstatus = RESET;
-  }
-  
-  /* Return the CEC_FLAG status */
-  return  bitstatus;
+	FlagStatus bitstatus = RESET;
+	uint32_t cecreg = 0, cecbase = 0;
+
+	/* Check the parameters */
+	assert_param(IS_CEC_GET_FLAG(CEC_FLAG));
+
+	/* Get the CEC peripheral base address */
+	cecbase = (uint32_t)(CEC_BASE);
+
+	/* Read flag register index */
+	cecreg = CEC_FLAG >> 28;
+
+	/* Get bit[23:0] of the flag */
+	CEC_FLAG &= FLAG_Mask;
+
+	if (cecreg != 0) {
+		/* Flag in CEC ESR Register */
+		CEC_FLAG = (uint32_t)(CEC_FLAG >> 16);
+
+		/* Get the CEC ESR register address */
+		cecbase += 0xC;
+	} else {
+		/* Get the CEC CSR register address */
+		cecbase += 0x10;
+	}
+
+	if (((*(__IO uint32_t *)cecbase) & CEC_FLAG) != (uint32_t)RESET) {
+		/* CEC_FLAG is set */
+		bitstatus = SET;
+	} else {
+		/* CEC_FLAG is reset */
+		bitstatus = RESET;
+	}
+
+	/* Return the CEC_FLAG status */
+	return bitstatus;
 }
 
 /**
@@ -347,16 +331,16 @@ FlagStatus CEC_GetFlagStatus(uint32_t CEC_FLAG)
   * @retval None
   */
 void CEC_ClearFlag(uint32_t CEC_FLAG)
-{ 
-  uint32_t tmp = 0x0;
-  
-  /* Check the parameters */
-  assert_param(IS_CEC_CLEAR_FLAG(CEC_FLAG));
+{
+	uint32_t tmp = 0x0;
 
-  tmp = CEC->CSR & 0x2;
-       
-  /* Clear the selected CEC flags */
-  CEC->CSR &= (uint32_t)(((~(uint32_t)CEC_FLAG) & 0xFFFFFFFC) | tmp);
+	/* Check the parameters */
+	assert_param(IS_CEC_CLEAR_FLAG(CEC_FLAG));
+
+	tmp = CEC->CSR & 0x2;
+
+	/* Clear the selected CEC flags */
+	CEC->CSR &= (uint32_t)(((~(uint32_t)CEC_FLAG) & 0xFFFFFFFC) | tmp);
 }
 
 /**
@@ -371,28 +355,25 @@ void CEC_ClearFlag(uint32_t CEC_FLAG)
   */
 ITStatus CEC_GetITStatus(uint8_t CEC_IT)
 {
-  ITStatus bitstatus = RESET;
-  uint32_t enablestatus = 0;
-  
-  /* Check the parameters */
-   assert_param(IS_CEC_GET_IT(CEC_IT));
-   
-  /* Get the CEC IT enable bit status */
-  enablestatus = (CEC->CFGR & (uint8_t)CEC_CFGR_IE) ;
-  
-  /* Check the status of the specified CEC interrupt */
-  if (((CEC->CSR & CEC_IT) != (uint32_t)RESET) && enablestatus)
-  {
-    /* CEC_IT is set */
-    bitstatus = SET;
-  }
-  else
-  {
-    /* CEC_IT is reset */
-    bitstatus = RESET;
-  }
-  /* Return the CEC_IT status */
-  return  bitstatus;
+	ITStatus bitstatus = RESET;
+	uint32_t enablestatus = 0;
+
+	/* Check the parameters */
+	assert_param(IS_CEC_GET_IT(CEC_IT));
+
+	/* Get the CEC IT enable bit status */
+	enablestatus = (CEC->CFGR & (uint8_t)CEC_CFGR_IE);
+
+	/* Check the status of the specified CEC interrupt */
+	if (((CEC->CSR & CEC_IT) != (uint32_t)RESET) && enablestatus) {
+		/* CEC_IT is set */
+		bitstatus = SET;
+	} else {
+		/* CEC_IT is reset */
+		bitstatus = RESET;
+	}
+	/* Return the CEC_IT status */
+	return bitstatus;
 }
 
 /**
@@ -407,27 +388,27 @@ ITStatus CEC_GetITStatus(uint8_t CEC_IT)
   */
 void CEC_ClearITPendingBit(uint16_t CEC_IT)
 {
-  uint32_t tmp = 0x0;
-  
-  /* Check the parameters */
-  assert_param(IS_CEC_GET_IT(CEC_IT));
-  
-  tmp = CEC->CSR & 0x2;
-  
-  /* Clear the selected CEC interrupt pending bits */
-  CEC->CSR &= (uint32_t)(((~(uint32_t)CEC_IT) & 0xFFFFFFFC) | tmp);
+	uint32_t tmp = 0x0;
+
+	/* Check the parameters */
+	assert_param(IS_CEC_GET_IT(CEC_IT));
+
+	tmp = CEC->CSR & 0x2;
+
+	/* Clear the selected CEC interrupt pending bits */
+	CEC->CSR &= (uint32_t)(((~(uint32_t)CEC_IT) & 0xFFFFFFFC) | tmp);
 }
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

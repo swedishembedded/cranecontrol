@@ -16,9 +16,7 @@
 #include <string.h>
 #include "types/avl-cmp.h"
 
-int
-avl_strcmp(const void *k1, const void *k2, void *ptr)
+int avl_strcmp(const void *k1, const void *k2, void *ptr)
 {
 	return strcmp(k1, k2);
 }
-

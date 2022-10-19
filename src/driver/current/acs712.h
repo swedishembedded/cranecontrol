@@ -33,5 +33,4 @@
 //setup sensitivity
 #define ACS712_SENSITIVITY ACS712_SENSITIVITY30
 
-float acs712_read_current(uint8_t adc_chan,
-	float sensitivity, float vcc_volt);
+float acs712_read_current(uint8_t adc_chan, float sensitivity, float vcc_volt);

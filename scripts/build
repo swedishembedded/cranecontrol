@@ -1,0 +1,20 @@
+#!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2022 Martin Schröder <info@swedishembedded.com>
+# Consulting: https://swedishembedded.com/go
+# Training: https://swedishembedded.com/tag/training
+
+ROOT="$(realpath $(dirname $BASH_SOURCE)/..)"
+. ${ROOT}/../zephyr/zephyr-env.sh
+west zephyr-export
+
+set -e
+
+export PATH=$PATH:/opt/toolchains/zephyr-sdk-0.15.1/arm-zephyr-eabi/bin/
+
+mkdir -p $ROOT/build &&
+	cd $ROOT &&
+	./autogen.sh &&
+	cd build &&
+	../configure --host=arm-zephyr-eabi --with-devicetree=../dts/flyingbergman.dts &&
+	make -j4

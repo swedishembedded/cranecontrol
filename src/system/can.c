@@ -29,15 +29,17 @@
 
 DEFINE_DEVICE_CLASS(can)
 
-void _can_dispatcher_loop(void *ptr){
-	struct can_dispatcher *self = (struct can_dispatcher*)ptr;
-	while(1){
+void _can_dispatcher_loop(void *ptr)
+{
+	struct can_dispatcher *self = (struct can_dispatcher *)ptr;
+	while (1) {
 		struct can_message cm;
-		if(self->next_message(self->dev, &cm) > 0){
+		if (self->next_message(self->dev, &cm) > 0) {
 			struct can_listener *listener;
 			thread_mutex_lock(&self->lock);
-			list_for_each_entry(listener, &self->listeners, list){
-				if(listener && listener->process_message){
+			list_for_each_entry(listener, &self->listeners, list)
+			{
+				if (listener && listener->process_message) {
 					thread_mutex_unlock(&self->lock);
 					listener->process_message(listener, self->dev, &cm);
 					thread_mutex_lock(&self->lock);
@@ -48,9 +50,9 @@ void _can_dispatcher_loop(void *ptr){
 	}
 }
 
-void can_dispatcher_init(struct can_dispatcher *self,
-		can_device_t dev,
-		int (*next_message)(can_device_t dev, struct can_message *msg)){
+void can_dispatcher_init(struct can_dispatcher *self, can_device_t dev,
+			 int (*next_message)(can_device_t dev, struct can_message *msg))
+{
 	memset(self, 0, sizeof(*self));
 	BUG_ON(!dev);
 	BUG_ON(!next_message);
@@ -61,15 +63,18 @@ void can_dispatcher_init(struct can_dispatcher *self,
 	thread_create(_can_dispatcher_loop, "can_disp", 400, self, 2, NULL);
 }
 
-void can_dispatcher_add_listener(struct can_dispatcher *self, struct can_listener *listener){
+void can_dispatcher_add_listener(struct can_dispatcher *self, struct can_listener *listener)
+{
 	thread_mutex_lock(&self->lock);
 	list_add(&listener->list, &self->listeners);
 	thread_mutex_unlock(&self->lock);
 }
 
-void can_listener_init(struct can_listener *self, void (*handler)(struct can_listener *self, can_device_t can, struct can_message *msg)){
+void can_listener_init(struct can_listener *self,
+		       void (*handler)(struct can_listener *self, can_device_t can,
+				       struct can_message *msg))
+{
 	memset(self, 0, sizeof(*self));
 	INIT_LIST_HEAD(&self->list);
 	self->process_message = handler;
 }
-

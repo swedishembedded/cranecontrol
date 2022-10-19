@@ -194,11 +194,19 @@ def main(collected_path, fn):
     if hasattr(gzip, "compress"):
         gzip_len = len(gzip.compress(all_input_bytes)) + num_uses * 4
         print("// gzip length:             {}".format(gzip_len))
-        print("// Percentage of gzip:      {:.1f}%".format(100 * (comp_len + data_len) / gzip_len))
+        print(
+            "// Percentage of gzip:      {:.1f}%".format(
+                100 * (comp_len + data_len) / gzip_len
+            )
+        )
     if hasattr(zlib, "compress"):
         zlib_len = len(zlib.compress(all_input_bytes)) + num_uses * 4
         print("// zlib length:             {}".format(zlib_len))
-        print("// Percentage of zlib:      {:.1f}%".format(100 * (comp_len + data_len) / zlib_len))
+        print(
+            "// Percentage of zlib:      {:.1f}%".format(
+                100 * (comp_len + data_len) / zlib_len
+            )
+        )
 
 
 if __name__ == "__main__":

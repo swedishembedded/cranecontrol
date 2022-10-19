@@ -94,18 +94,16 @@ Changes from V3.0.1
 	/*
 	 * Was the interrupt the SystemClock?
 	 */
-	if( bCCP1IF && bCCP1IE )
-	{
+	if (bCCP1IF && bCCP1IE) {
 		/*
 		 * Reset the interrupt flag
 		 */
 		bCCP1IF = 0;
-	
+
 		/*
 	 	 * Maintain the tick count.
 	 	 */
-		if( xTaskIncrementTick() != pdFALSE )
-		{
+		if (xTaskIncrementTick() != pdFALSE) {
 			/*
 		 	 * Ask for a switch to the highest priority task
 		 	 * that is ready to run.
@@ -115,6 +113,6 @@ Changes from V3.0.1
 	}
 }
 
-#pragma wizcpp uselib     "$__PATHNAME__/Tick.c"
+#pragma wizcpp uselib "$__PATHNAME__/Tick.c"
 
-#endif	/* _FREERTOS_DRIVERS_TICK_ISRTICK_C */
+#endif /* _FREERTOS_DRIVERS_TICK_ISRTICK_C */

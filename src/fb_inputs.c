@@ -15,7 +15,8 @@
  **/
 #include "fb.h"
 
-static void _next_mux_chan(struct fb_inputs *self) {
+static void _next_mux_chan(struct fb_inputs *self)
+{
 	self->mux_chan = (self->mux_chan + 1) & 0x7;
 
 	gpio_write(self->mux, 0, (self->mux_chan >> 0) & 1);
@@ -23,46 +24,48 @@ static void _next_mux_chan(struct fb_inputs *self) {
 	gpio_write(self->mux, 2, (self->mux_chan >> 2) & 1);
 }
 
-static void _fb_read_pots(struct fb_inputs *self) {
+static void _fb_read_pots(struct fb_inputs *self)
+{
 	adc_read(self->adc, FB_ADC_MUX_CHAN, &self->mux_adc[self->mux_chan]);
 
 	uint16_t value = self->mux_adc[self->mux_chan];
-	switch(self->mux_chan) {
-		case FB_ADCMUX_YAW_CHAN: {
-			self->joy_yaw = value;
-		} break;
-		case FB_ADCMUX_PITCH_CHAN: {
-			self->joy_pitch = value;
-		} break;
-		case FB_ADCMUX_YAW_ACC_CHAN: {
-			self->yaw_acc = value;
-		} break;
-		case FB_ADCMUX_PITCH_ACC_CHAN: {
-			self->pitch_acc = value;
-		} break;
-		case FB_ADCMUX_YAW_SPEED_CHAN: {
-			self->yaw_speed = value;
-		} break;
-		case FB_ADCMUX_MOTOR_PITCH_CHAN: {
-			//self->pitch = (uint16_t)constrain_i32(4096 - value, 0, 4096);
-			self->pitch = value;
-		} break;
-		case FB_ADCMUX_PITCH_SPEED_CHAN: {
-			self->pitch_speed = value;
-		} break;
+	switch (self->mux_chan) {
+	case FB_ADCMUX_YAW_CHAN: {
+		self->joy_yaw = value;
+	} break;
+	case FB_ADCMUX_PITCH_CHAN: {
+		self->joy_pitch = value;
+	} break;
+	case FB_ADCMUX_YAW_ACC_CHAN: {
+		self->yaw_acc = value;
+	} break;
+	case FB_ADCMUX_PITCH_ACC_CHAN: {
+		self->pitch_acc = value;
+	} break;
+	case FB_ADCMUX_YAW_SPEED_CHAN: {
+		self->yaw_speed = value;
+	} break;
+	case FB_ADCMUX_MOTOR_PITCH_CHAN: {
+		//self->pitch = (uint16_t)constrain_i32(4096 - value, 0, 4096);
+		self->pitch = value;
+	} break;
+	case FB_ADCMUX_PITCH_SPEED_CHAN: {
+		self->pitch_speed = value;
+	} break;
 	}
 
 	_next_mux_chan(self);
 }
 
-static void _fb_read_pots_local(struct fb_inputs *self) {
+static void _fb_read_pots_local(struct fb_inputs *self)
+{
 	adc_read(self->adc, FB_ADC_MUX_CHAN, &self->mux_adc[self->mux_chan]);
 
 	uint16_t value = self->mux_adc[self->mux_chan];
-	switch(self->mux_chan) {
-		case FB_ADCMUX_MOTOR_PITCH_CHAN: {
-			self->pitch = value;
-		} break;
+	switch (self->mux_chan) {
+	case FB_ADCMUX_MOTOR_PITCH_CHAN: {
+		self->pitch = value;
+	} break;
 	}
 	self->joy_yaw = self->local.joy_yaw;
 	self->joy_pitch = self->local.joy_pitch;
@@ -74,23 +77,25 @@ static void _fb_read_pots_local(struct fb_inputs *self) {
 	_next_mux_chan(self);
 }
 
-void _fb_read_switches_local(struct fb_inputs *self){
+void _fb_read_switches_local(struct fb_inputs *self)
+{
 	self->enc1_aux1 = self->local.enc1_aux1;
 	self->enc1_aux2 = self->local.enc1_aux2;
 	self->enc2_aux1 = self->local.enc2_aux1;
 	self->enc2_aux2 = self->local.enc2_aux2;
 }
 
-void _fb_read_switches(struct fb_inputs *self){
+void _fb_read_switches(struct fb_inputs *self)
+{
 	self->enc1_aux1 = gpio_read(self->enc1_gpio, 1);
 	self->enc1_aux2 = gpio_read(self->enc1_gpio, 2);
 	self->enc2_aux1 = gpio_read(self->enc2_gpio, 1);
 	self->enc2_aux2 = gpio_read(self->enc2_gpio, 2);
 }
 
-void _fb_read_inputs(struct fb_inputs *self) {
-
-	if(self->use_local) {
+void _fb_read_inputs(struct fb_inputs *self)
+{
+	if (self->use_local) {
 		_fb_read_pots_local(self);
 		_fb_read_switches_local(self);
 	} else {
@@ -99,19 +104,19 @@ void _fb_read_inputs(struct fb_inputs *self) {
 	}
 
 	// read switches
-	for(unsigned int c = 0; c < 8; c++) {
+	for (unsigned int c = 0; c < 8; c++) {
 		bool on = !gpio_read(self->sw_gpio, 8 + c);
 		self->sw[c].toggled = on != self->sw[c].pressed;
 		self->sw[c].pressed = on;
 
-		if(self->sw[c].toggled && !on) {
+		if (self->sw[c].toggled && !on) {
 			self->sw[c].long_pressed = false;
-		} else if(self->sw[c].toggled && on) {
+		} else if (self->sw[c].toggled && on) {
 			self->sw[c].pressed_time = timestamp();
-		} else if(on) {
+		} else if (on) {
 			timestamp_t ts = timestamp_add_us(self->sw[c].pressed_time,
-			                                  FB_BTN_LONG_PRESS_TIME_US);
-			if(timestamp_expired(ts)) {
+							  FB_BTN_LONG_PRESS_TIME_US);
+			if (timestamp_expired(ts)) {
 				self->sw[c].long_pressed = true;
 			} else {
 				self->sw[c].long_pressed = false;
@@ -137,17 +142,17 @@ void _fb_read_inputs(struct fb_inputs *self) {
 
 	// read CAN address switch
 	self->can_addr = ~((gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR3) << 3) |
-	                          (gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR2) << 2) |
-	                          (gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR1) << 1) |
-	                          (gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR0) << 0)) &
-	                        0x0f;
-
+			   (gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR2) << 2) |
+			   (gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR1) << 1) |
+			   (gpio_read(self->gpio_ex, FB_GPIO_CAN_ADDR0) << 0)) &
+			 0x0f;
 }
 
-void fb_inputs_update(struct fb_inputs *self) {
+void fb_inputs_update(struct fb_inputs *self)
+{
 	timestamp_t te, ts;
 	timestamp_diff_t inputs_td;
-		// measure timing
+	// measure timing
 	ts = timestamp();
 	_fb_read_inputs(self);
 	te = timestamp();
@@ -158,7 +163,8 @@ void fb_inputs_update(struct fb_inputs *self) {
 	thread_mutex_unlock(&self->lock);
 }
 
-void fb_inputs_init(struct fb_inputs *self){
+void fb_inputs_init(struct fb_inputs *self)
+{
 	self->local.joy_pitch = 2048;
 	self->local.joy_yaw = 2048;
 	self->local.pitch_acc = 2048;

@@ -24,7 +24,8 @@ struct stm32_adc {
 
 static struct stm32_adc *_adc1 = NULL;
 
-void _adc_dma_configure(struct stm32_adc *self) {
+void _adc_dma_configure(struct stm32_adc *self)
+{
 	DMA_InitTypeDef dma;
 	DMA_StructInit(&dma);
 
@@ -49,17 +50,19 @@ void _adc_dma_configure(struct stm32_adc *self) {
 	DMA_Cmd(DMA2_Stream4, ENABLE);
 }
 
-static int _stm32_adc_trigger(adc_device_t adc) {
+static int _stm32_adc_trigger(adc_device_t adc)
+{
 	// ADC 2 & 3 are triggered as slaves by ADC1
 	// ADC_SoftwareStartConv(ADC1);
 	return -EINVAL;
 }
 
-static int _stm32_adc_read(adc_device_t adc, unsigned int channel, uint16_t *value) {
+static int _stm32_adc_read(adc_device_t adc, unsigned int channel, uint16_t *value)
+{
 	struct stm32_adc *self = container_of(adc, struct stm32_adc, dev.ops);
-	if(channel >= self->n_channels)
+	if (channel >= self->n_channels)
 		return -EINVAL;
-	if(ADC_GetFlagStatus(ADC1, ADC_FLAG_OVR)) {
+	if (ADC_GetFlagStatus(ADC1, ADC_FLAG_OVR)) {
 		// can this even happen?
 		printk(PRINT_ERROR "adc overrun\n");
 		ADC_ClearFlag(ADC1, ADC_FLAG_OVR);
@@ -70,56 +73,55 @@ static int _stm32_adc_read(adc_device_t adc, unsigned int channel, uint16_t *val
 	return 0;
 }
 
-static const struct adc_device_ops _adc_ops = {.trigger = _stm32_adc_trigger,
-                                               .read = _stm32_adc_read};
+static const struct adc_device_ops _adc_ops = { .trigger = _stm32_adc_trigger,
+						.read = _stm32_adc_read };
 
-static int _stm32_adc_cmd(console_device_t con, void *ptr, int argc, char *argv[]) {
+static int _stm32_adc_cmd(console_device_t con, void *ptr, int argc, char *argv[])
+{
 #define flag_str(f, name) (f) ? "\033[30;47m" name "\033[0m" : name
 	struct stm32_adc *self = (struct stm32_adc *)ptr;
-	if(argc == 2 && strcmp(argv[1], "status") == 0) {
+	if (argc == 2 && strcmp(argv[1], "status") == 0) {
 		console_printf(con, "No. conv: %d\n", self->cnt.eoc);
 		console_printf(con, "Status: ");
+		console_printf(con, "%s ", flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_AWD), "AWD"));
+		console_printf(con, "%s ", flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC), "EOC"));
 		console_printf(con, "%s ",
-		               flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_AWD), "AWD"));
+			       flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC), "JEOC"));
 		console_printf(con, "%s ",
-		               flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC), "EOC"));
+			       flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_JSTRT), "JSTRT"));
 		console_printf(con, "%s ",
-		               flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC), "JEOC"));
-		console_printf(con, "%s ",
-		               flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_JSTRT), "JSTRT"));
-		console_printf(con, "%s ",
-		               flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_STRT), "STRT"));
-		console_printf(con, "%s ",
-		               flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_OVR), "OVR"));
+			       flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_STRT), "STRT"));
+		console_printf(con, "%s ", flag_str(ADC_GetFlagStatus(ADC1, ADC_FLAG_OVR), "OVR"));
 		console_printf(con, "\n");
 	}
 	return 0;
 }
 
-void ADC_IRQHandler(void) {
+void ADC_IRQHandler(void)
+{
 	struct stm32_adc *self = _adc1;
 	atomic_inc(&self->cnt.eoc);
 	ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
 }
 
-static int _stm32_adc_probe(void *fdt, int fdt_node) {
+static int _stm32_adc_probe(void *fdt, int fdt_node)
+{
 	int ch_count = 0;
 
 	int len = 0;
-	const fdt32_t *channels =
-	    (const fdt32_t *)fdt_getprop(fdt, fdt_node, "channels", &len);
-	if(len != 0 && channels) {
+	const fdt32_t *channels = (const fdt32_t *)fdt_getprop(fdt, fdt_node, "channels", &len);
+	if (len != 0 && channels) {
 		// each config line contains 4 fields of 32 bit each
 		// <Device>, <Channel>, <Order>, <SampleTime>
 		ch_count = (uint8_t)(len / 4 / 4);
 	}
 	uint32_t trigger = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "trigger", 0);
 	int trigger_edge = fdt_get_int_or_default(fdt, fdt_node, "trigger_edge", -1);
-	uint32_t prescaler = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "prescaler",
-	                                                      ADC_Prescaler_Div2);
+	uint32_t prescaler =
+		(uint32_t)fdt_get_int_or_default(fdt, fdt_node, "prescaler", ADC_Prescaler_Div2);
 	console_device_t console = console_find_by_ref(fdt, fdt_node, "console");
 
-	if(trigger > 0 && trigger_edge == -1) {
+	if (trigger > 0 && trigger_edge == -1) {
 		trigger_edge = ADC_ExternalTrigConvEdge_Rising;
 	}
 
@@ -127,27 +129,27 @@ static int _stm32_adc_probe(void *fdt, int fdt_node) {
 	RCC_GetClocksFreq(&clocks);
 
 	uint32_t adc_freq = clocks.PCLK2_Frequency;
-	switch(prescaler) {
-		case ADC_Prescaler_Div2:
-			adc_freq = adc_freq / 2;
-			break;
-		case ADC_Prescaler_Div4:
-			adc_freq = adc_freq / 4;
-			break;
-		case ADC_Prescaler_Div6:
-			adc_freq = adc_freq / 6;
-			break;
-		case ADC_Prescaler_Div8:
-			adc_freq = adc_freq / 8;
-			break;
-		default: {
-			printk(PRINT_ERROR "Invalid prescaler value\n");
-			return -EINVAL;
-		}
+	switch (prescaler) {
+	case ADC_Prescaler_Div2:
+		adc_freq = adc_freq / 2;
+		break;
+	case ADC_Prescaler_Div4:
+		adc_freq = adc_freq / 4;
+		break;
+	case ADC_Prescaler_Div6:
+		adc_freq = adc_freq / 6;
+		break;
+	case ADC_Prescaler_Div8:
+		adc_freq = adc_freq / 8;
+		break;
+	default: {
+		printk(PRINT_ERROR "Invalid prescaler value\n");
+		return -EINVAL;
+	}
 	}
 
 	// TODO: make this dependent on chip type
-	if(adc_freq > 36000000) {
+	if (adc_freq > 36000000) {
 		printk(PRINT_ERROR "adc clock frequency too high (%d)\n", adc_freq);
 		return -EINVAL;
 	}
@@ -181,7 +183,7 @@ static int _stm32_adc_probe(void *fdt, int fdt_node) {
 	ADC_EOCOnEachRegularChannelCmd(ADC1, DISABLE);
 
 	// load channel config
-	for(int c = 0; c < ch_count; c++) {
+	for (int c = 0; c < ch_count; c++) {
 		const fdt32_t *base = channels + (4 * c);
 		ADC_TypeDef *ADCx = (ADC_TypeDef *)fdt32_to_cpu(*(base));
 		uint8_t chan = (uint8_t)fdt32_to_cpu(*(base + 1));
@@ -215,7 +217,7 @@ static int _stm32_adc_probe(void *fdt, int fdt_node) {
 	ADC_Cmd(ADC2, ENABLE);
 	ADC_Cmd(ADC1, ENABLE);
 
-	if(console) {
+	if (console) {
 		console_add_command(console, self, "adc", "adc utilities", "", _stm32_adc_cmd);
 	}
 
@@ -227,7 +229,8 @@ static int _stm32_adc_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _stm32_adc_remove(void *fdt, int fdt_node) {
+static int _stm32_adc_remove(void *fdt, int fdt_node)
+{
 	return 0;
 }
 

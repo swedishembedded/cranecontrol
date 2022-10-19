@@ -27,11 +27,11 @@
 #include <libfirmware/driver.h>
 #include <libfirmware/i2c.h>
 
-#define ADXL345_ADDR (0x53<<1) //device address
+#define ADXL345_ADDR (0x53 << 1) //device address
 
 struct adxl345 {
 	i2c_device_t i2c;
-	uint8_t addr; 
+	uint8_t addr;
 };
 
 //definitions
@@ -102,11 +102,12 @@ static uint8_t firstread = 1;
 /*
  * initialize the accellerometer
  */
-void adxl345_init(struct adxl345 *self, i2c_device_t i2c, uint8_t addr) {
+void adxl345_init(struct adxl345 *self, i2c_device_t i2c, uint8_t addr)
+{
 	self->i2c = i2c;
-	self->addr = (addr)?addr:ADXL345_ADDR; 
+	self->addr = (addr) ? addr : ADXL345_ADDR;
 	uint8_t data = 0;
-    data = ADXL345_RANGE | (ADXL345_FULLRANGE<<3);
+	data = ADXL345_RANGE | (ADXL345_FULLRANGE << 3);
 	i2c_write_reg(i2c, self->addr, 0x31, &data, 1);
 	data = 0x00; // disable
 	i2c_write_reg(i2c, self->addr, 0x2D, &data, 1);
@@ -132,65 +133,72 @@ void adxl345_init(struct adxl345 *self, i2c_device_t i2c, uint8_t addr) {
 	i2c_stop(self->i2c); 
 }*/
 
-static uint8_t _adxl345_read_register(struct adxl345 *self, uint8_t reg) {
-	uint8_t value; 
+static uint8_t _adxl345_read_register(struct adxl345 *self, uint8_t reg)
+{
+	uint8_t value;
 	i2c_read_reg(self->i2c, self->addr, reg, &value, 1);
 	return value;
 }
 
-static int8_t adxl345_wait_for_data_ready(struct adxl345 *self) {
+static int8_t adxl345_wait_for_data_ready(struct adxl345 *self)
+{
 	//wait until data is ready
-	while(!(_adxl345_read_register(self, 0x30) & 0x80)){
+	while (!(_adxl345_read_register(self, 0x30) & 0x80)) {
 		// TODO: add timeout or yield
 	}
 	return 0;
 }
 
-int8_t adxl345_read_raw(struct adxl345 *self, int16_t *axraw, int16_t *ayraw, int16_t *azraw){
-	if(adxl345_wait_for_data_ready(self) == -1) return -1;
+int8_t adxl345_read_raw(struct adxl345 *self, int16_t *axraw, int16_t *ayraw, int16_t *azraw)
+{
+	if (adxl345_wait_for_data_ready(self) == -1)
+		return -1;
 
 	//read axis data
-	*axraw = (int16_t)(_adxl345_read_register(self, 0x32) + (_adxl345_read_register(self, 0x33) << 8));
-	*ayraw = (int16_t)(_adxl345_read_register(self, 0x34) + (_adxl345_read_register(self, 0x35) << 8));
-	*azraw = (int16_t)(_adxl345_read_register(self, 0x36) + (_adxl345_read_register(self, 0x37) << 8));
+	*axraw = (int16_t)(_adxl345_read_register(self, 0x32) +
+			   (_adxl345_read_register(self, 0x33) << 8));
+	*ayraw = (int16_t)(_adxl345_read_register(self, 0x34) +
+			   (_adxl345_read_register(self, 0x35) << 8));
+	*azraw = (int16_t)(_adxl345_read_register(self, 0x36) +
+			   (_adxl345_read_register(self, 0x37) << 8));
 
 	return 0;
 }
 
-int8_t adxl345_read_adjusted(struct adxl345 *self, float *ax, float *ay, float *az) {
+int8_t adxl345_read_adjusted(struct adxl345 *self, float *ax, float *ay, float *az)
+{
 	int16_t axraw = 0;
 	int16_t ayraw = 0;
 	int16_t azraw = 0;
 
-	if(adxl345_read_raw(self, &axraw, &ayraw, &azraw) == -1)
+	if (adxl345_read_raw(self, &axraw, &ayraw, &azraw) == -1)
 		return -1;
-	
-	//axisg = mx + b
-	//m is the scaling factor (g/counts), x is the sensor output (counts), and b is the count offset.
-	#if ADXL345_CALIBRATED == 1
-	*ax = (axraw/(float)ADXL345_CALRANGEVALX) + (float)ADXL345_CALOFFSETX;
-	*zy = (ayraw/(float)ADXL345_CALRANGEVALY) + (float)ADXL345_CALOFFSETY;
-	*az = (azraw/(float)ADXL345_CALRANGEVALZ) + (float)ADXL345_CALOFFSETZ;
-	#else
-	*ax = (axraw/(float)ADXL345_RANGEVAL);
-	*ay = (ayraw/(float)ADXL345_RANGEVAL);
-	*az = (azraw/(float)ADXL345_RANGEVAL);
-	#endif
 
-	//this is a simple low pass filter
-	#if ADXL345_LOWPASSENABLED == 1
-	if(!firstread)
-		*ax = (0.75)*(axold) + (0.25)*(*ax);
+//axisg = mx + b
+//m is the scaling factor (g/counts), x is the sensor output (counts), and b is the count offset.
+#if ADXL345_CALIBRATED == 1
+	*ax = (axraw / (float)ADXL345_CALRANGEVALX) + (float)ADXL345_CALOFFSETX;
+	*zy = (ayraw / (float)ADXL345_CALRANGEVALY) + (float)ADXL345_CALOFFSETY;
+	*az = (azraw / (float)ADXL345_CALRANGEVALZ) + (float)ADXL345_CALOFFSETZ;
+#else
+	*ax = (axraw / (float)ADXL345_RANGEVAL);
+	*ay = (ayraw / (float)ADXL345_RANGEVAL);
+	*az = (azraw / (float)ADXL345_RANGEVAL);
+#endif
+
+//this is a simple low pass filter
+#if ADXL345_LOWPASSENABLED == 1
+	if (!firstread)
+		*ax = (0.75) * (axold) + (0.25) * (*ax);
 	axold = *ax;
-	if(!firstread)
-		*ay = (0.75)*(ayold) + (0.25)*(*ay);
+	if (!firstread)
+		*ay = (0.75) * (ayold) + (0.25) * (*ay);
 	ayold = *ay;
-	if(!firstread)
-		*az = (0.75)*(azold) + (0.25)*(*az);
+	if (!firstread)
+		*az = (0.75) * (azold) + (0.25) * (*az);
 	azold = *az;
 	firstread = 0;
-	#endif
+#endif
 
-	return 0; 
+	return 0;
 }
-

@@ -30,31 +30,31 @@
 #include "py/pystack.h"
 
 typedef enum {
-    MP_VM_RETURN_NORMAL,
-    MP_VM_RETURN_YIELD,
-    MP_VM_RETURN_EXCEPTION,
+	MP_VM_RETURN_NORMAL,
+	MP_VM_RETURN_YIELD,
+	MP_VM_RETURN_EXCEPTION,
 } mp_vm_return_kind_t;
 
 typedef enum {
-    MP_ARG_BOOL      = 0x001,
-    MP_ARG_INT       = 0x002,
-    MP_ARG_OBJ       = 0x003,
-    MP_ARG_KIND_MASK = 0x0ff,
-    MP_ARG_REQUIRED  = 0x100,
-    MP_ARG_KW_ONLY   = 0x200,
+	MP_ARG_BOOL = 0x001,
+	MP_ARG_INT = 0x002,
+	MP_ARG_OBJ = 0x003,
+	MP_ARG_KIND_MASK = 0x0ff,
+	MP_ARG_REQUIRED = 0x100,
+	MP_ARG_KW_ONLY = 0x200,
 } mp_arg_flag_t;
 
 typedef union _mp_arg_val_t {
-    bool u_bool;
-    mp_int_t u_int;
-    mp_obj_t u_obj;
-    mp_rom_obj_t u_rom_obj;
+	bool u_bool;
+	mp_int_t u_int;
+	mp_obj_t u_obj;
+	mp_rom_obj_t u_rom_obj;
 } mp_arg_val_t;
 
 typedef struct _mp_arg_t {
-    uint16_t qst;
-    uint16_t flags;
-    mp_arg_val_t defval;
+	uint16_t qst;
+	uint16_t flags;
+	mp_arg_val_t defval;
 } mp_arg_t;
 
 // Tables mapping operator enums to qstrs, defined in objtype.c
@@ -76,28 +76,37 @@ bool mp_sched_schedule(mp_obj_t function, mp_obj_t arg);
 #endif
 
 // extra printing method specifically for mp_obj_t's which are integral type
-int mp_print_mp_int(const mp_print_t *print, mp_obj_t x, int base, int base_char, int flags, char fill, int width, int prec);
+int mp_print_mp_int(const mp_print_t *print, mp_obj_t x, int base, int base_char, int flags,
+		    char fill, int width, int prec);
 
 void mp_arg_check_num_sig(size_t n_args, size_t n_kw, uint32_t sig);
-static inline void mp_arg_check_num(size_t n_args, size_t n_kw, size_t n_args_min, size_t n_args_max, bool takes_kw) {
-    mp_arg_check_num_sig(n_args, n_kw, MP_OBJ_FUN_MAKE_SIG(n_args_min, n_args_max, takes_kw));
+static inline void mp_arg_check_num(size_t n_args, size_t n_kw, size_t n_args_min,
+				    size_t n_args_max, bool takes_kw)
+{
+	mp_arg_check_num_sig(n_args, n_kw, MP_OBJ_FUN_MAKE_SIG(n_args_min, n_args_max, takes_kw));
 }
-void mp_arg_parse_all(size_t n_pos, const mp_obj_t *pos, mp_map_t *kws, size_t n_allowed, const mp_arg_t *allowed, mp_arg_val_t *out_vals);
-void mp_arg_parse_all_kw_array(size_t n_pos, size_t n_kw, const mp_obj_t *args, size_t n_allowed, const mp_arg_t *allowed, mp_arg_val_t *out_vals);
+void mp_arg_parse_all(size_t n_pos, const mp_obj_t *pos, mp_map_t *kws, size_t n_allowed,
+		      const mp_arg_t *allowed, mp_arg_val_t *out_vals);
+void mp_arg_parse_all_kw_array(size_t n_pos, size_t n_kw, const mp_obj_t *args, size_t n_allowed,
+			       const mp_arg_t *allowed, mp_arg_val_t *out_vals);
 NORETURN void mp_arg_error_terse_mismatch(void);
 NORETURN void mp_arg_error_unimpl_kw(void);
 
-static inline mp_obj_dict_t *mp_locals_get(void) {
-    return MP_STATE_THREAD(dict_locals);
+static inline mp_obj_dict_t *mp_locals_get(void)
+{
+	return MP_STATE_THREAD(dict_locals);
 }
-static inline void mp_locals_set(mp_obj_dict_t *d) {
-    MP_STATE_THREAD(dict_locals) = d;
+static inline void mp_locals_set(mp_obj_dict_t *d)
+{
+	MP_STATE_THREAD(dict_locals) = d;
 }
-static inline mp_obj_dict_t *mp_globals_get(void) {
-    return MP_STATE_THREAD(dict_globals);
+static inline mp_obj_dict_t *mp_globals_get(void)
+{
+	return MP_STATE_THREAD(dict_globals);
 }
-static inline void mp_globals_set(mp_obj_dict_t *d) {
-    MP_STATE_THREAD(dict_globals) = d;
+static inline void mp_globals_set(mp_obj_dict_t *d)
+{
+	MP_STATE_THREAD(dict_globals) = d;
 }
 
 mp_obj_t mp_load_name(qstr qst);
@@ -117,16 +126,17 @@ mp_obj_t mp_call_function_2(mp_obj_t fun, mp_obj_t arg1, mp_obj_t arg2);
 mp_obj_t mp_call_function_n_kw(mp_obj_t fun, size_t n_args, size_t n_kw, const mp_obj_t *args);
 mp_obj_t mp_call_method_n_kw(size_t n_args, size_t n_kw, const mp_obj_t *args);
 mp_obj_t mp_call_method_n_kw_var(bool have_self, size_t n_args_n_kw, const mp_obj_t *args);
-mp_obj_t mp_call_method_self_n_kw(mp_obj_t meth, mp_obj_t self, size_t n_args, size_t n_kw, const mp_obj_t *args);
+mp_obj_t mp_call_method_self_n_kw(mp_obj_t meth, mp_obj_t self, size_t n_args, size_t n_kw,
+				  const mp_obj_t *args);
 // Call function and catch/dump exception - for Python callbacks from C code
 // (return MP_OBJ_NULL in case of exception).
 mp_obj_t mp_call_function_1_protected(mp_obj_t fun, mp_obj_t arg);
 mp_obj_t mp_call_function_2_protected(mp_obj_t fun, mp_obj_t arg1, mp_obj_t arg2);
 
 typedef struct _mp_call_args_t {
-    mp_obj_t fun;
-    size_t n_args, n_kw, n_alloc;
-    mp_obj_t *args;
+	mp_obj_t fun;
+	size_t n_args, n_kw, n_alloc;
+	mp_obj_t *args;
 } mp_call_args_t;
 
 #if MICROPY_STACKLESS
@@ -134,14 +144,16 @@ typedef struct _mp_call_args_t {
 // prepares argument array suitable for passing to ->call() method of a
 // function object (and mp_call_function_n_kw()).
 // (Only needed in stackless mode.)
-void mp_call_prepare_args_n_kw_var(bool have_self, size_t n_args_n_kw, const mp_obj_t *args, mp_call_args_t *out_args);
+void mp_call_prepare_args_n_kw_var(bool have_self, size_t n_args_n_kw, const mp_obj_t *args,
+				   mp_call_args_t *out_args);
 #endif
 
 void mp_unpack_sequence(mp_obj_t seq, size_t num, mp_obj_t *items);
 void mp_unpack_ex(mp_obj_t seq, size_t num, mp_obj_t *items);
 mp_obj_t mp_store_map(mp_obj_t map, mp_obj_t key, mp_obj_t value);
 mp_obj_t mp_load_attr(mp_obj_t base, qstr attr);
-void mp_convert_member_lookup(mp_obj_t obj, const mp_obj_type_t *type, mp_obj_t member, mp_obj_t *dest);
+void mp_convert_member_lookup(mp_obj_t obj, const mp_obj_type_t *type, mp_obj_t member,
+			      mp_obj_t *dest);
 void mp_load_method(mp_obj_t base, qstr attr, mp_obj_t *dest);
 void mp_load_method_maybe(mp_obj_t base, qstr attr, mp_obj_t *dest);
 void mp_load_method_protected(mp_obj_t obj, qstr attr, mp_obj_t *dest, bool catch_all_exc);
@@ -149,9 +161,12 @@ void mp_load_super_method(qstr attr, mp_obj_t *dest);
 void mp_store_attr(mp_obj_t base, qstr attr, mp_obj_t val);
 
 mp_obj_t mp_getiter(mp_obj_t o, mp_obj_iter_buf_t *iter_buf);
-mp_obj_t mp_iternext_allow_raise(mp_obj_t o); // may return MP_OBJ_STOP_ITERATION instead of raising StopIteration()
-mp_obj_t mp_iternext(mp_obj_t o); // will always return MP_OBJ_STOP_ITERATION instead of raising StopIteration(...)
-mp_vm_return_kind_t mp_resume(mp_obj_t self_in, mp_obj_t send_value, mp_obj_t throw_value, mp_obj_t *ret_val);
+mp_obj_t mp_iternext_allow_raise(
+	mp_obj_t o); // may return MP_OBJ_STOP_ITERATION instead of raising StopIteration()
+mp_obj_t mp_iternext(
+	mp_obj_t o); // will always return MP_OBJ_STOP_ITERATION instead of raising StopIteration(...)
+mp_vm_return_kind_t mp_resume(mp_obj_t self_in, mp_obj_t send_value, mp_obj_t throw_value,
+			      mp_obj_t *ret_val);
 
 mp_obj_t mp_make_raise_obj(mp_obj_t o);
 

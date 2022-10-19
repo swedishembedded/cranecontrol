@@ -7,13 +7,14 @@ struct blinky {
 	led_controller_t leds;
 };
 
-static void _blinky_thread(void *ptr) {
+static void _blinky_thread(void *ptr)
+{
 	struct blinky *self = (struct blinky *)ptr;
 	uint32_t t = thread_ticks_count();
 	bool blink_state = false;
-	while(1) {
+	while (1) {
 		blink_state = !blink_state;
-		if(blink_state) {
+		if (blink_state) {
 			led_on(self->leds, 0);
 		} else {
 			led_off(self->leds, 0);
@@ -22,12 +23,11 @@ static void _blinky_thread(void *ptr) {
 	}
 }
 
-
-static int _blinky_probe(void *fdt, int fdt_node) {
-
+static int _blinky_probe(void *fdt, int fdt_node)
+{
 	led_controller_t leds = leds_find_by_ref(fdt, fdt_node, "leds");
 
-	if(!leds) {
+	if (!leds) {
 		printk("blinky: no leds\n");
 		return -1;
 	}
@@ -40,7 +40,8 @@ static int _blinky_probe(void *fdt, int fdt_node) {
 	return 0;
 }
 
-static int _blinky_remove(void *fdt, int fdt_node) {
+static int _blinky_remove(void *fdt, int fdt_node)
+{
 	// TODO
 	return -1;
 }

@@ -33,10 +33,10 @@ extern "C" {
 #endif
 
 struct nrf24l01 {
-	serial_dev_t spi; 
-	gpio_pin_t cs_pin; 
-	gpio_pin_t ce_pin; 
-}; 
+	serial_dev_t spi;
+	gpio_pin_t cs_pin;
+	gpio_pin_t ce_pin;
+};
 
 #define NRF24L01_MAX_CHANNEL 128
 
@@ -92,19 +92,18 @@ struct nrf24l01 {
 #define NRF24L01_ADDRP5 {0xC1, 0xC2, 0xC2, 0xC2, 0xC6} //pipe 5, 5 byte address
 #define NRF24L01_ADDRTX {0xE8, 0xE8, 0xF0, 0xF0, 0xE2} //tx default address
 */
- //enable print info function
+//enable print info function
 #define NRF24L01_PRINTENABLE 0
 
 extern void nrf24l01_init(struct nrf24l01 *nrf, serial_dev_t spi, gpio_pin_t cs, gpio_pin_t ce);
 extern uint8_t nrf24l01_getstatus(struct nrf24l01 *nrf);
-extern uint8_t nrf24l01_readready(struct nrf24l01 *nrf, uint8_t* pipe); 
+extern uint8_t nrf24l01_readready(struct nrf24l01 *nrf, uint8_t *pipe);
 extern void nrf24l01_read(struct nrf24l01 *nrf, uint8_t *data);
 extern uint8_t nrf24l01_write(struct nrf24l01 *nrf, uint8_t *data);
 extern void nrf24l01_setrxaddr(struct nrf24l01 *nrf, uint8_t channel, uint8_t *addr);
 extern void nrf24l01_settxaddr(struct nrf24l01 *nrf, uint8_t *addr);
 void nrf24l01_powerdown(struct nrf24l01 *nrf);
-void nrf24l01_scan(struct nrf24l01 *nrf, uint8_t iterations, uint8_t result[NRF24L01_MAX_CHANNEL]); 
-
+void nrf24l01_scan(struct nrf24l01 *nrf, uint8_t iterations, uint8_t result[NRF24L01_MAX_CHANNEL]);
 
 #ifdef __cplusplus
 }

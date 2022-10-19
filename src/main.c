@@ -16,23 +16,18 @@
 #include <libfirmware/usb.h>
 #include <libfirmware/types/timestamp.h>
 
-static void _init_drivers(void *ptr){
+static void _init_drivers(void *ptr)
+{
 	probe_device_drivers(_devicetree);
 
 	thread_suspend();
 }
 
-int main(void){
-	thread_create(
-		  _init_drivers,
-		  "init",
-		  450,
-		  NULL,
-		  2,
-		  NULL);
+int main(void)
+{
+	thread_create(_init_drivers, "init", 450, NULL, 2, NULL);
 
 	thread_start_scheduler();
 
 	return 0;
 }
-

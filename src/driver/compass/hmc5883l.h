@@ -28,22 +28,21 @@ extern "C" {
 #endif
 
 //definitions
-#define HMC5883L_ADDR (0x1E<<1) //device address
+#define HMC5883L_ADDR (0x1E << 1) //device address
 
 struct hmc5883l {
 	i2c_dev_t i2c;
 	uint8_t addr;
-	float scale; 
+	float scale;
 };
 
 //functions
 void hmc5883l_init(struct hmc5883l *self, i2c_dev_t i2c, uint8_t addr);
 void hmc5883l_readRawMag(struct hmc5883l *self, int16_t *mxraw, int16_t *myraw, int16_t *mzraw);
 void hmc5883l_read_adjusted(struct hmc5883l *self, float *mx, float *my, float *mz);
-void hmc5883l_convertMag(struct hmc5883l *self, 
-	int16_t mxraw, int16_t myraw, int16_t mzraw, 
-	float *mx, float *my, float *mz); 
-uint32_t hmc5883l_read_id(struct hmc5883l *self); 
+void hmc5883l_convertMag(struct hmc5883l *self, int16_t mxraw, int16_t myraw, int16_t mzraw,
+			 float *mx, float *my, float *mz);
+uint32_t hmc5883l_read_id(struct hmc5883l *self);
 #ifdef __cplusplus
 }
 #endif

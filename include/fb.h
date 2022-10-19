@@ -78,8 +78,8 @@
 #define FB_MOTOR_YAW_GEARBOX_IN_RPM 2800
 #define FB_MOTOR_YAW_GEARBOX_OUT_RPM 28
 #define FB_MOTOR_YAW_GEAR_RATIO (90.f / 17.f)
-#define FB_MOTOR_YAW_TICKS_PER_ROT                                                  \
-	(FB_MOTOR_YAW_GEAR_RATIO *                                                        \
+#define FB_MOTOR_YAW_TICKS_PER_ROT                                                                 \
+	(FB_MOTOR_YAW_GEAR_RATIO *                                                                 \
 	 ((FB_MOTOR_YAW_GEARBOX_IN_RPM * 512 * 4) / FB_MOTOR_YAW_GEARBOX_OUT_RPM))
 
 #define FB_SLAVE_TIMEOUT_MS 1000
@@ -227,5 +227,5 @@ void _fb_update_measurements(struct fb *self);
 
 void fb_init(struct fb *self);
 int fb_try_load_preset(struct fb *self, unsigned preset);
-void fb_output_limited(struct fb *self, float pitch, float yaw, float pitch_speed,
-                       float yaw_speed, float pitch_acc, float yaw_acc);
+void fb_output_limited(struct fb *self, float pitch, float yaw, float pitch_speed, float yaw_speed,
+		       float pitch_acc, float yaw_acc);

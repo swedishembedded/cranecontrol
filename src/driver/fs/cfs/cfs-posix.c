@@ -43,65 +43,59 @@
 #include "cfs/cfs.h"
 
 /*---------------------------------------------------------------------------*/
-int
-cfs_open(const char *n, int f)
+int cfs_open(const char *n, int f)
 {
-  int s = 0;
-  if(f == CFS_READ) {
-    return open(n, O_RDONLY);
-  } else if(f & CFS_WRITE) {
-    s = O_CREAT;
-    if(f & CFS_READ) {
-      s |= O_RDWR;
-    } else {
-      s |= O_WRONLY;
-    }
-    if(f & CFS_APPEND) {
-      s |= O_APPEND;
-    } else {
-      s |= O_TRUNC;
-    }
-    return open(n, s, 0600);
-  }
-  return -1;
+	int s = 0;
+	if (f == CFS_READ) {
+		return open(n, O_RDONLY);
+	} else if (f & CFS_WRITE) {
+		s = O_CREAT;
+		if (f & CFS_READ) {
+			s |= O_RDWR;
+		} else {
+			s |= O_WRONLY;
+		}
+		if (f & CFS_APPEND) {
+			s |= O_APPEND;
+		} else {
+			s |= O_TRUNC;
+		}
+		return open(n, s, 0600);
+	}
+	return -1;
 }
 /*---------------------------------------------------------------------------*/
-void
-cfs_close(int f)
+void cfs_close(int f)
 {
-  close(f);
+	close(f);
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_read(int f, void *b, unsigned int l)
+int cfs_read(int f, void *b, unsigned int l)
 {
-  return read(f, b, l);
+	return read(f, b, l);
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_write(int f, const void *b, unsigned int l)
+int cfs_write(int f, const void *b, unsigned int l)
 {
-  return write(f, b, l);
+	return write(f, b, l);
 }
 /*---------------------------------------------------------------------------*/
-cfs_offset_t
-cfs_seek(int f, cfs_offset_t o, int w)
+cfs_offset_t cfs_seek(int f, cfs_offset_t o, int w)
 {
-  if(w == CFS_SEEK_SET) {
-    w = SEEK_SET;
-  } else if(w == CFS_SEEK_CUR) {
-    w = SEEK_CUR;
-  } else if(w == CFS_SEEK_END) {
-    w = SEEK_END;
-  } else {
-    return (cfs_offset_t)-1;
-  }
-  return lseek(f, o, w);
+	if (w == CFS_SEEK_SET) {
+		w = SEEK_SET;
+	} else if (w == CFS_SEEK_CUR) {
+		w = SEEK_CUR;
+	} else if (w == CFS_SEEK_END) {
+		w = SEEK_END;
+	} else {
+		return (cfs_offset_t)-1;
+	}
+	return lseek(f, o, w);
 }
 /*---------------------------------------------------------------------------*/
-int
-cfs_remove(const char *name)
+int cfs_remove(const char *name)
 {
-  return remove(name);
+	return remove(name);
 }
 /*---------------------------------------------------------------------------*/

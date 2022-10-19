@@ -22,7 +22,8 @@ struct ice40 {
 	uint32_t creset_pin, cdone_pin, cs_pin;
 };
 
-int _ice40_probe(void *fdt, int fdt_node){
+int _ice40_probe(void *fdt, int fdt_node)
+{
 	memory_device_t flash = memory_find_by_ref(fdt, fdt_node, "flash");
 	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
 	spi_device_t spi = spi_find_by_ref(fdt, fdt_node, "spi");
@@ -31,27 +32,27 @@ int _ice40_probe(void *fdt, int fdt_node){
 	int cs_pin = fdt_get_int_or_default(fdt, fdt_node, "cs_pin", -1);
 	int pwr_pin = fdt_get_int_or_default(fdt, fdt_node, "pwr_pin", -1);
 
-	if(!flash){
+	if (!flash) {
 		printk("ice40: missing flash device!\n");
 		return -1;
 	}
 
-	if(!gpio){
+	if (!gpio) {
 		printk("ice40: missing gpio device!\n");
 		return -1;
 	}
 
-	if(creset_pin < 0){
+	if (creset_pin < 0) {
 		printk("ice40: missing creset_pin!\n");
 		return -1;
 	}
 
-	if(cdone_pin < 0){
+	if (cdone_pin < 0) {
 		printk("ice40: missing cdone_pin!\n");
 		return -1;
 	}
 
-	if(cs_pin < 0){
+	if (cs_pin < 0) {
 		printk("ice40: missing cs_pin!\n");
 		return -1;
 	}
@@ -65,9 +66,9 @@ int _ice40_probe(void *fdt, int fdt_node){
 	self->cs_pin = (uint32_t)cs_pin;
 
 	// to enter spi slave mode we set the SS low and then toggle power
-	if(spi){
+	if (spi) {
 		int r = 0;
-		uint8_t dummy[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+		uint8_t dummy[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 		// reset the chip into slave mode
 		gpio_reset(self->gpio, self->cs_pin);
@@ -75,7 +76,7 @@ int _ice40_probe(void *fdt, int fdt_node){
 		thread_sleep_ms(1);
 
 		// power cycle
-		if(pwr_pin >= 0){
+		if (pwr_pin >= 0) {
 			gpio_reset(self->gpio, (uint32_t)pwr_pin);
 			thread_sleep_ms(50);
 			gpio_set(self->gpio, (uint32_t)pwr_pin);
@@ -90,23 +91,23 @@ int _ice40_probe(void *fdt, int fdt_node){
 		gpio_set(self->gpio, self->cs_pin);
 		spi_transfer(self->spi, NULL, 0, dummy, NULL, 1, 1000);
 		thread_sleep_ms(1);
-	
+
 		// now pull it low and send the whole image!
 		gpio_reset(self->gpio, self->cs_pin);
 		r = spi_transfer(self->spi, NULL, 0, example_bin, NULL, example_bin_len, 1000);
 		gpio_set(self->gpio, self->cs_pin);
 
-		if(r < 0){
+		if (r < 0) {
 			printk("ice40: failed to write configuration image!\n");
 		} else {
 			printk("ice40: written %d bytes to FPGA!\n", r);
 		}
 		// we are not done yet so CDONE should be low!
-		if(gpio_read(self->gpio, self->cdone_pin)){
+		if (gpio_read(self->gpio, self->cdone_pin)) {
 			printk("ice40: WARNING: CDONE is high when it shouldn't!\n");
 		}
 		spi_transfer(self->spi, NULL, 0, dummy, NULL, sizeof(dummy), 1000);
-		if(gpio_read(self->gpio, self->cdone_pin)){
+		if (gpio_read(self->gpio, self->cdone_pin)) {
 			printk("ice40: FPGA configured!\n", r);
 		} else {
 			printk("ice40: FAILED to start FPGA! (timeout waiting for CDONE)\n", r);
@@ -119,7 +120,7 @@ int _ice40_probe(void *fdt, int fdt_node){
 		thread_sleep_ms(1);
 
 		// power cycle
-		if(pwr_pin >= 0){
+		if (pwr_pin >= 0) {
 			gpio_reset(self->gpio, (uint32_t)pwr_pin);
 			thread_sleep_ms(50);
 			gpio_set(self->gpio, (uint32_t)pwr_pin);
@@ -127,7 +128,7 @@ int _ice40_probe(void *fdt, int fdt_node){
 		}
 
 		int r = memory_write(self->flash, 0, example_bin, example_bin_len);
-		if(r < 0){
+		if (r < 0) {
 			printk("ice40: failed to write flash!\n");
 		} else {
 			printk("ice40: written %d bytes\n", r);
@@ -139,7 +140,8 @@ int _ice40_probe(void *fdt, int fdt_node){
 	return 0;
 }
 
-int _ice40_remove(void *fdt, int fdt_node){
+int _ice40_remove(void *fdt, int fdt_node)
+{
 	return 0;
 }
 

@@ -34,8 +34,8 @@ libfirmware_a_SOURCES = \
 	vardir.c\
 	system.c\
 	regmap.c
-libfirmware_a_CFLAGS = -I$(abs_top_builddir)/include -I$(top_srcdir)/include -std=gnu99
-libfirmware_a_CFLAGS += -I$(top_srcdir)/include/libfdt/
+libfirmware_a_CFLAGS = -I$(abs_top_builddir)/include -I$(abs_top_srcdir)/include -std=gnu99
+libfirmware_a_CFLAGS += -I$(abs_top_srcdir)/include/libfdt/
 
 if WITH_TARGET_LINUX
 libfirmware_a_SOURCES+=linux/chip.c\

@@ -59,33 +59,33 @@ extern "C" {
 #endif
 
 /* ------------------------ Data types for Coldfire ----------------------- */
-#define portCHAR        char
-#define portFLOAT       float
-#define portDOUBLE      double
-#define portLONG        long
-#define portSHORT       short
-#define portSTACK_TYPE  unsigned int
-#define portBASE_TYPE   int
+#define portCHAR char
+#define portFLOAT float
+#define portDOUBLE double
+#define portLONG long
+#define portSHORT short
+#define portSTACK_TYPE unsigned int
+#define portBASE_TYPE int
 
 typedef portSTACK_TYPE StackType_t;
 typedef long BaseType_t;
 typedef unsigned long UBaseType_t;
 
-#if( configUSE_16_BIT_TICKS == 1 )
-    typedef uint16_t TickType_t;
-    #define portMAX_DELAY ( TickType_t ) 0xffff
+#if (configUSE_16_BIT_TICKS == 1)
+typedef uint16_t TickType_t;
+#define portMAX_DELAY (TickType_t)0xffff
 #else
-    typedef uint32_t TickType_t;
-    #define portMAX_DELAY ( TickType_t ) 0xffffffffUL
+typedef uint32_t TickType_t;
+#define portMAX_DELAY (TickType_t)0xffffffffUL
 #endif
 
 /* ------------------------ Architecture specifics ------------------------ */
-#define portSTACK_GROWTH                ( -1 )
-#define portTICK_PERIOD_MS                ( ( TickType_t ) 1000 / configTICK_RATE_HZ )
-#define portBYTE_ALIGNMENT              4
+#define portSTACK_GROWTH (-1)
+#define portTICK_PERIOD_MS ((TickType_t)1000 / configTICK_RATE_HZ)
+#define portBYTE_ALIGNMENT 4
 
-#define portTRAP_YIELD                  0   /* Trap 0 */
-#define portIPL_MAX                     7   /* Only NMI interrupt 7 allowed. */
+#define portTRAP_YIELD 0 /* Trap 0 */
+#define portIPL_MAX 7 /* Only NMI interrupt 7 allowed. */
 
 /* ------------------------ FreeRTOS macros for port ---------------------- */
 
@@ -97,17 +97,14 @@ typedef unsigned long UBaseType_t;
  * the stack for the CPU registers and other task dependent values (e.g
  * ulCriticalNesting) and updates the top of the stack in the TCB.
  */
-#define portSAVE_CONTEXT()                                                   \
-    asm volatile ( /* reserve space for task state. */                       \
-                   "lea.l   (-64, %sp), %sp\n\t"                             \
-                   /* push data register %d0-%d7/%a0-%a6 on stack. */        \
-                   "movem.l %d0-%d7/%a0-%a6, (%sp)\n\t"                      \
-                   /* push ulCriticalNesting counter on stack. */            \
-                   "lea.l  (60, %sp), %a0\n\t"                               \
-                   "move.l  ulCriticalNesting, (%a0)\n\t"                    \
-                   /* set the new top of the stack in the TCB. */            \
-                   "move.l  pxCurrentTCB, %a0\n\t"                           \
-                   "move.l  %sp, (%a0)");
+#define portSAVE_CONTEXT()                                                                                 \
+	asm volatile(/* reserve space for task state. */                                                   \
+		     "lea.l   (-64, %sp), %sp\n\t" /* push data register %d0-%d7/%a0-%a6 on stack. */      \
+		     "movem.l %d0-%d7/%a0-%a6, (%sp)\n\t" /* push ulCriticalNesting counter on stack. */   \
+		     "lea.l  (60, %sp), %a0\n\t"                                                           \
+		     "move.l  ulCriticalNesting, (%a0)\n\t" /* set the new top of the stack in the TCB. */ \
+		     "move.l  pxCurrentTCB, %a0\n\t"                                                       \
+		     "move.l  %sp, (%a0)");
 
 /*.
  * This function restores the current active and continues its execution.
@@ -115,68 +112,59 @@ typedef unsigned long UBaseType_t;
  * task dependent values (e.g ulCriticalNesting). Finally execution
  * is continued by executing an rte instruction.
  */
-#define portRESTORE_CONTEXT()                                                \
-    asm volatile ( "move.l  pxCurrentTCB, %sp\n\t"                           \
-                   "move.l  (%sp), %sp\n\t"                                  \
-                   /* stack pointer now points to the saved registers. */    \
-                   "movem.l (%sp), %d0-%d7/%a0-%a6\n\t"                      \
-                   /* restore ulCriticalNesting counter from stack. */       \
-                   "lea.l   (%sp, 60), %sp\n\t"                              \
-                   "move.l  (%sp)+, ulCriticalNesting\n\t"                   \
-                   /* stack pointer now points to exception frame. */        \
-                   "rte\n\t" );
+#define portRESTORE_CONTEXT()                                                                              \
+	asm volatile(                                                                                      \
+		"move.l  pxCurrentTCB, %sp\n\t"                                                            \
+		"move.l  (%sp), %sp\n\t" /* stack pointer now points to the saved registers. */            \
+		"movem.l (%sp), %d0-%d7/%a0-%a6\n\t" /* restore ulCriticalNesting counter from stack. */   \
+		"lea.l   (%sp, 60), %sp\n\t"                                                               \
+		"move.l  (%sp)+, ulCriticalNesting\n\t" /* stack pointer now points to exception frame. */ \
+		"rte\n\t");
 
-#define portENTER_CRITICAL()                                                 \
-    vPortEnterCritical();
+#define portENTER_CRITICAL() vPortEnterCritical();
 
-#define portEXIT_CRITICAL()                                                  \
-    vPortExitCritical();
+#define portEXIT_CRITICAL() vPortExitCritical();
 
-#define portSET_IPL( xIPL )                                                  \
-    asm_set_ipl( xIPL )
+#define portSET_IPL(xIPL) asm_set_ipl(xIPL)
 
-#define portDISABLE_INTERRUPTS() \
-    do { ( void )portSET_IPL( portIPL_MAX ); } while( 0 )
-#define portENABLE_INTERRUPTS() \
-    do { ( void )portSET_IPL( 0 ); } while( 0 )
+#define portDISABLE_INTERRUPTS()                                                                   \
+	do {                                                                                       \
+		(void)portSET_IPL(portIPL_MAX);                                                    \
+	} while (0)
+#define portENABLE_INTERRUPTS()                                                                    \
+	do {                                                                                       \
+		(void)portSET_IPL(0);                                                              \
+	} while (0)
 
-#define portYIELD()                                                          \
-    asm volatile ( " trap   %0\n\t" : : "i"(portTRAP_YIELD) )
+#define portYIELD() asm volatile(" trap   %0\n\t" : : "i"(portTRAP_YIELD))
 
-#define portNOP()                                                            \
-    asm volatile ( "nop\n\t" )
+#define portNOP() asm volatile("nop\n\t")
 
-#define portENTER_SWITCHING_ISR()                                            \
-    asm volatile ( "move.w  #0x2700, %sr" );                                 \
-    /* Save the context of the interrupted task. */                          \
-    portSAVE_CONTEXT(  );                                                    \
-    {
-
-#define portEXIT_SWITCHING_ISR( SwitchRequired )                             \
-        /* If a switch is required we call vTaskSwitchContext(). */          \
-        if( SwitchRequired )                                                 \
-        {                                                                    \
-            vTaskSwitchContext(  );                                          \
-        }                                                                    \
-    }                                                                        \
-    portRESTORE_CONTEXT(  );
+#define portENTER_SWITCHING_ISR()                                                                  \
+	asm volatile("move.w  #0x2700, %sr");                                                      \
+	/* Save the context of the interrupted task. */                                            \
+	portSAVE_CONTEXT();                                                                        \
+	{
+#define portEXIT_SWITCHING_ISR(SwitchRequired)                                                     \
+	/* If a switch is required we call vTaskSwitchContext(). */                                \
+	if (SwitchRequired) {                                                                      \
+		vTaskSwitchContext();                                                              \
+	}                                                                                          \
+	}                                                                                          \
+	portRESTORE_CONTEXT();
 
 /* ------------------------ Function prototypes --------------------------- */
-void vPortEnterCritical( void );
-void vPortExitCritical( void );
-int asm_set_ipl( uint32_t int uiNewIPL );
+void vPortEnterCritical(void);
+void vPortExitCritical(void);
+int asm_set_ipl(uint32_t int uiNewIPL);
 
 /* ------------------------ Compiler specifics ---------------------------- */
-#define portTASK_FUNCTION_PROTO( vFunction, pvParameters )                   \
-    void vFunction( void *pvParameters )
+#define portTASK_FUNCTION_PROTO(vFunction, pvParameters) void vFunction(void *pvParameters)
 
-#define portTASK_FUNCTION( vFunction, pvParameters )                         \
-    void vFunction( void *pvParameters )
+#define portTASK_FUNCTION(vFunction, pvParameters) void vFunction(void *pvParameters)
 
 #ifdef __cplusplus
 }
 #endif
 
-
 #endif /* PORTMACRO_H */
-

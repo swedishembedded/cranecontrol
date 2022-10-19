@@ -48,11 +48,13 @@ def get_version_info_from_git():
     try:
         # Check if there are any modified files.
         subprocess.check_call(
-            ["git", "diff", "--no-ext-diff", "--quiet", "--exit-code"], stderr=subprocess.STDOUT
+            ["git", "diff", "--no-ext-diff", "--quiet", "--exit-code"],
+            stderr=subprocess.STDOUT,
         )
         # Check if there are any staged files.
         subprocess.check_call(
-            ["git", "diff-index", "--cached", "--quiet", "HEAD", "--"], stderr=subprocess.STDOUT
+            ["git", "diff-index", "--cached", "--quiet", "HEAD", "--"],
+            stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError:
         git_hash += "-dirty"

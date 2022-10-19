@@ -17,15 +17,15 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
-  */ 
+  */
 #if 0
-#ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED 
-#pragma     data_alignment = 4 
+#ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED
+#pragma data_alignment = 4
 #endif /* USB_OTG_HS_INTERNAL_DMA_ENABLED */
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if_template.h"
-#include  "stm32_eval.h"
+#include "stm32_eval.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
