@@ -158,7 +158,7 @@ extern uint8_t ucCriticalNesting;
 		 * can be accessed directly. Increment						\
 		 * ucCriticalNesting to keep a count of how					\
 		 * many times portENTER_CRITICAL() has been called. 		\
-		 */                                                                \
+		 */                                                                 \
 		ucCriticalNesting++;                                                               \
 	} while (0)
 
@@ -168,14 +168,14 @@ extern uint8_t ucCriticalNesting;
 			/*														\
 			 * Decrement the nesting count as we are leaving a		\
 			 * critical section.									\
-			 */                                                         \
+			 */                                                          \
 			ucCriticalNesting--;                                                       \
 		}                                                                                  \
                                                                                                    \
 		/*															\
 		 * If the nesting level has reached zero then				\
 		 * interrupts should be re-enabled.							\
-		 */                                                                \
+		 */                                                                 \
 		if (ucCriticalNesting == portNO_CRITICAL_SECTION_NESTING) {                        \
 			portENABLE_INTERRUPTS();                                                   \
 		}                                                                                  \

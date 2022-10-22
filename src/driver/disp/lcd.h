@@ -1,17 +1,19 @@
-/*
-Parallel LCD library for use with parallel interfaces
-
-copyright (c)
-* Martin Schröder 2014
-* Davide Gironi, 2013
-
-Released under GPLv3.
-Please refer to LICENSE file for licensing information.
-
-References:
-  + based on lcd library by Peter Fleury
-    http://jump.to/fleury
-*/
+/**
+ * SPDX-License-Identifier: GPLv3
+ *   ____                       ____            _             _
+ *  / ___|_ __ __ _ _ __   ___ / ___|___  _ __ | |_ _ __ ___ | |
+ * | |   | '__/ _` | '_ \ / _ \ |   / _ \| '_ \| __| '__/ _ \| |
+ * | |___| | | (_| | | | |  __/ |__| (_) | | | | |_| | | (_) | |
+ *  \____|_|  \__,_|_| |_|\___|\____\___/|_| |_|\__|_|  \___/|_|
+ *
+ * Copyright (c) 2015-2022, Martin K. Schröder, All Rights Reserved
+ * Copyright (c) 2013 Davide Gironi
+ *
+ * CraneControl is distributed under GPLv2
+ *
+ * Embedded Systems Training: https://swedishembedded.com/training
+ * Free Embedded Insights: https://swedishembedded.com/tag/insights
+ **/
 
 #ifndef LCD_H
 #define LCD_H

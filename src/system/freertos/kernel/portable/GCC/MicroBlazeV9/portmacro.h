@@ -139,7 +139,7 @@ void vPortExitCritical(void);
 		uxCriticalNesting--;                                                               \
 		if (uxCriticalNesting == 0) {                                                      \
 			/* The nesting has unwound and we 						\
-											can enable interrupts again. */                                 \
+											can enable interrupts again. */                                  \
 			portENABLE_INTERRUPTS();                                                   \
 		}                                                                                  \
 	}

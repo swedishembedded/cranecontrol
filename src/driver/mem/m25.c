@@ -1,5 +1,6 @@
 /*
- * This file is part of martink project.
+ * SPDX-License-Identifier: BSD
+ * This file is part of CraneControl project.
  *
  * Copyright (c) 2010, Loughborough University - Computer Science
  * All rights reserved.

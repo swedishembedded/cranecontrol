@@ -2324,10 +2324,10 @@ typedef struct {
 
 #define HRTIM_SINGLE_CALIBRATION (uint32_t)0xFFFFFFFF /*!< Non periodic DLL calibration */
 #define HRTIM_CALIBRATIONRATE_7300 (uint32_t)0x00000000 /*!< 1048576 * tHRTIM (7.3 ms) */
-#define HRTIM_CALIBRATIONRATE_910 (HRTIM_DLLCR_CALRTE_0) /*!< 131072 * tHRTIM (910 µs) */
-#define HRTIM_CALIBRATIONRATE_114 (HRTIM_DLLCR_CALRTE_1) /*!< 131072 * tHRTIM (910 µs) */
+#define HRTIM_CALIBRATIONRATE_910 (HRTIM_DLLCR_CALRTE_0) /*!< 131072 * tHRTIM (910 Âµs) */
+#define HRTIM_CALIBRATIONRATE_114 (HRTIM_DLLCR_CALRTE_1) /*!< 131072 * tHRTIM (910 Âµs) */
 #define HRTIM_CALIBRATIONRATE_14                                                                   \
-	(HRTIM_DLLCR_CALRTE_1 | HRTIM_DLLCR_CALRTE_0) /*!< 131072 * tHRTIM (910 µs) */
+	(HRTIM_DLLCR_CALRTE_1 | HRTIM_DLLCR_CALRTE_0) /*!< 131072 * tHRTIM (910 Âµs) */
 
 #define IS_HRTIM_CALIBRATIONRATE(CALIBRATIONRATE)                                                  \
 	(((CALIBRATIONRATE) == HRTIM_CALIBRATIONRATE_7300) ||                                      \

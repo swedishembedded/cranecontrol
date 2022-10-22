@@ -63,6 +63,7 @@ PAGER=cat git log --oneline --graph --decorate --abbrev-commit ${COMMIT_RANGE}
 echo -e "---------------------------------------------------"
 
 ZEPHYR_BASE=$ROOT $ZEPHYR_BASE/scripts/ci/check_compliance.py \
+	-e checkpatch \
 	-e Gitlint \
 	-e Identity \
 	-e Kconfig \

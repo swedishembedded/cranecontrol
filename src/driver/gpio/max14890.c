@@ -1,21 +1,19 @@
-/*
- * This file contains a lot of code from Ninjaflight.
+/**
+ * SPDX-License-Identifier: GPLv3
+ *   ____                       ____            _             _
+ *  / ___|_ __ __ _ _ __   ___ / ___|___  _ __ | |_ _ __ ___ | |
+ * | |   | '__/ _` | '_ \ / _ \ |   / _ \| '_ \| __| '__/ _ \| |
+ * | |___| | | (_| | | | |  __/ |__| (_) | | | | |_| | | (_) | |
+ *  \____|_|  \__,_|_| |_|\___|\____\___/|_| |_|\__|_|  \___/|_|
  *
- * Authors: Martin Schröder & Cleanflight project
+ * Copyright (c) 2015-2022, Martin K. Schröder, All Rights Reserved
+ * Copyright (c) Cleanflight contributors
  *
- * Ninjaflight is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * CraneControl is distributed under GPLv2
  *
- * Ninjaflight is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Ninjaflight.  If not, see <http://www.gnu.org/licenses/>.
- */
+ * Embedded Systems Training: https://swedishembedded.com/training
+ * Free Embedded Insights: https://swedishembedded.com/tag/insights
+ **/
 
 #include <string.h>
 #include <stdio.h>

@@ -129,7 +129,7 @@ typedef uint32_t TickType_t;
 		portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;                                    \
                                                                                                    \
 		/* Barriers are normally not required but do ensure the code is completely    \
-    within the specified behaviour for the architecture. */   \
+    within the specified behaviour for the architecture. */    \
 		__asm { dsb }                                                                      \
 		;                                                                                  \
 		__asm { isb }                                                                      \

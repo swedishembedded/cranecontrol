@@ -1,4 +1,5 @@
 /*
+ * SPDX-License-Identifier: GPLv3
  *                  Copyright 2014 ARTaylor.co.uk
  *
  * This program is free software; you can redistribute it and/or modify

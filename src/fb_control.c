@@ -1,18 +1,19 @@
-/** :ms-top-comment
- *  ____            _        _   ____  _     ____
- * |  _ \ ___   ___| | _____| |_|  _ \| |   / ___|
- * | |_) / _ \ / __| |/ / _ \ __| |_) | |  | |
- * |  _ < (_) | (__|   <  __/ |_|  __/| |__| |___
- * |_| \_\___/ \___|_|\_\___|\__|_|   |_____\____|
+/**
+ * SPDX-License-Identifier: GPLv2
+ *   ____                       ____            _             _
+ *  / ___|_ __ __ _ _ __   ___ / ___|___  _ __ | |_ _ __ ___ | |
+ * | |   | '__/ _` | '_ \ / _ \ |   / _ \| '_ \| __| '__/ _ \| |
+ * | |___| | | (_| | | | |  __/ |__| (_) | | | | |_| | | (_) | |
+ *  \____|_|  \__,_|_| |_|\___|\____\___/|_| |_|\__|_|  \___/|_|
  *
- * Copyright (c) 2020, Martin K. Schröder, All Rights Reserved
+ * Copyright (c) 2019-2022, Martin K. Schröder, All Rights Reserved
  *
- * RocketPLC is distributed under GPLv2
+ * CraneControl is distributed under GPLv2
  *
- * Commercial licensing: http://swedishembedded.com/rocketplc
- * Contact: info@swedishembedded.com
- * Secondary email: mkschreder.uk@gmail.com
+ * Embedded Systems Training: https://swedishembedded.com/training
+ * Free Embedded Insights: https://swedishembedded.com/tag/insights
  **/
+
 #include "fb_control.h"
 #include "fb.h"
 #include <libfirmware/angle.h>

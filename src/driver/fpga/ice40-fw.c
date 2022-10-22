@@ -1,3 +1,19 @@
+/**
+ * SPDX-License-Identifier: GPLv2
+ *   ____                       ____            _             _
+ *  / ___|_ __ __ _ _ __   ___ / ___|___  _ __ | |_ _ __ ___ | |
+ * | |   | '__/ _` | '_ \ / _ \ |   / _ \| '_ \| __| '__/ _ \| |
+ * | |___| | | (_| | | | |  __/ |__| (_) | | | | |_| | | (_) | |
+ *  \____|_|  \__,_|_| |_|\___|\____\___/|_| |_|\__|_|  \___/|_|
+ *
+ * Copyright (c) 2015-2022, Martin K. Schröder, All Rights Reserved
+ *
+ * CraneControl is distributed under GPLv2
+ *
+ * Embedded Systems Training: https://swedishembedded.com/training
+ * Free Embedded Insights: https://swedishembedded.com/tag/insights
+ **/
+
 unsigned char example_bin[] = {
 	0xff, 0x00, 0x00, 0xff, 0x7e, 0xaa, 0x99, 0x7e, 0x51, 0x00, 0x01, 0x05, 0x92, 0x00, 0x20,
 	0x62, 0x01, 0x4b, 0x72, 0x00, 0x90, 0x82, 0x00, 0x00, 0x11, 0x00, 0x01, 0x01, 0x00, 0x00,
