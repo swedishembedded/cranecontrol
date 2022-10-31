@@ -1,40 +1,46 @@
-Realtime Python Kernel With Device Tree
----------------------------------------
+# CraneControl - Movie Production Crane Firmware
 
-![](./docs/realtime-python-banner.png)
+![](./docs/header-image.jpg)
 
-This is a realtime kernel with device tree support for microcontrollers and
-bare metal electronics devices that is designed to run python applications on
-microcontrollers. 
+This repository includes original implementation of the CraneControl firmware
+for controlling FlyingBergman movie production camera crane.
 
-Through device tree it is very easy to extend and add new drivers. Through
-python it is very easy to extend and add new applications. 
+This firmware is based on FreeRTOS and this repository is provided for
+historical and learning purposes.
 
-As opposed to other RTOS projects, instead of supporting infinite number of
-boards and trying to be overly generic - we aim to have 100% support for a
-finite number of versatile building blocks with which you can build your
-projects.
+The crane has been in active use since 2019 and has been the primary camera
+crane used to film several Swedish movie series - most notably 2022 Netflix
+series "Clark".
 
-This way we can be laser focused on a specific set of products - which makes
-the system much more robust and easier and simpler to maintain. This also means
-we can have a very well documented system as well!
+The software in this repository runs on the [CraneControl PCB
+design](https://github.com/swedishembedded/cranecontrol-hw) which has dual
+function as both HMI panel and motor control board (two boards can be connected
+over CANOpen and communicate in this way).
 
-You can build your own boards as well, according to the specification, and make
-them available for sale through this project!
+## Results
 
-Building
---------
+[![FlyingBergman](http://img.youtube.com/vi/k-2InPx5LMA/0.jpg)](http://www.youtube.com/watch?v=k-2InPx5LMA
+"FlyingBergman")
+
+[![FlyingBergman](http://img.youtube.com/vi/5sOf54V7gs8/0.jpg)](http://www.youtube.com/watch?v=5sOf54V7gs8
+"FlyingBergman on land")
+
+[![FlyingBergman](http://img.youtube.com/vi/lv9wT3cRuf8/0.jpg)](http://www.youtube.com/watch?v=lv9wT3cRuf8
+"FlyingBergman at sea")
+
+## Building
 
 	./autogen.sh
 	mkdir build && cd build
-	../configure --host=<toolchain> --with-devicetree=../dts/<board>.dts
+	../configure --host=arm-none-eabi --with-devicetree=../dts/flyingbergman.dts
 	make
 	make flash
 
-Boards That Support Realtime Python
------------------------------------
+## License
 
-- Swedish Embedded Motor Control Development Board
-- STM32F407 Discovery Board
-- STM32F429 Discovery Board
+This project contains code in it that is provided under several different open
+source licenses. Most notably GPLv2 and GPLv3. If no license information is
+provided in the file, you should treat that file as GPLv2-or-later. Otherwise
+refer to individual files for license details.
+
 
